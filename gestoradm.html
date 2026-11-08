@@ -3915,12 +3915,12 @@ function renderizarTodosPedidos() {
         const isRev = isClienteRevendedor(p);
         const badgeRev = isRev ? '<span class="badge-revendedor">👑 REV</span>' : '';
         
-        // 🔥 NOVO: Define a cor e o texto do status para a listagem geral
+        // Define a cor e o texto do status
         let statusColor = '#888';
         let statusExibido = p.status || 'Pendente';
         
         if (p.status === 'Pago') {
-            statusColor = '#27ae60'; // Verde
+            statusColor = '#27ae60';
             statusExibido = '💰 Pago';
         } else if (statusExibido === 'Pendente' || !p.status) {
             statusColor = '#f39c12';
@@ -3934,24 +3934,15 @@ function renderizarTodosPedidos() {
             statusColor = '#e74c3c';
         }
         
-        let itensResumo = p.itens || '';
+        // 🔥 CORREÇÃO: Resumo dos itens usando a função processarItensPedido
+        let itensResumo = '-';
         try {
-            if (typeof p.itens === 'string') {
-                const partes = p.itens.split('; ');
-                if (partes.length > 1) {
-                    itensResumo = partes.map(part => {
-                        const campos = part.split('|');
-                        if (campos.length >= 4) {
-                            const qtd = parseInt(campos[1]) || 1;
-                            const pacote = parseInt(campos[2]) || 1;
-                            return `${campos[0]?.substring(0, 15)} (${qtd}x ${pacote} un)`;
-                        }
-                        return part.substring(0, 20);
-                    }).join(' | ');
-                }
+            const itensProcessados = processarItensPedido(p.itens);
+            if (itensProcessados.length > 0) {
+                itensResumo = itensProcessados.map(i => `${i.quantidade}x ${i.nome.substring(0, 20)}${i.nome.length > 20 ? '...' : ''}`).join(' | ');
             }
         } catch (e) {
-            itensResumo = p.itens ? p.itens.substring(0, 40) : '-';
+            itensResumo = p.itens ? String(p.itens).substring(0, 40) : '-';
         }
         
         return `
@@ -3960,7 +3951,7 @@ function renderizarTodosPedidos() {
             <td>${p.cliente_nome || 'Cliente não identificado'} ${badgeRev}</td>
             <td>${p.cliente_telefone || '-'}</td>
             <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;" title="${itensResumo}">
-                ${itensResumo || '-'}
+                ${itensResumo}
             </td>
             <td><strong>R$ ${parseFloat(String(p.total).replace(',', '.')) || 0}</strong></td>
             <td><span class="status-badge" style="background:${statusColor};color:white;padding:3px 10px;border-radius:20px;font-size:11px;">${statusExibido}</span></td>
@@ -4160,9 +4151,9 @@ function renderizarPendentes() {
             <td><strong>#${p.id_pedido}</strong></td>
             <td>${p.cliente_nome || 'Cliente não identificado'} ${badgeRev}</td>
             <td>${p.cliente_telefone || '-'}</td>
-            <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${p.itens || ''}">
-                ${p.itens ? p.itens.substring(0, 30) + (p.itens.length > 30 ? '...' : '') : '-'}
-            </td>
+           <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${p.itens || ''}">
+    ${processarItensPedido(p.itens).map(i => `${i.quantidade}x ${i.nome.substring(0, 15)}`).join(', ') || '-'}
+</td>
             <td><strong>R$ ${parseFloat(String(p.total).replace(',', '.')) || 0}</strong></td>
             <td style="font-size:11px;">${p.data_pedido ? formatarDataHoraBR(p.data_pedido) : '-'}</td>
             <td>
