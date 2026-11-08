@@ -3564,16 +3564,25 @@ src="https://www.facebook.com/tr?id=1764645147917874&ev=PageView&noscript=1"
 <!-- ============================================================ -->
 <div class="modal confirmacao-modal" id="confirmacaoModal">
     <div class="modal-content">
-        <span class="modal-close" onclick="fecharModal('confirmacaoModal')">&times;</span> <!-- O X -->
+        <span class="modal-close" onclick="fecharModalPagamento()">&times;</span>
         <div class="icone-grande"><i class="fas fa-check-circle"></i></div>
         <h2 style="color:var(--success);">✅ Pedido Realizado!</h2>
-        <p style="color:#666;margin:10px 0;" id="confirmacaoMensagem">Clique no botão abaixo para pagar.</p>
+        <p style="color:#666;margin:10px 0;" id="confirmacaoMensagem">Clique no botão abaixo para pagar com segurança.</p>
         <div class="numero-pedido" id="confirmacaoNumeroPedido">#13160</div>
         
-        <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
-            <button id="btnFinalizarPagamento" class="btn-checkout" style="background:#25D366;flex:1;border:none;padding:14px;border-radius:8px;cursor:pointer;font-weight:600;font-size:16px;color:white;display:none;justify-content:center;align-items:center;gap:8px;">
-                Ir para o Pagamento
+        <div style="margin-top:20px;display:flex;flex-direction:column;gap:10px;align-items:center;">
+            <!-- Botão Ir para o Pagamento -->
+            <button id="btnFinalizarPagamento" class="btn-checkout" style="background:#25D366;width:100%;border:none;padding:14px;border-radius:8px;cursor:pointer;font-weight:600;font-size:16px;color:white;display:flex;justify-content:center;align-items:center;gap:8px;">
+                <i class="fas fa-credit-card"></i> Ir para o Pagamento
             </button>
+
+            <!-- Link e Botão Copiar -->
+            <div style="background:#f5f7fa;border:1px dashed #ccc;border-radius:8px;padding:10px;width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px;">
+                <input type="text" id="linkPagamentoTexto" readonly style="border:none;background:transparent;width:100%;color:#666;font-size:12px;outline:none;">
+                <button onclick="copiarLinkPagamento()" style="background:var(--primary-blue);color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px;white-space:nowrap;">
+                    <i class="fas fa-copy"></i> Copiar Link
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -9346,7 +9355,30 @@ function atualizarResumoFinal() {
     document.getElementById('checkoutPrazoDetalhe').textContent = detalhePrazo;
 }
 
+// Função para o botão X do modal de pagamento
+function fecharModalPagamento() {
+    document.getElementById('confirmacaoModal').style.display = 'none';
+    
+    // Mostra o "Modal de Aviso" dizendo que o link ficará salvo
+    alert("Atenção!\n\nSe você fechar esta tela, não se preocupe: seu link de pagamento continuará disponível na área 'Meus Pedidos' do seu perfil.\n\nSe precisar de ajuda, chame no WhatsApp!");
+    
+    // Remove do localStorage, pois o usuário já viu o aviso
+    localStorage.removeItem('pagamentoPendenteLink');
+}
 
+// Função para copiar o link do Pagar.me
+function copiarLinkPagamento() {
+    const input = document.getElementById('linkPagamentoTexto');
+    input.select();
+    input.setSelectionRange(0, 99999); // Para celulares
+    
+    try {
+        document.execCommand('copy');
+        mostrarNotificacao('✅ Link de pagamento copiado!', 'success');
+    } catch (err) {
+        mostrarNotificacao('⚠️ Erro ao copiar link. Tente selecionar e copiar manualmente.', 'warning');
+    }
+}
 async function finalizarPedidoCheckout() {
     const btnFinalizar = document.getElementById('btnFinalizarPedido');
     const textoOriginal = btnFinalizar.innerHTML;
@@ -9519,8 +9551,13 @@ async function finalizarPedidoCheckout() {
                     document.getElementById('confirmacaoNumeroPedido').textContent = `#${novoId}`;
                     document.getElementById('confirmacaoMensagem').textContent = 'Clique no botão abaixo para pagar com segurança.';
                     
+                    // 🔥 NOVO: Salva o link no navegador do cliente
+                    document.getElementById('linkPagamentoTexto').value = linkPagamento;
+                    localStorage.setItem('pagamentoPendenteLink', linkPagamento);
+                    localStorage.setItem('pagamentoPendenteId', novoId);
+                    
                     const btnPagar = document.getElementById('btnFinalizarPagamento');
-                    btnPagar.style.display = 'block';
+                    btnPagar.style.display = 'flex';
                     btnPagar.innerHTML = '<i class="fas fa-credit-card"></i> Ir para o Pagamento';
                     
                     btnPagar.onclick = function() {
@@ -9945,6 +9982,29 @@ function init() {
             .subscribe();
     } catch (e) {
         console.error('Erro ao configurar realtime:', e);
+    }
+
+    // ============================================================
+    // 🔥 NOVO: REABRE O MODAL DE PAGAMENTO PENDENTE
+    // ============================================================
+    const linkPendente = localStorage.getItem('pagamentoPendenteLink');
+    const idPendente = localStorage.getItem('pagamentoPendenteId');
+    
+    if (linkPendente && idPendente) {
+        setTimeout(() => {
+            document.getElementById('confirmacaoNumeroPedido').textContent = `#${idPendente}`;
+            document.getElementById('confirmacaoMensagem').textContent = 'Você tem um pagamento pendente! Clique abaixo para finalizar.';
+            document.getElementById('linkPagamentoTexto').value = linkPendente;
+            
+            const btnPagar = document.getElementById('btnFinalizarPagamento');
+            btnPagar.style.display = 'flex';
+            btnPagar.innerHTML = '<i class="fas fa-credit-card"></i> Ir para o Pagamento';
+            btnPagar.onclick = function() {
+                window.open(linkPendente, '_blank');
+            };
+            
+            document.getElementById('confirmacaoModal').style.display = 'block';
+        }, 1000); // Espera 1 segundo para o site carregar os produtos primeiro
     }
 }
 
