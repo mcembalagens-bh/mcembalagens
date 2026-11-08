@@ -9885,6 +9885,49 @@ function init() {
     }
     
     inicializando = false;
+
+    // ============================================================
+    // 🔥 TEMPO REAL: ESCUTA MUDANÇAS DE ESTOQUE NO SUPABASE
+    // ============================================================
+    try {
+        supabaseClient
+            .channel('public:produtos')
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'produtos' }, payload => {
+                const produtoAtualizado = payload.new;
+                console.log('⚡ Estoque atualizado em tempo real:', produtoAtualizado.nome, 'Novo estoque:', produtoAtualizado.estoque);
+                
+                // 1. Atualiza a memória do site
+                for (const cat of PRODUCTS_DATA.categories) {
+                    const prod = cat.products.find(p => parseInt(p.id) === parseInt(produtoAtualizado.id));
+                    if (prod) {
+                        prod.stock = parseInt(produtoAtualizado.estoque) || 0;
+                        prod.vender_zerado = String(produtoAtualizado.vender_zerado).toUpperCase() === 'SIM';
+                        break;
+                    }
+                }
+
+                // 2. Atualiza o carrinho (se o produto estiver lá)
+                let carrinhoAlterado = false;
+                for (let i = 0; i < carrinho.length; i++) {
+                    if (parseInt(carrinho[i].productId) === parseInt(produtoAtualizado.id)) {
+                        carrinho[i].stock = parseInt(produtoAtualizado.estoque) || 0;
+                        carrinhoAlterado = true;
+                    }
+                }
+                if (carrinhoAlterado) salvarCarrinho();
+
+                // 3. Atualiza a tela do cliente na hora
+                if (currentProducts && currentProducts.length > 0) {
+                    renderizarProdutos();
+                }
+                if (document.getElementById('cartModal').style.display === 'block') {
+                    abrirCarrinho(); // Recarrega a tela do carrinho
+                }
+            })
+            .subscribe();
+    } catch (e) {
+        console.error('Erro ao configurar realtime:', e);
+    }
 }
 
 
