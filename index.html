@@ -3564,17 +3564,15 @@ src="https://www.facebook.com/tr?id=1764645147917874&ev=PageView&noscript=1"
 <!-- ============================================================ -->
 <div class="modal confirmacao-modal" id="confirmacaoModal">
     <div class="modal-content">
+        <span class="modal-close" onclick="fecharModal('confirmacaoModal')">&times;</span> <!-- O X -->
         <div class="icone-grande"><i class="fas fa-check-circle"></i></div>
         <h2 style="color:var(--success);">✅ Pedido Realizado!</h2>
-        <p style="color:#666;margin:10px 0;">Seu pedido foi confirmado com sucesso.</p>
-        <div class="numero-pedido" id="confirmacaoNumeroPedido">#13001</div>
-        <p style="color:#888;font-size:14px;" id="confirmacaoMensagem">Aguarde o redirecionamento para o pagamento...</p>
-        <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;">
-            <button id="btnFinalizarPagamento" class="btn-checkout" style="background:#25D366;flex:1;border:none;padding:12px;border-radius:8px;cursor:pointer;font-weight:600;font-size:16px;color:white;transition:all 0.3s;display:none;">
-                <i class="fas fa-credit-card"></i> Finalizar Pagamento
-            </button>
-            <button onclick="fecharModal('confirmacaoModal')" style="flex:1;background:#e0e0e0;color:#333;border:none;padding:12px;border-radius:8px;cursor:pointer;font-weight:600;font-size:16px;">
-                Ver depois
+        <p style="color:#666;margin:10px 0;" id="confirmacaoMensagem">Clique no botão abaixo para pagar.</p>
+        <div class="numero-pedido" id="confirmacaoNumeroPedido">#13160</div>
+        
+        <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+            <button id="btnFinalizarPagamento" class="btn-checkout" style="background:#25D366;flex:1;border:none;padding:14px;border-radius:8px;cursor:pointer;font-weight:600;font-size:16px;color:white;display:none;justify-content:center;align-items:center;gap:8px;">
+                Ir para o Pagamento
             </button>
         </div>
     </div>
@@ -9485,7 +9483,7 @@ async function finalizarPedidoCheckout() {
                 if (currentProducts && currentProducts.length > 0) renderizarProdutos();
                 mostrarNotificacao('✅ Pedido criado! Escaneie o QR Code para pagar.', 'success');
             } else {
-                // Cartão e Boleto usam a Edge Function do Pagar.me
+                               // Cartão e Boleto usam a Edge Function do Pagar.me
                 const { data: pagamento, error: erroPagamento } = await supabaseClient.functions.invoke('criar-link-pagamento', {
                     body: {
                         pedidoId: novoId,
@@ -9501,17 +9499,31 @@ async function finalizarPedidoCheckout() {
 
                 if (erroPagamento) throw erroPagamento;
 
-                if (pagamento && pagamento.url) {
+                // A Edge Function do Pagar.me devolve os dados com a propriedade 'paymentLink'
+                const linkPagamento = pagamento?.paymentLink || pagamento?.url;
+
+                if (linkPagamento) {
+                    // Atualiza os dados do modal
                     document.getElementById('confirmacaoNumeroPedido').textContent = `#${novoId}`;
-                    document.getElementById('btnFinalizarPagamento').style.display = 'block';
-                    document.getElementById('confirmacaoModal').style.display = 'block';
+                    document.getElementById('confirmacaoMensagem').textContent = 'Clique no botão abaixo para pagar com segurança.';
                     
-                    document.getElementById('btnFinalizarPagamento').onclick = function() {
-                        fecharModal('confirmacaoModal');
-                        window.open(pagamento.url, '_blank');
+                    // Configura o botão do modal
+                    const btnPagar = document.getElementById('btnFinalizarPagamento');
+                    btnPagar.style.display = 'block';
+                    btnPagar.innerHTML = '<i class="fas fa-credit-card"></i> Ir para o Pagamento';
+                    
+                    // O botão abre o link do Pagar.me
+                    btnPagar.onclick = function() {
+                        window.open(linkPagamento, '_blank');
                     };
+                    
+                    // Mostra o modal de confirmação
+                    document.getElementById('confirmacaoModal').style.display = 'block';
+                } else {
+                    alert('⚠️ Pedido salvo, mas não foi possível gerar o link de pagamento. Contate o suporte.');
                 }
-                
+
+                // Limpa o carrinho e fecha o checkout
                 fecharCheckout();
                 carrinho = [];
                 salvarCarrinho();
