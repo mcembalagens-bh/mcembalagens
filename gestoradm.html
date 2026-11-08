@@ -6404,10 +6404,22 @@ function imprimirCupom(idPedido) {
         if (item.isProducao) isProducaoGeral = true;
         
         let codigoProduto = '';
-        const produtoEncontrado = dados.produtos.find(p => p.nome && p.nome.toLowerCase() === item.nome.toLowerCase());
+        
+        // 🔥 CORREÇÃO: Remove o sufixo "(Produção X dias)" do nome para achar o produto certo no banco
+        let nomeBusca = item.nome.split(' (Produção')[0].trim();
+        
+        const produtoEncontrado = dados.produtos.find(p => p.nome && p.nome.toLowerCase() === nomeBusca.toLowerCase());
+        
         if (produtoEncontrado) {
             codigoProduto = produtoEncontrado.codigo_produto || '';
-            if (produtoEncontrado.descricao) extrairESomarBerços(produtoEncontrado.descricao, totalUnidades);
+            
+            // 🔥 CORREÇÃO: Busca berços na descrição E no nome do produto
+            if (produtoEncontrado.descricao) {
+                extrairESomarBerços(produtoEncontrado.descricao, totalUnidades);
+            }
+            if (produtoEncontrado.nome) {
+                extrairESomarBerços(produtoEncontrado.nome, totalUnidades);
+            }
         }
         
         let statusEstoque = '';
