@@ -5351,43 +5351,64 @@ async function cancelarPedido(id) {
     const pedido = dados.pedidos.find(p => parseInt(p.id_pedido) === parseInt(id));
     if (!pedido) { alert('Pedido não encontrado!'); return; }
     
-    if (!confirm(`⚠️ Deseja realmente CANCELAR o pedido #${id}?`)) return;
+    if (!confirm(`⚠️ Deseja realmente CANCELAR o pedido #${id}?\n\nIsso vai devolver os produtos ao estoque.`)) return;
     
-    mostrarSpinner('Cancelando pedido...');
+    mostrarSpinner('Cancelando e devolvendo estoque...');
     
     try {
-        // 1. Processa os itens para devolver ao estoque (se não forem de produção)
         const itens = processarItensPedido(pedido.itens);
         
         for (const item of itens) {
-            if (!item.isProducao && item.productId) {
-                const produto = dados.produtos.find(p => parseInt(p.id) === item.productId);
+            // Se não for produção, devolve ao estoque
+            if (!item.isProducao && item.quantidade > 0) {
+                let produto = null;
+                
+                // 1. Tenta achar pelo ID (se o site novo enviou)
+                if (item.productId) {
+                    produto = dados.produtos.find(p => parseInt(p.id) === parseInt(item.productId));
+                }
+                
+                // 2. Se não achou pelo ID, tenta pelo Nome (para pedidos antigos ou falhas)
+                if (!produto) {
+                    produto = dados.produtos.find(p => p.nome && p.nome.toLowerCase() === item.nome.toLowerCase());
+                }
+                if (!produto) {
+                    produto = dados.produtos.find(p => p.nome && p.nome.toLowerCase().includes(item.nome.toLowerCase()));
+                }
+                
                 if (produto) {
                     const estoqueAtual = parseInt(produto.estoque) || 0;
                     const novoEstoque = estoqueAtual + item.quantidade;
                     
-                    await supabaseClient
+                    // Atualiza no banco de dados
+                    const { error } = await supabaseClient
                         .from('produtos')
                         .update({ estoque: novoEstoque })
-                        .eq('id', item.productId);
+                        .eq('id', produto.id);
                         
-                    produto.estoque = novoEstoque; // Atualiza local
+                    if (error) throw error;
+                    
+                    // Atualiza localmente para o gestor refletir na hora
+                    produto.estoque = novoEstoque;
+                    console.log(`✅ Estoque de "${produto.nome}" devolvido: ${estoqueAtual} + ${item.quantidade} = ${novoEstoque}`);
+                } else {
+                    console.warn(`⚠️ Produto "${item.nome}" não encontrado para devolver estoque.`);
                 }
             }
         }
         
-        // 2. Muda o status do pedido para Cancelado
-        const { error } = await supabaseClient
+        // Muda o status do pedido para Cancelado
+        const { error: erroStatus } = await supabaseClient
             .from('pedidos')
             .update({ status: 'Cancelado' })
             .eq('id_pedido', id);
             
-        if (error) throw error;
+        if (erroStatus) throw erroStatus;
         
         esconderSpinner();
-        alert(`✅ Pedido #${id} cancelado com sucesso!\n\nO estoque dos produtos disponíveis foi devolvido.`);
+        alert(`✅ Pedido #${id} cancelado com sucesso!\n\nOs produtos disponíveis voltaram para o estoque.`);
         
-        await carregarDados();
+        await carregarDados(); // Recarrega tudo para atualizar a tela
         
     } catch (error) {
         console.error('❌ Erro ao cancelar pedido:', error);
