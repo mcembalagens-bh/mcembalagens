@@ -3767,13 +3767,9 @@ async function salvarEdicaoPedido(id) {
     mostrarSpinner('Salvando alterações...');
     
     try {
-        await fetch(API_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                acao: 'atualizar_pedido_completo',
-                id_pedido: id,
+        const { error } = await supabaseClient
+            .from('pedidos')
+            .update({
                 cliente_nome: clienteNome,
                 cliente_email: clienteEmail,
                 cliente_telefone: clienteTelefone,
@@ -3781,9 +3777,9 @@ async function salvarEdicaoPedido(id) {
                 status: status,
                 observacoes: observacoes
             })
-        });
-        
-        await new Promise(resolve => setTimeout(resolve, 2000));
+            .eq('id_pedido', id);
+            
+        if (error) throw error;
         
         esconderSpinner();
         alert('✅ Pedido atualizado com sucesso!');
@@ -3793,7 +3789,7 @@ async function salvarEdicaoPedido(id) {
     } catch (error) {
         console.error('Erro ao salvar:', error);
         esconderSpinner();
-        alert('⚠️ Erro ao salvar alterações.');
+        alert('⚠️ Erro ao salvar: ' + error.message);
     }
 }
 
@@ -3804,7 +3800,6 @@ async function atualizarStatus() {
     const novoStatus = document.getElementById('status_pedido').value;
     const codigoRastreio = document.getElementById('codigo_rastreio').value.trim();
     
-    // Se for cancelado, chama a função de cancelar
     if (novoStatus === 'Cancelado') {
         fecharModal('modalStatus');
         await cancelarPedido(pedidoEditando);
@@ -3814,25 +3809,29 @@ async function atualizarStatus() {
     mostrarSpinner('Atualizando status...');
     
     try {
-        await fetch(API_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                acao: 'atualizar_status_pedido',
-                id_pedido: pedidoEditando,
-                status: novoStatus,
-                rastreio: codigoRastreio,
-                observacoes: ''
-            })
-        });
-
+        const pedido = dados.pedidos.find(p => parseInt(p.id_pedido) === parseInt(pedidoEditando));
+        if (!pedido) throw new Error('Pedido não encontrado');
+        
+        let observacoesAtuais = pedido.observacoes || '';
+        observacoesAtuais = observacoesAtuais.replace(/\s*\|\s*Rastreio:\s*[A-Za-z0-9\-]+/gi, '');
+        observacoesAtuais = observacoesAtuais.replace(/\s*\|\s*$/g, '').trim();
+        
+        if (novoStatus === 'Enviado' && codigoRastreio) {
+            if (observacoesAtuais && !observacoesAtuais.endsWith('|')) observacoesAtuais += ' | ';
+            observacoesAtuais += 'Rastreio: ' + codigoRastreio;
+        }
+        
+        const { error } = await supabaseClient
+            .from('pedidos')
+            .update({ status: novoStatus, observacoes: observacoesAtuais })
+            .eq('id_pedido', pedidoEditando);
+            
+        if (error) throw error;
+        
         esconderSpinner();
         
         let mensagem = `✅ Status atualizado para: ${novoStatus}`;
-        if (novoStatus === 'Enviado' && codigoRastreio) {
-            mensagem += `\n📦 Código de rastreio: ${codigoRastreio}`;
-        }
+        if (novoStatus === 'Enviado' && codigoRastreio) mensagem += `\n📦 Rastreio: ${codigoRastreio}`;
         alert(mensagem);
         
         fecharModal('modalStatus');
@@ -3841,7 +3840,7 @@ async function atualizarStatus() {
     } catch (error) {
         console.error('Erro ao atualizar status:', error);
         esconderSpinner();
-        alert('⚠️ Erro ao atualizar status. Verifique sua conexão.');
+        alert('⚠️ Erro ao atualizar status: ' + error.message);
     }
 }
 
@@ -5372,116 +5371,50 @@ function processarItensPedido(textoItens) {
 // ============================================================
 async function cancelarPedido(id) {
     const pedido = dados.pedidos.find(p => parseInt(p.id_pedido) === parseInt(id));
-    if (!pedido) {
-        alert('Pedido não encontrado!');
-        return;
-    }
+    if (!pedido) { alert('Pedido não encontrado!'); return; }
     
-    console.log('📋 Pedido a cancelar:', pedido);
-    console.log('📦 Itens do pedido:', pedido.itens);
-    
-    if (!confirm(`⚠️ Deseja realmente CANCELAR o pedido #${id}?`)) {
-        return;
-    }
+    if (!confirm(`⚠️ Deseja realmente CANCELAR o pedido #${id}?`)) return;
     
     mostrarSpinner('Cancelando pedido...');
     
     try {
+        // 1. Processa os itens para devolver ao estoque (se não forem de produção)
         const itens = processarItensPedido(pedido.itens);
-        console.log('📊 Itens processados:', itens);
         
-        const produtosParaRestituir = [];
-        let produtosDisponiveis = 0;
-        let produtosProducao = 0;
-        let produtosSemId = 0;
-        
-        itens.forEach(item => {
-            console.log(`🔍 Item: "${item.nome}" | Produção: ${item.isProducao} | ID: ${item.productId} | Qtd: ${item.quantidade}`);
-            
+        for (const item of itens) {
             if (!item.isProducao && item.productId) {
                 const produto = dados.produtos.find(p => parseInt(p.id) === item.productId);
                 if (produto) {
                     const estoqueAtual = parseInt(produto.estoque) || 0;
-                    produtosParaRestituir.push({
-                        productId: item.productId,
-                        quantidade: item.quantidade,
-                        estoqueAtual: estoqueAtual,
-                        nome: produto.nome || 'Produto',
-                        novoEstoque: estoqueAtual + item.quantidade
-                    });
-                    produtosDisponiveis++;
-                    console.log(`✅ Restituirá: "${produto.nome}" (${estoqueAtual} + ${item.quantidade} = ${estoqueAtual + item.quantidade})`);
-                } else {
-                    console.log(`⚠️ Produto com ID ${item.productId} não encontrado no banco`);
-                    produtosSemId++;
+                    const novoEstoque = estoqueAtual + item.quantidade;
+                    
+                    await supabaseClient
+                        .from('produtos')
+                        .update({ estoque: novoEstoque })
+                        .eq('id', item.productId);
+                        
+                    produto.estoque = novoEstoque; // Atualiza local
                 }
-            } else {
-                produtosProducao++;
-                console.log(`🔨 Produto em produção: "${item.nome}" (não restitui estoque)`);
             }
-        });
-        
-        let mensagemResumo = '';
-        if (produtosDisponiveis > 0) {
-            mensagemResumo += `\n📦 ${produtosDisponiveis} produto(s) DISPONÍVEIS terão estoque restituído`;
-        }
-        if (produtosProducao > 0) {
-            mensagemResumo += `\n🔨 ${produtosProducao} produto(s) em PRODUÇÃO NÃO terão estoque alterado`;
-        }
-        if (produtosSemId > 0) {
-            mensagemResumo += `\n⚠️ ${produtosSemId} produto(s) não puderam ser identificados`;
         }
         
-        if (!confirm(`Resumo do cancelamento:${mensagemResumo}\n\nConfirmar cancelamento?`)) {
-            esconderSpinner();
-            return;
-        }
-        
-        if (produtosParaRestituir.length > 0) {
-            const atualizacoes = {};
-            produtosParaRestituir.forEach(item => {
-                atualizacoes[item.productId] = { 
-                    estoque: item.novoEstoque
-                };
-                console.log(`🔄 Restituindo ${item.quantidade} unidades de "${item.nome}" (${item.estoqueAtual} → ${item.novoEstoque})`);
-            });
+        // 2. Muda o status do pedido para Cancelado
+        const { error } = await supabaseClient
+            .from('pedidos')
+            .update({ status: 'Cancelado' })
+            .eq('id_pedido', id);
             
-            console.log('📤 Enviando atualizações:', atualizacoes);
-            
-            await fetch(API_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    acao: 'atualizar_estoque_multiplo',
-                    itens: atualizacoes,
-                    manter_data_estoque: true
-                })
-            });
-        } else {
-            console.log('ℹ️ Nenhum produto para restituir estoque');
-        }
-        
-        await fetch(API_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                acao: 'atualizar_status_pedido',
-                id_pedido: id,
-                status: 'Cancelado'
-            })
-        });
+        if (error) throw error;
         
         esconderSpinner();
-        alert(`✅ Pedido #${id} cancelado com sucesso!\n\n${produtosParaRestituir.length} produto(s) tiveram estoque restituído.\n${produtosProducao} produto(s) em produção não afetados.`);
+        alert(`✅ Pedido #${id} cancelado com sucesso!\n\nO estoque dos produtos disponíveis foi devolvido.`);
         
         await carregarDados();
         
     } catch (error) {
         console.error('❌ Erro ao cancelar pedido:', error);
         esconderSpinner();
-        alert('⚠️ Erro ao cancelar pedido. Verifique o console para mais detalhes.');
+        alert('⚠️ Erro ao cancelar pedido: ' + error.message);
     }
 }
 
