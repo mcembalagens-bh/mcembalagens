@@ -1940,6 +1940,7 @@
         <select id="filtroStatusPedido" style="padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;background:white;cursor:pointer;" onchange="renderizarTodosPedidos()">
             <option value="">📌 Todos status</option>
             <option value="Pendente">⏳ Pendente</option>
+            <option value="Pago">💰 Pago (Aguardando Separação)</option>
             <option value="Em andamento">🔄 Em andamento</option>
             <option value="Enviado">📦 Enviado</option>
             <option value="Entregue">✅ Entregue</option>
@@ -3873,7 +3874,7 @@ function renderizarTodosPedidos() {
     
     let pedidos = [...dados.pedidos];
     
-    // 🔥 FILTRO DE BUSCA
+    // Filtro de busca
     if (busca) {
         pedidos = pedidos.filter(p => {
             const id = String(p.id_pedido || '');
@@ -3886,12 +3887,12 @@ function renderizarTodosPedidos() {
         });
     }
     
-    // 🔥 FILTRO DE STATUS
+    // Filtro de Status
     if (filtroStatus) {
         pedidos = pedidos.filter(p => (p.status || 'Pendente') === filtroStatus);
     }
     
-    // 🔥 FILTRO DE RASTREIO
+    // Filtro de Rastreio
     if (filtroRastreio) {
         pedidos = pedidos.filter(p => {
             const rastreio = extrairRastreio(p.observacoes) || '';
@@ -3910,10 +3911,28 @@ function renderizarTodosPedidos() {
     }
 
     tbody.innerHTML = pedidosOrdenados.map(p => {
-        const statusClass = `status-${(p.status || 'pendente').toLowerCase().replace(/ /g, '_')}`;
         const codigoRastreio = extrairRastreio(p.observacoes) || '';
         const isRev = isClienteRevendedor(p);
         const badgeRev = isRev ? '<span class="badge-revendedor">👑 REV</span>' : '';
+        
+        // 🔥 NOVO: Define a cor e o texto do status para a listagem geral
+        let statusColor = '#888';
+        let statusExibido = p.status || 'Pendente';
+        
+        if (p.status === 'Pago') {
+            statusColor = '#27ae60'; // Verde
+            statusExibido = '💰 Pago';
+        } else if (statusExibido === 'Pendente' || !p.status) {
+            statusColor = '#f39c12';
+        } else if (statusExibido === 'Em andamento') {
+            statusColor = '#3498db';
+        } else if (statusExibido === 'Enviado') {
+            statusColor = '#2ecc71';
+        } else if (statusExibido === 'Entregue') {
+            statusColor = '#27ae60';
+        } else if (statusExibido === 'Cancelado') {
+            statusColor = '#e74c3c';
+        }
         
         let itensResumo = p.itens || '';
         try {
@@ -3925,7 +3944,6 @@ function renderizarTodosPedidos() {
                         if (campos.length >= 4) {
                             const qtd = parseInt(campos[1]) || 1;
                             const pacote = parseInt(campos[2]) || 1;
-                            const total = qtd * pacote;
                             return `${campos[0]?.substring(0, 15)} (${qtd}x ${pacote} un)`;
                         }
                         return part.substring(0, 20);
@@ -3944,8 +3962,8 @@ function renderizarTodosPedidos() {
             <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;" title="${itensResumo}">
                 ${itensResumo || '-'}
             </td>
-            <td><strong>R$ ${parseFloat(p.total || 0).toFixed(2)}</strong></td>
-            <td><span class="status-badge ${statusClass}">${p.status || 'Pendente'}</span></td>
+            <td><strong>R$ ${parseFloat(String(p.total).replace(',', '.')) || 0}</strong></td>
+            <td><span class="status-badge" style="background:${statusColor};color:white;padding:3px 10px;border-radius:20px;font-size:11px;">${statusExibido}</span></td>
             <td>
                 ${codigoRastreio ? `
                     <span style="font-family:monospace;font-size:11px;background:#e8f4fd;padding:2px 10px;border-radius:4px;display:inline-block;font-weight:600;color:#1a3a5c;">
@@ -4058,19 +4076,19 @@ async function carregarDadosParcial() {
 // ATUALIZAR BADGES - COM REVENDEDORES
 // ============================================================
 function atualizarBages() {
-    document.getElementById('badgePendentes').textContent = dados.pedidos.filter(p => p.status === 'Pendente' || !p.status).length;
+    // 🔥 ALTERADO: Agora a badge de pendentes conta tanto "Pendente" quanto "Pago"
+    document.getElementById('badgePendentes').textContent = dados.pedidos.filter(p => p.status === 'Pendente' || p.status === 'Pago' || !p.status).length;
     document.getElementById('badgeTodosPedidos').textContent = dados.pedidos.length;
     document.getElementById('badgeProdutos').textContent = dados.produtos.length;
     document.getElementById('badgeClientes').textContent = dados.clientes.length;
     
-    // 🔥 NOVO: Conta revendedores
+    // Conta revendedores
     const revendedores = dados.clientes.filter(c => {
         const obs = String(c.observacoes || '').toUpperCase().trim();
         return obs === 'REVENDA';
     });
     document.getElementById('badgeRevendedores').textContent = revendedores.length;
 }
-
 // ============================================================
 // FILTROS - TOGGLE
 // ============================================================
@@ -4088,7 +4106,8 @@ function renderizarPendentes() {
     const tbody = document.getElementById('pendentesTable');
     const busca = document.getElementById('buscaPendentes')?.value?.toLowerCase() || '';
     
-    const pendentes = dados.pedidos.filter(p => p.status === 'Pendente' || !p.status);
+    // 🔥 ALTERADO: Filtra Pendentes e Pagos
+    const pendentes = dados.pedidos.filter(p => p.status === 'Pendente' || p.status === 'Pago' || !p.status);
     
     let filtrados = pendentes;
     if (busca) {
@@ -4119,6 +4138,23 @@ function renderizarPendentes() {
         const isRev = isClienteRevendedor(p);
         const badgeRev = isRev ? '<span class="badge-revendedor">👑 REV</span>' : '';
         
+        // 🔥 ALTERADO: Define as cores com base no novo status "Pago"
+        let statusColor = '#f39c12';
+        let statusExibido = p.status || 'Pendente';
+        
+        if (p.status === 'Pago') {
+            statusColor = '#27ae60'; // Verde
+            statusExibido = '💰 Pago - Separar';
+        } else if (p.status === 'Em andamento') {
+            statusColor = '#3498db';
+        } else if (p.status === 'Enviado') {
+            statusColor = '#2ecc71';
+        } else if (p.status === 'Entregue') {
+            statusColor = '#27ae60';
+        } else if (p.status === 'Cancelado') {
+            statusColor = '#e74c3c';
+        }
+        
         return `
         <tr>
             <td><strong>#${p.id_pedido}</strong></td>
@@ -4127,13 +4163,17 @@ function renderizarPendentes() {
             <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${p.itens || ''}">
                 ${p.itens ? p.itens.substring(0, 30) + (p.itens.length > 30 ? '...' : '') : '-'}
             </td>
-            <td><strong>R$ ${parseFloat(p.total || 0).toFixed(2)}</strong></td>
+            <td><strong>R$ ${parseFloat(String(p.total).replace(',', '.')) || 0}</strong></td>
             <td style="font-size:11px;">${p.data_pedido ? formatarDataHoraBR(p.data_pedido) : '-'}</td>
             <td>
-                <button class="btn-sm btn-status" onclick="abrirModalStatus(${p.id_pedido}, '${p.status || 'Pendente'}')">
+                <span style="background:${statusColor};color:white;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;margin-bottom:4px;display:inline-block;">
+                    ${statusExibido}
+                </span>
+                <br>
+                <button class="btn-sm btn-status" onclick="abrirModalStatus(${p.id_pedido}, '${p.status || 'Pendente'}')" title="Mudar Status">
                     <i class="fas fa-exchange-alt"></i>
                 </button>
-                <button class="btn-sm btn-print" onclick="imprimirCupom(${p.id_pedido})">
+                <button class="btn-sm btn-print" onclick="imprimirCupom(${p.id_pedido})" title="Imprimir">
                     <i class="fas fa-print"></i>
                 </button>
             </td>
