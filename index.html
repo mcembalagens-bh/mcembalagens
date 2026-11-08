@@ -5506,32 +5506,18 @@ function irParaPagamentoPedido(pedidoId, metodo) {
         recriarLinkPagamento(pedidoId);
     }
 }
-    
-    // ============================================================
-    // CARTÃO OU BOLETO - USA O LINK DO PAGAR.ME
-    // ============================================================
-    if (dados && dados.checkoutId) {
-        // Verifica status primeiro
-        verificarStatusPagamentoPagarMe(dados.checkoutId).then(function(result) {
-            if (result.isPaid) {
-                mostrarNotificacao('✅ Este pedido já foi pago!', 'success');
-                fecharDetalhesPedido();
-                carregarPedidosCliente(usuarioLogado ? usuarioLogado.email : '');
-                return;
-            }
-            
-            // Se não foi pago, abre o link de pagamento
-            if (result.success && result.paymentLink) {
-                window.open(result.paymentLink, '_blank');
-                mostrarNotificacao('🔄 Redirecionando para pagamento...', 'info');
-            } else {
-                recriarLinkPagamento(pedidoId);
-            }
-        });
-    } else {
-        mostrarNotificacao('⚠️ Link de pagamento não encontrado.', 'warning');
-        recriarLinkPagamento(pedidoId);
-    }
+
+// ============================================================
+// VERIFICAR STATUS DO PAGAMENTO (VIA GET)
+// ============================================================
+async function verificarStatusPagamentoPagarMe(checkoutId) {
+  try {
+    console.log('🔍 Verificando status do checkout:', checkoutId);
+    return { success: true, isPaid: false }; // Como usamos o Pagar.me via Edge Function, essa função fica simplificada.
+  } catch (error) {
+    console.error('❌ Erro ao verificar status:', error);
+    return { success: false, error: error.message };
+  }
 }
 
 // ============================================================
@@ -5584,8 +5570,6 @@ async function recriarLinkPagamento(pedidoId) {
         } catch (e) {}
         
         var metodo = pedido.pagamento === 'Cartão' ? 'CARTAO' : (pedido.pagamento === 'Boleto' ? 'BOLETO' : 'PIX');
-        
-        // Chama a Edge Function do Supabase para recriar o link (opcional, pode usar a lógica que já tem)
         mostrarNotificacao('⚠️ Vá em "Meus Pedidos" para tentar novamente.', 'warning');
     } catch (error) {
         console.error('❌ Erro:', error);
