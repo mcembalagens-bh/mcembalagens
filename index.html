@@ -9481,18 +9481,27 @@ async function finalizarPedidoCheckout() {
         const novoId = pedidoSalvo.id_pedido;
         console.log('✅ Pedido salvo no Supabase:', novoId);
 
-        // 4. Baixar Estoque (Atualizar Produtos)
+               // 4. Baixar Estoque (Atualizar Produtos)
         for (const item of carrinho) {
             const product = encontrarProduto(item.productId);
-            if (product && !item.isProducao) {
-                const novoEstoque = Math.max(0, product.stock - (item.totalUnits || item.quantity));
-                await supabaseClient
-                    .from('produtos')
-                    .update({ estoque: novoEstoque })
-                    .eq('id', item.productId);
+            if (product) {
+                const estoqueAtual = parseInt(product.stock) || 0;
+                const qtdComprada = parseInt(item.totalUnits || item.quantity);
+                
+                // 🔥 REGRA DE OURO: Só baixa o estoque se a quantidade comprada 
+                // for menor ou igual ao estoque atual. Se for maior, é produção!
+                if (qtdComprada <= estoqueAtual) {
+                    const novoEstoque = Math.max(0, estoqueAtual - qtdComprada);
+                    await supabaseClient
+                        .from('produtos')
+                        .update({ estoque: novoEstoque })
+                        .eq('id', item.productId);
+                    console.log(`📉 Estoque baixado: ${product.name} (${estoqueAtual} -> ${novoEstoque})`);
+                } else {
+                    console.log(`🏭 Produto em produção: ${product.name}. Estoque não alterado (${estoqueAtual} unidades).`);
+                }
             }
         }
-
         // 5. Chamar o Pagamento (Edge Function)
         try {
             const itensParaPagamento = carrinho.map(item => ({
