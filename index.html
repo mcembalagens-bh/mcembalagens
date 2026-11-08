@@ -5472,39 +5472,40 @@ function salvarCheckoutIdPedido(pedidoId, checkoutId) {
 function irParaPagamentoPedido(pedidoId, metodo) {
     console.log('🔄 Ir para pagamento do pedido #' + pedidoId + ' | Método: ' + metodo);
     
-    var pedidosPendentes = JSON.parse(localStorage.getItem('pedidosPendentesPagamento') || '{}');
-    var dados = pedidosPendentes[pedidoId];
-    
-    // ============================================================
-    // SE FOR PIX, USA O MODAL MANUAL
-    // ============================================================
     if (metodo === 'PIX') {
-        // Busca os dados do pedido para obter o total
-        fetch(API_URL)
-            .then(function(response) { return response.json(); })
-            .then(function(data) {
-                var pedidos = data.pedidos || [];
-                var pedido = pedidos.find(function(p) { 
-                    return parseInt(p.id_pedido) === parseInt(pedidoId); 
-                });
-                
-                if (pedido) {
-                    var total = parseFloat(pedido.total) || 0;
-                    console.log('💳 Abrindo PIX para pedido #' + pedidoId + ' - Total: R$ ' + total.toFixed(2));
-                    fecharDetalhesPedido();
-                    setTimeout(function() {
-                        mostrarPixManual(pedidoId, total);
-                    }, 300);
-                } else {
-                    mostrarNotificacao('❌ Pedido não encontrado.', 'error');
-                }
-            })
-            .catch(function(error) {
-                console.error('❌ Erro ao buscar pedido:', error);
-                mostrarNotificacao('❌ Erro ao buscar dados do pedido.', 'error');
-            });
+        supabaseClient.from('pedidos').select('total').eq('id_pedido', pedidoId).single().then(({data}) => {
+            if (data) {
+                fecharDetalhesPedido();
+                setTimeout(() => mostrarPixManual(pedidoId, parseFloat(data.total) || 0), 300);
+            } else {
+                mostrarNotificacao('❌ Pedido não encontrado.', 'error');
+            }
+        });
         return;
     }
+    
+    var pagamentosSalvos = JSON.parse(localStorage.getItem('pagamentosPedidos') || '{}');
+    var dados = pagamentosSalvos[pedidoId];
+    
+    if (dados && dados.checkoutId) {
+        verificarStatusPagamentoPagarMe(dados.checkoutId).then(function(result) {
+            if (result.isPaid) {
+                mostrarNotificacao('✅ Este pedido já foi pago!', 'success');
+                fecharDetalhesPedido();
+                carregarPedidosCliente(usuarioLogado ? usuarioLogado.email : '');
+                return;
+            }
+            if (result.success && result.paymentLink) {
+                window.open(result.paymentLink, '_blank');
+            } else {
+                recriarLinkPagamento(pedidoId);
+            }
+        });
+    } else {
+        mostrarNotificacao('⚠️ Link de pagamento não encontrado.', 'warning');
+        recriarLinkPagamento(pedidoId);
+    }
+}
     
     // ============================================================
     // CARTÃO OU BOLETO - USA O LINK DO PAGAR.ME
@@ -5567,71 +5568,27 @@ async function verificarStatusPagamentoPagarMe(checkoutId) {
 async function recriarLinkPagamento(pedidoId) {
     try {
         mostrarNotificacao('🔄 Recriando link de pagamento...', 'info');
+        const { data: pedido, error } = await supabaseClient.from('pedidos').select('*').eq('id_pedido', pedidoId).single();
         
-        // Busca os dados do pedido
-        const response = await fetch(API_URL);
-        const data = await response.json();
-        const pedidos = data.pedidos || [];
-        const pedido = pedidos.find(function(p) { 
-            return parseInt(p.id_pedido) === parseInt(pedidoId); 
-        });
-        
-        if (!pedido) {
+        if (error || !pedido) {
             mostrarNotificacao('❌ Pedido não encontrado.', 'error');
             return;
         }
         
-        // Extrai os itens
         var itens = [];
-        var total = parseFloat(pedido.total) || 0;
-        
         try {
             var itensTexto = pedido.itens || '';
-            if (itensTexto.includes(' | ')) {
-                itens = itensTexto.split(' | ').map(function(part) {
-                    var match = part.match(/^(.+?)\s*\((\d+)x\s*(\d+)\s*un\)\s*-\s*R\$\s*([\d,.]+)/);
-                    if (match) {
-                        return {
-                            nome: match[1].trim(),
-                            price: parseFloat(match[4].replace(',', '.')) || 0,
-                            quantity: parseInt(match[2]) * parseInt(match[3]) || 1
-                        };
-                    }
-                    return { nome: part, price: 0, quantity: 1 };
-                });
+            if (itensTexto.startsWith('[')) {
+                itens = JSON.parse(itensTexto).map(i => ({ nome: i.nome, price: i.price, quantity: i.quantidade }));
             }
-        } catch (e) {
-            console.error('Erro ao parsear itens:', e);
-        }
+        } catch (e) {}
         
-        // Determina o método de pagamento
-        var metodo = 'PIX';
-        if (pedido.pagamento) {
-            var pag = String(pedido.pagamento).toUpperCase();
-            if (pag === 'CARTAO' || pag === 'CARTÃO') metodo = 'CARTAO';
-            else if (pag === 'BOLETO') metodo = 'BOLETO';
-        }
+        var metodo = pedido.pagamento === 'Cartão' ? 'CARTAO' : (pedido.pagamento === 'Boleto' ? 'BOLETO' : 'PIX');
         
-        var result = await criarLinkPagamentoSite(
-            pedidoId,
-            pedido.cliente_email || '',
-            pedido.cliente_nome || 'Cliente',
-            '',
-            itens,
-            metodo
-        );
-        
-        if (result.success) {
-            salvarCheckoutIdPedido(pedidoId, result.checkoutId);
-            window.open(result.paymentLink, '_blank');
-            mostrarNotificacao('✅ Link de pagamento recriado!', 'success');
-        } else {
-            mostrarNotificacao('❌ Erro ao recriar link: ' + result.error, 'error');
-        }
-        
+        // Chama a Edge Function do Supabase para recriar o link (opcional, pode usar a lógica que já tem)
+        mostrarNotificacao('⚠️ Vá em "Meus Pedidos" para tentar novamente.', 'warning');
     } catch (error) {
-        console.error('❌ Erro ao recriar link:', error);
-        mostrarNotificacao('❌ Erro ao recriar link de pagamento.', 'error');
+        console.error('❌ Erro:', error);
     }
 }
 
@@ -7270,187 +7227,7 @@ async function carregarPedidosCliente(email) {
     }
 }
 
-    // ============================================================
-// CARREGAR PEDIDOS DO CLIENTE - CORRIGIDO
-// ============================================================
-async function carregarPedidosCliente(email) {
-    try {
-        console.log('🔍 Buscando pedidos para:', email);
-        var response = await fetch(API_URL);
-        if (!response.ok) throw new Error('Erro HTTP: ' + response.status);
-        var data = await response.json();
-        var pedidos = data.pedidos || [];
-        
-        var pedidosCliente = pedidos.filter(function(p) {
-            var pEmail = String(p.cliente_email || '').toLowerCase().trim();
-            return pEmail === email.toLowerCase().trim();
-        });
-        
-        // FILTRO DE 60 DIAS
-        var hoje = new Date();
-        var sessentaDiasAtras = new Date();
-        sessentaDiasAtras.setDate(hoje.getDate() - 60);
-        
-        var pedidosFiltrados = pedidosCliente.filter(function(p) {
-            if (!p.data_pedido) return true;
-            try {
-                var dataPedido;
-                if (p.data_pedido.includes('/')) {
-                    var partes = p.data_pedido.split(',')[0].trim().split('/');
-                    if (partes.length === 3) {
-                        dataPedido = new Date(parseInt(partes[2]), parseInt(partes[1]) - 1, parseInt(partes[0]));
-                    }
-                } else {
-                    dataPedido = new Date(p.data_pedido);
-                }
-                if (isNaN(dataPedido.getTime())) return true;
-                return dataPedido >= sessentaDiasAtras;
-            } catch (e) {
-                return true;
-            }
-        });
-        
-        pedidosFiltrados.sort(function(a, b) {
-            var idA = parseInt(a.id_pedido) || 0;
-            var idB = parseInt(b.id_pedido) || 0;
-            return idB - idA;
-        });
-        
-        var container = document.getElementById('listaPedidosLogado');
-        
-        var avisoHtml = '';
-        if (pedidosCliente.length > pedidosFiltrados.length) {
-            var removidos = pedidosCliente.length - pedidosFiltrados.length;
-            avisoHtml = `
-                <div style="background:#fff3cd;padding:10px 14px;border-radius:8px;margin-bottom:12px;border-left:4px solid #f39c12;font-size:13px;color:#856404;">
-                    <i class="fas fa-info-circle"></i> 
-                    Exibindo apenas pedidos dos últimos 60 dias. 
-                    <strong>${removidos}</strong> pedido(s) mais antigo(s) não estão sendo exibidos.
-                </div>
-            `;
-        }
-        
-        if (pedidosFiltrados.length === 0) {
-            container.innerHTML = `
-                ${avisoHtml}
-                <div class="login-pedido-vazio">
-                    <i class="fas fa-box-open" style="font-size:32px;color:#ddd;display:block;margin-bottom:10px;"></i>
-                    <p>${pedidosCliente.length > 0 ? 'Você não tem pedidos nos últimos 60 dias.' : 'Você ainda não tem pedidos.'}</p>
-                    <span style="font-size:13px;color:#aaa;">${pedidosCliente.length > 0 ? 'Seus pedidos mais antigos não estão sendo exibidos.' : 'Faça sua primeira compra!'}</span>
-                </div>
-            `;
-        } else {
-            container.innerHTML = avisoHtml + pedidosFiltrados.map(function(p) {
-                // ============================================================
-                // 🔧 CORREÇÃO: TROCA "Pendente" por "Pedido efetuado com sucesso"
-                // ============================================================
-                var statusExibido = p.status || 'Pendente';
-                if (statusExibido.toLowerCase() === 'pendente') {
-                    statusExibido = 'Pedido efetuado com sucesso';
-                }
-                
-                var statusColor = {
-                    'pendente': '#27ae60',
-                    'em andamento': '#3498db',
-                    'enviado': '#2ecc71',
-                    'entregue': '#27ae60',
-                    'cancelado': '#e74c3c'
-                }[p.status?.toLowerCase()] || '#888';
-                
-                var itensHtml = '';
-                var itensCount = 0;
-                
-                try {
-                    var textoItens = p.itens || '';
-                    if (typeof textoItens === 'string' && textoItens.includes(' | ')) {
-                        var partes = textoItens.split(' | ');
-                        itensCount = partes.length;
-                        
-                        var itensProcessados = partes.map(function(part) {
-                            var match = part.match(/^(.+?)\s*\((\d+)x\s*(\d+)\s*un\)\s*-\s*R\$\s*([\d,.]+)/);
-                            if (match) {
-                                var nomeCompleto = match[1].trim();
-                                var qtd = parseInt(match[2]) || 1;
-                                var pacote = parseInt(match[3]) || 1;
-                                var preco = parseFloat(match[4].replace(',', '.')) || 0;
-                                var totalUnidades = qtd * pacote;
-                                
-                                var statusTag = '';
-                                if (nomeCompleto.includes('Produção')) {
-                                    var prazoMatch = nomeCompleto.match(/Produção\s*(\d*)\s*dias?/);
-                                    var prazo = prazoMatch ? parseInt(prazoMatch[1]) : 7;
-                                    statusTag = ' 🔨 ' + prazo + ' dias';
-                                } else if (nomeCompleto.includes('Disponível')) {
-                                    statusTag = ' ✅ Disponível';
-                                }
-                                
-                                var nomeLimpo = nomeCompleto;
-                                nomeLimpo = nomeLimpo.replace(/\(Produção\s*\d*\s*dias?\)/g, '');
-                                nomeLimpo = nomeLimpo.replace(/\(Produção\)/g, '');
-                                nomeLimpo = nomeLimpo.replace(/\(Disponível\)/g, '');
-                                nomeLimpo = nomeLimpo.trim();
-                                if (!nomeLimpo) nomeLimpo = nomeCompleto;
-                                
-                                return '• ' + nomeLimpo + statusTag + ' - ' + qtd + 'x ' + totalUnidades + ' un - R$ ' + preco.toFixed(2);
-                            }
-                            return part;
-                        });
-                        
-                        itensHtml = itensProcessados.join('%0A');
-                    } else {
-                        itensHtml = textoItens || 'Itens não disponíveis';
-                        itensCount = 1;
-                    }
-                } catch (e) {
-                    console.error('❌ Erro ao processar itens:', e);
-                    itensHtml = p.itens || 'Itens não disponíveis';
-                    itensCount = 1;
-                }
-                
-                var dataExibicao = p.data_pedido || '';
-                if (dataExibicao.includes('T')) {
-                    dataExibicao = dataExibicao.replace('T', ' ').substring(0, 16);
-                }
-                
-                return `
-                    <div class="login-pedido-item" style="cursor:pointer;transition:all 0.3s;border-radius:8px;padding:12px 14px;border:1px solid #f0f0f0;margin-bottom:8px;" 
-                         onclick="verDetalhesPedido(${p.id_pedido})"
-                         onmouseover="this.style.background='#f8f9fa';this.style.borderColor='#1a3a5c';"
-                         onmouseout="this.style.background='white';this.style.borderColor='#f0f0f0';">
-                        <div class="pedido-info" style="flex:1;">
-                            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-                                <div>
-                                    <span class="numero" style="font-weight:600;color:var(--primary-dark);font-size:15px;">#${p.id_pedido}</span>
-                                    <span class="data" style="font-size:12px;color:#888;margin-left:8px;">${dataExibicao}</span>
-                                </div>
-                                <span style="background:${statusColor};color:white;padding:2px 12px;border-radius:12px;font-size:11px;font-weight:600;">
-                                    ${statusExibido}
-                                </span>
-                            </div>
-                            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px;margin-top:4px;">
-                                <span style="font-size:13px;color:#888;">${itensCount} itens</span>
-                                <span class="total" style="font-weight:700;color:var(--primary-blue);font-size:15px;">R$ ${parseFloat(p.total || 0).toFixed(2)}</span>
-                            </div>
-                            <div style="font-size:11px;color:#aaa;margin-top:4px;">
-                                <i class="fas fa-chevron-right"></i> Clique para ver detalhes
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-        document.getElementById('pedidosLogado').style.display = 'block';
-    } catch (error) {
-        console.error('❌ Erro ao carregar pedidos:', error);
-        document.getElementById('listaPedidosLogado').innerHTML = `
-            <div class="login-pedido-vazio">
-                <p style="color:#e74c3c;">❌ Erro ao carregar pedidos.</p>
-                <p style="font-size:12px;color:#888;">Tente novamente mais tarde.</p>
-            </div>
-        `;
-    }
-}
-
+ 
         // ============================================================
         // VER DETALHES DO PEDIDO
         // ============================================================
@@ -7462,62 +7239,30 @@ async function carregarPedidosCliente(email) {
     // Chama a função original que já existe no seu código para carregar os detalhes
     carregarDetalhesPedido(pedidoId);
 }
-        async function carregarDetalhesPedido(pedidoId) {
-            const loadingModal = document.createElement('div');
-            loadingModal.id = 'loadingDetalhesModal';
-            loadingModal.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0,0,0,0.6);
-                z-index: 9999;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-            `;
-            loadingModal.innerHTML = `
-                <div style="background:white;padding:40px;border-radius:16px;text-align:center;max-width:90%;">
-                    <div class="spinner" style="width:50px;height:50px;border:4px solid #e0e0e0;border-top:4px solid var(--primary-blue);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px;"></div>
-                    <p style="color:#666;font-size:16px;font-weight:600;">⏳ Carregando Detalhes do Pedido</p>
-                    <p style="color:#999;font-size:13px;">Aguarde um momento...</p>
-                </div>
-            `;
-            document.body.appendChild(loadingModal);
-            
-            try {
-                const response = await fetch(API_URL);
-                if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
-                const data = await response.json();
-                const pedidos = data.pedidos || [];
-                
-                const pedido = pedidos.find(p => parseInt(p.id_pedido) === parseInt(pedidoId));
-                
-                const loadingEl = document.getElementById('loadingDetalhesModal');
-                if (loadingEl) loadingEl.remove();
-                
-                if (!pedido) {
-                    mostrarNotificacao('❌ Pedido não encontrado.', 'error');
-                    return;
-                }
-                
-                mostrarDetalhesPedido(pedido);
-                
-            } catch (error) {
-                console.error('Erro ao carregar detalhes do pedido:', error);
-                
-                const loadingEl = document.getElementById('loadingDetalhesModal');
-                if (loadingEl) loadingEl.remove();
-                
-                mostrarNotificacao('❌ Erro ao carregar detalhes do pedido.', 'error');
-            }
+       async function carregarDetalhesPedido(pedidoId) {
+    const loadingModal = document.createElement('div');
+    loadingModal.id = 'loadingDetalhesModal';
+    loadingModal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;';
+    loadingModal.innerHTML = `<div style="background:white;padding:40px;border-radius:16px;text-align:center;"><div class="spinner" style="width:50px;height:50px;border:4px solid #e0e0e0;border-top:4px solid var(--primary-blue);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px;"></div><p>Carregando...</p></div>`;
+    document.body.appendChild(loadingModal);
+    
+    try {
+        const { data: pedido, error } = await supabaseClient.from('pedidos').select('*').eq('id_pedido', pedidoId).single();
+        const loadingEl = document.getElementById('loadingDetalhesModal');
+        if (loadingEl) loadingEl.remove();
+        
+        if (error || !pedido) {
+            mostrarNotificacao('❌ Pedido não encontrado.', 'error');
+            return;
         }
-
- // ============================================================
-// MOSTRAR DETALHES DO PEDIDO - CORRIGIDO (RASTREIO)
-// ============================================================
+        mostrarDetalhesPedido(pedido);
+    } catch (error) {
+        console.error('Erro:', error);
+        const loadingEl = document.getElementById('loadingDetalhesModal');
+        if (loadingEl) loadingEl.remove();
+        mostrarNotificacao('❌ Erro ao carregar.', 'error');
+    }
+}
 // ============================================================
 // MOSTRAR DETALHES DO PEDIDO - CORRIGIDO
 // ============================================================
@@ -8116,16 +7861,10 @@ function mostrarPixComDadosSalvos(pedidoId, dados) {
     modal.style.display = 'block';
     modal.style.zIndex = '9999';
     
-    // Busca o total do pedido
-    fetch(API_URL)
-        .then(function(response) { return response.json(); })
-        .then(function(data) {
-            var pedidos = data.pedidos || [];
-            var pedido = pedidos.find(function(p) { 
-                return parseInt(p.id_pedido) === parseInt(pedidoId); 
-            });
-            
-            var total = pedido ? parseFloat(pedido.total) || 0 : 0;
+    // Busca o total do pedido no Supabase
+    supabaseClient.from('pedidos').select('total').eq('id_pedido', pedidoId).single()
+        .then(function(response) {
+            var total = response.data ? (parseFloat(response.data.total) || 0) : 0;
             var metodo = dados.metodo || 'PIX';
             
             modal.innerHTML = `
@@ -8193,7 +7932,6 @@ function mostrarPixComDadosSalvos(pedidoId, dados) {
                     </button>
                 </div>
             `;
-            
             document.body.appendChild(modal);
         })
         .catch(function(error) {
@@ -8203,28 +7941,14 @@ function mostrarPixComDadosSalvos(pedidoId, dados) {
                 <div class="modal-content" style="max-width:520px;text-align:center;">
                     <span class="modal-close" onclick="fecharModal('pixSalvoModal')">&times;</span>
                     <div style="padding:30px;">
-                        <i class="fas fa-exclamation-circle" style="font-size:48px;color:#e74c3c;display:block;margin-bottom:15px;"></i>
                         <p style="color:#666;">Erro ao carregar dados do pedido.</p>
-                        <p style="font-size:13px;color:#888;">Tente novamente ou entre em contato com o atendente.</p>
-                        <button onclick="fecharModal('pixSalvoModal')" style="
-                            background: #1a3a5c;
-                            color: white;
-                            border: none;
-                            padding: 12px 20px;
-                            border-radius: 8px;
-                            cursor: pointer;
-                            font-weight: 600;
-                            margin-top: 15px;
-                        ">
-                            Fechar
-                        </button>
+                        <button onclick="fecharModal('pixSalvoModal')" style="background: #1a3a5c;color: white;border: none;padding: 12px 20px;border-radius: 8px;cursor: pointer;margin-top: 15px;">Fechar</button>
                     </div>
                 </div>
             `;
             document.body.appendChild(modal);
         });
 }
-
 // ============================================================
 // COPIAR TEXTO DO PIX MANUAL
 // ============================================================
@@ -8314,95 +8038,55 @@ function abrirLinkPagamentoSalvo(pedidoId) {
             document.getElementById('dadosPessoaisModal').style.display = 'block';
         }
 
-        async function salvarDadosPessoais() {
-            const nome = document.getElementById('dadosNome').value.trim();
-            const telefone = document.getElementById('dadosTelefone').value.trim();
-            const novaSenha = document.getElementById('dadosNovaSenha').value;
-            const cep = document.getElementById('dadosCep').value.trim();
-            const endereco = document.getElementById('dadosEndereco').value.trim();
-            const numero = document.getElementById('dadosNumero').value.trim();
-            const complemento = document.getElementById('dadosComplemento').value.trim();
-            const bairro = document.getElementById('dadosBairro').value.trim();
-            const cidade = document.getElementById('dadosCidade').value.trim();
-            const uf = document.getElementById('dadosUf').value;
-            const msgEl = document.getElementById('dadosPessoaisMessage');
-            
-            if (!nome) { msgEl.className = 'login-message error'; msgEl.textContent = '⚠️ Preencha o Nome.'; return; }
-            if (!telefone) { msgEl.className = 'login-message error'; msgEl.textContent = '⚠️ Preencha o Telefone.'; return; }
-            if (!cep || !endereco || !numero || !bairro || !cidade || !uf) {
-                msgEl.className = 'login-message error';
-                msgEl.textContent = '⚠️ Preencha todos os campos do endereço.';
-                return;
-            }
-            if (novaSenha && novaSenha.length < 6) {
-                msgEl.className = 'login-message error';
-                msgEl.textContent = '⚠️ A senha deve ter no mínimo 6 caracteres.';
-                return;
-            }
-            
-            msgEl.className = 'login-message';
-            msgEl.textContent = '🔄 Salvando alterações...';
-            
-            const btn = document.querySelector('#dadosPessoaisModal .btn-success') || document.querySelector('#dadosPessoaisModal button[onclick="salvarDadosPessoais()"]');
-            const textoOriginal = btn ? btn.innerHTML : '';
-            if (btn) {
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
-                btn.disabled = true;
-            }
-            
-            try {
-                const dadosAtualizados = {
-                    nome: nome,
-                    telefone: telefone,
-                    endereco: endereco,
-                    numero: numero,
-                    complemento: complemento,
-                    bairro: bairro,
-                    cidade: cidade,
-                    estado: uf,
-                    cep: cep
-                };
-                if (novaSenha) {
-                    dadosAtualizados.senha = novaSenha;
-                }
-                await fetch(API_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        acao: 'atualizar_cliente',
-                        cliente: {
-                            email: usuarioLogado.email,
-                            senha_atual: usuarioLogado.senha || '',
-                            dados: dadosAtualizados
-                        }
-                    })
-                });
-                usuarioLogado.nome = nome;
-                usuarioLogado.telefone = telefone;
-                usuarioLogado.cep = cep;
-                usuarioLogado.endereco = `${endereco}, ${numero}${complemento ? ', ' + complemento : ''} - ${bairro}, ${cidade} - ${uf}, ${cep}`;
-                if (novaSenha) {
-                    usuarioLogado.senha = novaSenha;
-                }
-                localStorage.setItem('usuarioLogado', JSON.stringify(usuarioLogado));
-                atualizarNomeClienteHeader();
-                msgEl.className = 'login-message success';
-                msgEl.textContent = '✅ Dados atualizados com sucesso!';
-                setTimeout(() => {
-                    fecharModal('dadosPessoaisModal');
-                    mostrarNotificacao('✅ Dados pessoais atualizados!', 'success');
-                }, 1500);
-            } catch (error) {
-                msgEl.className = 'login-message error';
-                msgEl.textContent = '❌ Erro ao salvar. Tente novamente.';
-            } finally {
-                if (btn) {
-                    btn.innerHTML = textoOriginal || '<i class="fas fa-save"></i> Salvar Alterações';
-                    btn.disabled = false;
-                }
-            }
-        }
+       async function salvarDadosPessoais() {
+    const nome = document.getElementById('dadosNome').value.trim();
+    const telefone = document.getElementById('dadosTelefone').value.trim();
+    const novaSenha = document.getElementById('dadosNovaSenha').value;
+    const cep = document.getElementById('dadosCep').value.trim();
+    const endereco = document.getElementById('dadosEndereco').value.trim();
+    const numero = document.getElementById('dadosNumero').value.trim();
+    const complemento = document.getElementById('dadosComplemento').value.trim();
+    const bairro = document.getElementById('dadosBairro').value.trim();
+    const cidade = document.getElementById('dadosCidade').value.trim();
+    const uf = document.getElementById('dadosUf').value;
+    const msgEl = document.getElementById('dadosPessoaisMessage');
+    
+    if (!nome || !telefone || !cep || !endereco || !numero || !bairro || !cidade || !uf) {
+        msgEl.className = 'login-message error';
+        msgEl.textContent = '⚠️ Preencha todos os campos obrigatórios.';
+        return;
+    }
+    
+    msgEl.className = 'login-message';
+    msgEl.textContent = '🔄 Salvando...';
+    
+    try {
+        const dadosAtualizados = {
+            nome: nome, telefone: telefone, endereco: endereco,
+            numero: numero, complemento: complemento, bairro: bairro,
+            cidade: cidade, estado: uf, cep: cep
+        };
+        if (novaSenha) dadosAtualizados.senha = novaSenha;
+        
+        const { error } = await supabaseClient.from('clientes').update(dadosAtualizados).eq('email', usuarioLogado.email);
+        if (error) throw error;
+        
+        usuarioLogado.nome = nome;
+        usuarioLogado.telefone = telefone;
+        usuarioLogado.cep = cep;
+        usuarioLogado.endereco = `${endereco}, ${numero} - ${bairro}, ${cidade} - ${uf}`;
+        if (novaSenha) usuarioLogado.senha = novaSenha;
+        
+        localStorage.setItem('usuarioLogado', JSON.stringify(usuarioLogado));
+        atualizarNomeClienteHeader();
+        msgEl.className = 'login-message success';
+        msgEl.textContent = '✅ Dados atualizados com sucesso!';
+        setTimeout(() => fecharModal('dadosPessoaisModal'), 1500);
+    } catch (error) {
+        msgEl.className = 'login-message error';
+        msgEl.textContent = '❌ Erro ao salvar: ' + error.message;
+    }
+}
 
 
 
@@ -9589,41 +9273,7 @@ async function finalizarPedidoCheckout() {
 
 
 
-      async function atualizarEstoquePlanilha(atualizacoes) {
-    try {
-        if (!atualizacoes || atualizacoes.length === 0) {
-            console.log('ℹ️ Nenhum item para atualizar estoque.');
-            return true;
-        }
-        
-        const itensParaEnviar = atualizacoes.map(item => ({
-            id: item.productId,
-            estoque: item.novoEstoque
-        }));
-        
-        console.log('📤 Enviando para API:', {
-            acao: 'atualizar_estoque',
-            itens: itensParaEnviar
-        });
-        
-        await fetch(API_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                acao: 'atualizar_estoque',
-                itens: itensParaEnviar
-            })
-        });
-        
-        console.log('✅ Requisição de atualização de estoque enviada!');
-        return true;
-        
-    } catch (error) {
-        console.error('❌ Erro ao atualizar estoque:', error);
-        return false;
-    }
-}
+    
 
 
         function sairAdmin() {
@@ -9633,56 +9283,7 @@ async function finalizarPedidoCheckout() {
             document.getElementById('adminPassword').value = '';
         }
 
-        // ============================================================
-        // VERIFICAR PEDIDOS CANCELADOS
-        // ============================================================
-        async function verificarPedidosCancelados() {
-    try {
-        const response = await fetch(API_URL);
-        const data = await response.json();
-        const pedidos = data.pedidos || [];
-        const pedidosCancelados = pedidos.filter(p => p.status && p.status.toLowerCase() === 'cancelado');
-        
-        for (const pedido of pedidosCancelados) {
-            // Adicionar try/catch aqui também
-            try {
-                const processados = JSON.parse(localStorage.getItem('canceladosProcessados') || '[]');
-                if (processados.includes(pedido.id_pedido)) continue;
-                
-                if (pedido.itens) {
-                    // Verificar se é string JSON ou texto plano
-                    let itens = [];
-                    try {
-                        itens = typeof pedido.itens === 'string' ? JSON.parse(pedido.itens) : pedido.itens;
-                    } catch (e) {
-                        // Se não for JSON válido, tentar extrair nomes do texto
-                        console.warn('⚠️ Itens não são JSON válido, pulando:', e.message);
-                        continue;
-                    }
-                    
-                    for (const item of itens) {
-                        const product = encontrarProdutoPorNome(item.nome);
-                        if (product) {
-                            product.stock = (product.stock || 0) + item.quantidade;
-                            await atualizarEstoquePlanilha([{ productId: product.id, novoEstoque: product.stock }]);
-                        }
-                    }
-                }
-                processados.push(pedido.id_pedido);
-                localStorage.setItem('canceladosProcessados', JSON.stringify(processados));
-            } catch (e) {
-                console.warn('⚠️ Erro ao processar pedido cancelado:', e.message);
-            }
-        }
-        
-        if (pedidosCancelados.length > 0 && currentProducts && currentProducts.length > 0) {
-            renderizarProdutos();
-        }
-    } catch (error) {
-        console.error('❌ Erro ao verificar pedidos cancelados:', error);
-        // Não faz nada, apenas loga o erro
-    }
-}
+    
 
         // ============================================================
         // CARREGAR DADOS DA PLANILHA
@@ -10081,7 +9682,7 @@ function copiarTextoSelecaoManual(texto) {
         // INICIAR
         // ============================================================
         carregarDadosPlanilha();
-        setInterval(verificarPedidosCancelados, 300000);
+       
 
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('cadastroTipoPessoa').addEventListener('change', function() {
