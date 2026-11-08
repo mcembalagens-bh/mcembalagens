@@ -3558,7 +3558,7 @@ async function editarPedido(id) {
                     subtotal += preco;
                     itens.push({
                         nome: nome,
-                        quantidade: qtdPacotes,
+                        quantidade: totalUnidades, // <--- CORRIGIDO
                         pacote_tamanho: tamanhoPacote,
                         totalUnidades: totalUnidades,
                         price: preco,
