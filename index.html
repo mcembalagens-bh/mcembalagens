@@ -7172,7 +7172,6 @@ async function carregarPedidosCliente(email) {
     try {
         console.log('🔍 Buscando pedidos no Supabase para:', email);
         
-        // Busca os pedidos no Supabase em ordem decrescente
         const { data: pedidos, error } = await supabaseClient
             .from('pedidos')
             .select('*')
@@ -7183,9 +7182,7 @@ async function carregarPedidosCliente(email) {
         
         var pedidosCliente = pedidos || [];
         
-        // ============================================================
-        // FILTRO DE 60 DIAS (Mantido do código original)
-        // ============================================================
+        // Filtro de 60 dias
         var hoje = new Date();
         var sessentaDiasAtras = new Date();
         sessentaDiasAtras.setDate(hoje.getDate() - 60);
@@ -7217,60 +7214,24 @@ async function carregarPedidosCliente(email) {
         
         var container = document.getElementById('listaPedidosLogado');
         
-        var avisoHtml = '';
-        if (pedidosCliente.length > pedidosFiltrados.length) {
-            var removidos = pedidosCliente.length - pedidosFiltrados.length;
-            avisoHtml = `
-                <div style="background:#fff3cd;padding:10px 14px;border-radius:8px;margin-bottom:12px;border-left:4px solid #f39c12;font-size:13px;color:#856404;">
-                    <i class="fas fa-info-circle"></i> 
-                    Exibindo apenas pedidos dos últimos 60 dias. 
-                    <strong>${removidos}</strong> pedido(s) mais antigo(s) não estão sendo exibidos.
-                </div>
-            `;
-        }
-        
         if (pedidosFiltrados.length === 0) {
             container.innerHTML = `
-                ${avisoHtml}
                 <div class="login-pedido-vazio">
                     <i class="fas fa-box-open" style="font-size:32px;color:#ddd;display:block;margin-bottom:10px;"></i>
-                    <p>${pedidosCliente.length > 0 ? 'Você não tem pedidos nos últimos 60 dias.' : 'Você ainda não tem pedidos.'}</p>
-                    <span style="font-size:13px;color:#aaa;">${pedidosCliente.length > 0 ? 'Seus pedidos mais antigos não estão sendo exibidos.' : 'Faça sua primeira compra!'}</span>
+                    <p>Você ainda não tem pedidos.</p>
                 </div>
             `;
         } else {
-            container.innerHTML = avisoHtml + pedidosFiltrados.map(function(p) {
+            container.innerHTML = pedidosFiltrados.map(function(p) {
                 var statusExibido = p.status || 'Pendente';
-                if (statusExibido.toLowerCase() === 'pendente') {
-                    statusExibido = 'Pedido efetuado com sucesso';
-                }
-                
                 var statusColor = {
                     'pendente': '#27ae60',
+                    'pago': '#27ae60',
                     'em andamento': '#3498db',
                     'enviado': '#2ecc71',
                     'entregue': '#27ae60',
-                    'cancelado': '#e74c3c',
-                    'pago': '#27ae60'
+                    'cancelado': '#e74c3c'
                 }[p.status?.toLowerCase()] || '#888';
-                
-                var itensHtml = '';
-                var itensCount = 0;
-                
-                try {
-                    var textoItens = p.itens || '';
-                    if (typeof textoItens === 'string' && textoItens.includes(' | ')) {
-                        var partes = textoItens.split(' | ');
-                        itensCount = partes.length;
-                    } else if (typeof textoItens === 'string' && textoItens.trim().startsWith('[')) {
-                        var parsed = JSON.parse(textoItens);
-                        if (Array.isArray(parsed)) itensCount = parsed.length;
-                    } else {
-                        itensCount = 1;
-                    }
-                } catch (e) {
-                    itensCount = 1;
-                }
                 
                 var dataExibicao = p.data_pedido || '';
                 if (dataExibicao.includes('T')) {
@@ -7279,9 +7240,7 @@ async function carregarPedidosCliente(email) {
                 
                 return `
                     <div class="login-pedido-item" style="cursor:pointer;transition:all 0.3s;border-radius:8px;padding:12px 14px;border:1px solid #f0f0f0;margin-bottom:8px;" 
-                         onclick="verDetalhesPedido(${p.id_pedido})"
-                         onmouseover="this.style.background='#f8f9fa';this.style.borderColor='#1a3a5c';"
-                         onmouseout="this.style.background='white';this.style.borderColor='#f0f0f0';">
+                         onclick="verDetalhesPedido(${p.id_pedido})">
                         <div class="pedido-info" style="flex:1;">
                             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
                                 <div>
@@ -7293,11 +7252,7 @@ async function carregarPedidosCliente(email) {
                                 </span>
                             </div>
                             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px;margin-top:4px;">
-                                <span style="font-size:13px;color:#888;">${itensCount} itens</span>
                                 <span class="total" style="font-weight:700;color:var(--primary-blue);font-size:15px;">R$ ${parseFloat(String(p.total).replace(',', '.')) || 0}</span>
-                            </div>
-                            <div style="font-size:11px;color:#aaa;margin-top:4px;">
-                                <i class="fas fa-chevron-right"></i> Clique para ver detalhes
                             </div>
                         </div>
                     </div>
@@ -7307,12 +7262,6 @@ async function carregarPedidosCliente(email) {
         document.getElementById('pedidosLogado').style.display = 'block';
     } catch (error) {
         console.error('❌ Erro ao carregar pedidos:', error);
-        document.getElementById('listaPedidosLogado').innerHTML = `
-            <div class="login-pedido-vazio">
-                <p style="color:#e74c3c;">❌ Erro ao carregar pedidos.</p>
-                <p style="font-size:12px;color:#888;">Tente novamente mais tarde.</p>
-            </div>
-        `;
     }
 }
 
