@@ -6366,10 +6366,8 @@ function imprimirCupom(idPedido) {
     
     const totalBerçosPorGomos = {};
     
-    function extrairESomarBerços(descricao, totalUnidades, nomeProduto) {
-        if (!descricao) return;
-        if (totalUnidades <= 0) return;
-        
+    function extrairESomarBerços(descricao, totalUnidades) {
+        if (!descricao || totalUnidades <= 0) return;
         const regex = /[Bb]erços?\s*:\s*([^\n]*)/;
         const match = descricao.match(regex);
         if (!match) return;
@@ -6383,7 +6381,6 @@ function imprimirCupom(idPedido) {
             if (subPartes.length === 2) {
                 const qtdBerçosPorUnidade = subPartes[0];
                 const gomos = subPartes[1];
-                
                 if (qtdBerçosPorUnidade > 0 && gomos > 0) {
                     const totalBerços = totalUnidades * qtdBerçosPorUnidade;
                     if (!totalBerçosPorGomos[gomos]) totalBerçosPorGomos[gomos] = 0;
@@ -6403,18 +6400,14 @@ function imprimirCupom(idPedido) {
         
         subtotal += preco;
         
-        if (item.isProducao && item.prazoProducao > maiorPrazoProducao) {
-            maiorPrazoProducao = item.prazoProducao;
-        }
+        if (item.isProducao && item.prazoProducao > maiorPrazoProducao) maiorPrazoProducao = item.prazoProducao;
         if (item.isProducao) isProducaoGeral = true;
         
         let codigoProduto = '';
         const produtoEncontrado = dados.produtos.find(p => p.nome && p.nome.toLowerCase() === item.nome.toLowerCase());
         if (produtoEncontrado) {
             codigoProduto = produtoEncontrado.codigo_produto || '';
-            if (produtoEncontrado.descricao) {
-                extrairESomarBerços(produtoEncontrado.descricao, totalUnidades, item.nome);
-            }
+            if (produtoEncontrado.descricao) extrairESomarBerços(produtoEncontrado.descricao, totalUnidades);
         }
         
         let statusEstoque = '';
@@ -6448,14 +6441,12 @@ function imprimirCupom(idPedido) {
     
     if (gomosOrdenados.length > 0) {
         let itemIndex = itens.length + 1;
-        
         itensHtml += `
             <div style="border-top:1px dashed #000;margin:3px 0;width:100%;"></div>
             <div style="font-size:7px;font-weight:bold;color:#000;text-align:center;padding:2px 0;background:#f5f5f5;width:100%;">
                 📦 BERÇOS PARA SEPARAÇÃO
             </div>
         `;
-        
         gomosOrdenados.forEach(gomos => {
             const totalBerços = totalBerçosPorGomos[gomos];
             itensHtml += `
@@ -6477,15 +6468,18 @@ function imprimirCupom(idPedido) {
         });
     }
     
+    // ============================================================
+    // LEITURA DAS COLUNAS DO SUPABASE
+    // ============================================================
     let freteNome = pedido.frete || 'Retirada na Loja';
     let freteValor = parseFloat(pedido.frete_valor) || 0;
-    let diasEnvio = (freteNome !== 'Retirada na Loja' && freteNome !== 'Retirada') ? 3 : 1;
-    let prazoTotal = diasEnvio + maiorPrazoProducao;
+    let prazoTotal = parseInt(pedido.prazo_entrega) || 0;
     
-    if (pedido.prazo_entrega && parseInt(pedido.prazo_entrega) > 0) {
-        prazoTotal = parseInt(pedido.prazo_entrega);
+    if (prazoTotal === 0) {
+        let diasEnvio = (freteNome !== 'Retirada na Loja' && freteNome !== 'Retirada') ? 3 : 1;
+        prazoTotal = diasEnvio + maiorPrazoProducao;
     }
-    
+
     const total = parseFloat(pedido.total) || subtotal;
     const status = pedido.status || 'Pendente';
     const data = formatarDataHoraBR(pedido.data_pedido) || formatarDataHoraBR(new Date());
@@ -6507,6 +6501,18 @@ function imprimirCupom(idPedido) {
         }
     }
     
+    // Monta a string de observações igual ao modelo antigo, puxando as colunas do banco
+    let obsLimpa = pedido.observacoes || '';
+    obsLimpa = obsLimpa.replace(/Prazo:\s*undefined\s*dias/gi, '').trim();
+    
+    // Se a observação não tiver o texto de Frete e Pagamento, adiciona
+    if (!obsLimpa.includes('Frete:') && !obsLimpa.includes('Pagamento:')) {
+        let textoObs = `Frete: ${freteNome} (R$ ${freteValor.toFixed(2)}) | Pagamento: ${pagamento}`;
+        if (parseInt(pedido.desconto) > 0) textoObs += ` | Desconto PIX: R$ ${parseFloat(pedido.desconto).toFixed(2)}`;
+        textoObs += ` | Prazo: ${prazoTotal} dias`;
+        obsLimpa = textoObs;
+    }
+
     printArea.innerHTML = `
         <div style="text-align:center;border-bottom:2px solid #000;padding-bottom:4px;margin-bottom:4px;width:100%;">
             <h2 style="font-size:13px;margin:0;letter-spacing:0.5px;font-weight:bold;color:#000;">MC EMBALAGENS BH</h2>
@@ -6524,11 +6530,7 @@ function imprimirCupom(idPedido) {
                 <span>Cliente: ${cliente}${badgeRevendedor}</span>
             </div>
             
-            ${documentoCliente ? `
-            <div style="display:flex;justify-content:space-between;font-size:8px;font-weight:bold;padding:0.5px 0;width:100%;color:#000;">
-                <span>${tipoDocumento}: ${documentoCliente}</span>
-            </div>` : ''}
-            
+            ${documentoCliente ? `<div style="display:flex;justify-content:space-between;font-size:8px;font-weight:bold;padding:0.5px 0;width:100%;color:#000;"><span>${tipoDocumento}: ${documentoCliente}</span></div>` : ''}
             ${telefone ? `<div style="display:flex;justify-content:flex-start;font-size:8px;font-weight:bold;padding:0.5px 0;width:100%;color:#000;"><span>Telefone: ${telefone}</span></div>` : ''}
             
             <div style="display:flex;justify-content:space-between;font-size:8px;font-weight:bold;padding:0.5px 0;width:100%;color:#000;">
@@ -6573,6 +6575,11 @@ function imprimirCupom(idPedido) {
             <div style="font-size:8px;font-weight:bold;padding:0.3px 0;width:100%;word-wrap:break-word;white-space:normal;line-height:1.4;color:#000;">
                 ${endereco}
             </div>
+            
+            ${obsLimpa ? `
+            <div style="font-size:7px;font-weight:bold;padding:0.3px 0;width:100%;margin-top:2px;border-top:1px dotted #000;padding-top:2px;color:#000;">
+                Obs: ${obsLimpa}
+            </div>` : ''}
         </div>
         
         <div style="text-align:center;border-top:2px solid #000;padding-top:3px;margin-top:3px;font-size:7px;width:100%;">
@@ -6586,11 +6593,9 @@ function imprimirCupom(idPedido) {
     window._imprimindo = true;
     
     setTimeout(function() {
-        try {
-            window.print();
-        } catch (e) {
-            console.error('Erro ao imprimir:', e);
-        } finally {
+        try { window.print(); } 
+        catch (e) { console.error('Erro ao imprimir:', e); } 
+        finally {
             setTimeout(function() {
                 printArea.style.display = 'none';
                 window._imprimindo = false;
