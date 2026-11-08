@@ -9482,6 +9482,15 @@ async function finalizarPedidoCheckout() {
                 if (currentProducts && currentProducts.length > 0) renderizarProdutos();
                 mostrarNotificacao('✅ Pedido criado! Escaneie o QR Code para pagar.', 'success');
             } else {
+                // TRADUZ O MÉTODO PARA O PADRÃO DO PAGAR.ME
+                let metodoPagarMe = 'credit_card'; // padrão
+                const pagSelect = checkoutState.pagamentoSelecionado.toLowerCase();
+                if (pagSelect.includes('pix')) {
+                    metodoPagarMe = 'pix';
+                } else if (pagSelect.includes('boleto')) {
+                    metodoPagarMe = 'boleto';
+                }
+
                 const { data: pagamento, error: erroPagamento } = await supabaseClient.functions.invoke('criar-link-pagamento', {
                     body: {
                         pedidoId: novoId,
@@ -9491,7 +9500,7 @@ async function finalizarPedidoCheckout() {
                         clienteTelefone: clienteTelefone || '31999999999',
                         itens: itensParaPagamento,
                         total: totalFinal,
-                        metodosPagamento: [checkoutState.pagamentoSelecionado.toLowerCase()]
+                        metodosPagamento: [metodoPagarMe]
                     }
                 });
 
@@ -9544,7 +9553,6 @@ async function finalizarPedidoCheckout() {
         document.getElementById('checkoutContent').style.display = 'flex';
     }
 }
-
 
 
         function abrirCadastroDiretoCheckout() {
