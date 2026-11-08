@@ -5360,7 +5360,7 @@ async function cancelarPedido(id) {
     const pedido = dados.pedidos.find(p => parseInt(p.id_pedido) === parseInt(id));
     if (!pedido) { alert('Pedido não encontrado!'); return; }
     
-    if (!confirm(`⚠️ Deseja realmente CANCELAR o pedido #${id}?\n\nIsso vai devolver os produtos ao estoque.`)) return;
+    if (!confirm(`⚠️ Deseja realmente CANCELAR o pedido #${id}?\n\nIsso vai devolver os produtos ao estoque (se aplicável).`)) return;
     
     mostrarSpinner('Cancelando e devolvendo estoque...');
     
@@ -5368,7 +5368,7 @@ async function cancelarPedido(id) {
         const itens = processarItensPedido(pedido.itens);
         
         for (const item of itens) {
-            if (!item.isProducao && item.quantidade > 0) {
+            if (item.quantidade > 0) {
                 let produto = null;
                 
                 // 1. Tenta achar pelo ID
@@ -5388,17 +5388,23 @@ async function cancelarPedido(id) {
                 
                 if (produto) {
                     const estoqueAtual = parseInt(produto.estoque) || 0;
-                    const novoEstoque = estoqueAtual + item.quantidade; // item.quantidade agora é 20
                     
-                    const { error } = await supabaseClient
-                        .from('produtos')
-                        .update({ estoque: novoEstoque })
-                        .eq('id', produto.id);
+                    // 🔥 REGRA DE OURO: Se o item foi marcado como Produção, NÃO devolve ao estoque
+                    if (!item.isProducao) {
+                        const novoEstoque = estoqueAtual + item.quantidade;
                         
-                    if (error) throw error;
-                    
-                    produto.estoque = novoEstoque;
-                    console.log(`✅ Estoque de "${produto.nome}" devolvido: ${estoqueAtual} + ${item.quantidade} = ${novoEstoque}`);
+                        const { error } = await supabaseClient
+                            .from('produtos')
+                            .update({ estoque: novoEstoque })
+                            .eq('id', produto.id);
+                            
+                        if (error) throw error;
+                        
+                        produto.estoque = novoEstoque;
+                        console.log(`✅ Estoque de "${produto.nome}" devolvido: ${estoqueAtual} + ${item.quantidade} = ${novoEstoque}`);
+                    } else {
+                        console.log(`🏭 Item "${produto.nome}" era de produção. Estoque não devolvido.`);
+                    }
                 }
             }
         }
