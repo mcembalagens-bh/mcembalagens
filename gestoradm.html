@@ -5245,14 +5245,23 @@ function processarItensPedido(textoItens) {
             try {
                 const parsed = JSON.parse(textoItens);
                 if (Array.isArray(parsed)) {
-                    return parsed.map(item => ({
-                        nome: item.nome || 'Produto',
-                        quantidade: parseInt(item.quantidade) || 1,
-                        isProducao: item.isProducao || false,
-                        productId: item.productId || null,
-                        prazoProducao: item.prazoProducao || 0,
-                        price: parseFloat(item.price) || 0
-                    }));
+                    return parsed.map(item => {
+                        // O site novo agora manda a quantidade total de unidades
+                        const totalUnidades = parseInt(item.quantidade) || 1;
+                        const tamanhoPacote = parseInt(item.pacote_tamanho) || 1;
+                        const qtdPacotes = Math.ceil(totalUnidades / tamanhoPacote);
+                        
+                        return {
+                            nome: item.nome || 'Produto',
+                            quantidade: totalUnidades, // Guarda o total (ex: 20)
+                            qtdPacotes: qtdPacotes,    // Calcula os pacotes (ex: 1)
+                            tamanhoPacote: tamanhoPacote, // Ex: 20
+                            isProducao: item.isProducao || false,
+                            productId: item.productId || null,
+                            prazoProducao: item.prazoProducao || 0,
+                            price: parseFloat(item.price) || 0
+                        };
+                    });
                 }
             } catch (e) {
                 console.log('⚠️ Erro ao ler JSON, tentando formato antigo...');
@@ -6345,17 +6354,10 @@ async function finalizarPedidoManual() {
 }
 
 function imprimirCupom(idPedido) {
-    // 🔥 BLOQUEIA MÚLTIPLAS IMPRESSÕES
-    if (window._imprimindo) {
-        console.log('⚠️ Impressão já em andamento, ignorando...');
-        return;
-    }
+    if (window._imprimindo) return;
     
     const pedido = dados.pedidos.find(p => parseInt(p.id_pedido) === parseInt(idPedido));
-    if (!pedido) {
-        alert('Pedido não encontrado!');
-        return;
-    }
+    if (!pedido) { alert('Pedido não encontrado!'); return; }
     
     const isRevendedor = isClienteRevendedor(pedido);
     const badgeRevendedor = isRevendedor ? ' 👑 REVENDEDOR' : '';
@@ -6366,9 +6368,6 @@ function imprimirCupom(idPedido) {
     let maiorPrazoProducao = 0;
     let isProducaoGeral = false;
     
-    // ============================================================
-    // 🔥 DICIONÁRIO PARA SOMAR BERÇOS POR GOMOS
-    // ============================================================
     const totalBerçosPorGomos = {};
     
     function extrairESomarBerços(descricao, totalUnidades, nomeProduto) {
@@ -6398,16 +6397,13 @@ function imprimirCupom(idPedido) {
         });
     }
     
-    // ============================================================
-    // PROCESSA OS ITENS (NOVO FORMATO JSON E ANTIGO)
-    // ============================================================
     const itens = processarItensPedido(pedido.itens);
     
     itens.forEach((item, index) => {
         const preco = parseFloat(item.price) || 0;
-        const qtd = parseInt(item.quantidade) || 1;
+        const qtdPacotes = parseInt(item.qtdPacotes) || 1;
         const tamanhoPacote = parseInt(item.tamanhoPacote) || 1;
-        const totalUnidades = qtd * tamanhoPacote;
+        const totalUnidades = parseInt(item.quantidade) || 1;
         
         subtotal += preco;
         
@@ -6440,7 +6436,7 @@ function imprimirCupom(idPedido) {
                             ${index+1}. ${item.nome} ${codigoExibicao}
                         </span>
                         <span style="font-size:8px;font-weight:bold;color:#000;display:block;">
-                            ${qtd}x ${tamanhoPacote} un (${totalUnidades} un total)
+                            ${qtdPacotes}x ${tamanhoPacote} un (${totalUnidades} un total)
                         </span>
                         <span style="font-size:7px;font-weight:bold;color:#000;display:block;">
                             ${statusEstoque}
@@ -6452,9 +6448,6 @@ function imprimirCupom(idPedido) {
         `;
     });
     
-    // ============================================================
-    // ADICIONA OS BERÇOS AGREGADOS
-    // ============================================================
     const gomosOrdenados = Object.keys(totalBerçosPorGomos).map(Number).sort((a, b) => a - b);
     
     if (gomosOrdenados.length > 0) {
@@ -6488,9 +6481,6 @@ function imprimirCupom(idPedido) {
         });
     }
     
-    // ============================================================
-    // DADOS FINAIS DO CUPOM
-    // ============================================================
     let freteNome = pedido.frete || 'Retirada na Loja';
     let freteValor = parseFloat(pedido.frete_valor) || 0;
     let diasEnvio = (freteNome !== 'Retirada na Loja' && freteNome !== 'Retirada') ? 3 : 1;
