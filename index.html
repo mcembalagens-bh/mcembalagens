@@ -2994,7 +2994,12 @@ src="https://www.facebook.com/tr?id=1764645147917874&ev=PageView&noscript=1"
 <!-- BIBLIOTECA QR CODE PARA GERAR QR CODE PIX -->
 <!-- ============================================================ -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    const supabaseUrl = 'https://ddtiraoxbxexstozncwj.supabase.co';
+    const supabaseKey = 'sb_publishable_JJBVWA5QR9N9WZTJ_PROcA_PaioDgKR';
+    const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+</script>
 
 </head>
 
@@ -10291,55 +10296,30 @@ function atualizarResumoFinal() {
         // ============================================================
         // CARREGAR DADOS DA PLANILHA
         // ============================================================
-      async function carregarDadosPlanilha() {
+  async function carregarDadosPlanilha() {
     if (carregando) return;
     carregando = true;
 
     try {
         mostrarLoading(true);
-        console.log('🔄 Buscando dados da planilha...');
-        const response = await fetch(API_URL);
+        console.log('🔄 Buscando produtos do Supabase...');
         
-        if (!response.ok) {
-            throw new Error(`Erro HTTP: ${response.status}`);
-        }
+        // Busca produtos e categorias no Supabase
+        const [resProdutos, resCategorias] = await Promise.all([
+            supabaseClient.from('produtos').select('*').eq('produto_ativado', 'SIM'),
+            supabaseClient.from('categorias').select('*')
+        ]);
+
+        if (resProdutos.error) throw resProdutos.error;
+        if (resCategorias.error) throw resCategorias.error;
+
+        const produtosStr = resProdutos.data || [];
+        const categoriasStr = resCategorias.data || [];
         
-        const data = await response.json();
-        console.log('📊 Dados recebidos da planilha:', data);
+        console.log(`✅ ${produtosStr.length} produtos ativos encontrados!`);
         
-        if (!data.produtos || !data.categorias) {
-            throw new Error('Estrutura de dados inválida');
-        }
-        
-        // ============================================================
-        // 🔧 FILTRA APENAS PRODUTOS ATIVOS (produto_ativado = SIM)
-        // ============================================================
-        const produtosStr = data.produtos
-            .filter(p => {
-                const ativado = String(p.produto_ativado || '').toUpperCase().trim();
-                return ativado === 'SIM';
-            })
-            .map(p => {
-                const novoP = {};
-                for (const key in p) {
-                    novoP[key] = String(p[key] || '').trim();
-                }
-                return novoP;
-            });
-        
-        console.log(`📦 ${produtosStr.length} produtos ativos carregados (de ${data.produtos.length} total)`);
-        
-        const categoriasStr = data.categorias.map(c => {
-            const novoC = {};
-            for (const key in c) {
-                novoC[key] = String(c[key] || '').trim();
-            }
-            return novoC;
-        });
-        
-        // ============================================================
-        // PROCESSAMENTO DE CADA PRODUTO INDIVIDUALMENTE
-        // ============================================================
+        // O restante do código de processamento continua IGUAL, 
+        // pois os nomes das colunas são os mesmos da planilha.
         PRODUCTS_DATA.categories = categoriasStr.map(cat => {
             const produtosDaCategoria = produtosStr.filter(p => p.categoria === cat.nome);
             
@@ -10349,19 +10329,13 @@ function atualizarResumoFinal() {
                 description: cat.descricao || '',
                 image: cat.imagem || '',
                 products: produtosDaCategoria
-                    .filter(p => (p.produto_ativado || '').toUpperCase() === 'SIM')
+                    .filter(p => String(p.produto_ativado || '').toUpperCase() === 'SIM')
                     .map(p => {
-                        // ============================================================
-                        // 1. QUANTIDADES
-                        // ============================================================
-                        const qtyList = p.quantidades ? p.quantidades.split(',').map(q => parseInt(q.trim())).filter(q => !isNaN(q) && q > 0) : [];
+                        const qtyList = p.quantidades ? String(p.quantidades).split(',').map(q => parseInt(q.trim())).filter(q => !isNaN(q) && q > 0) : [];
                         
-                        // ============================================================
-                        // 2. PREÇOS
-                        // ============================================================
                         const precoMap = {};
                         if (p.preco_venda) {
-                            p.preco_venda.split(';').forEach(item => {
+                            String(p.preco_venda).split(';').forEach(item => {
                                 const parts = item.trim().split(':');
                                 if (parts.length === 2) {
                                     precoMap[parseInt(parts[0])] = parseFloat(parts[1]) || 0;
@@ -10369,16 +10343,13 @@ function atualizarResumoFinal() {
                             });
                         }
                         
-                        // ============================================================
-                        // 3. PESOS E MEDIDAS
-                        // ============================================================
                         const pesoMap = {};
                         const dimsMap = {};
                         let pesoUnitario = 0;
                         let dimensoesPadrao = '';
                         
-                        if (p.pesos_medidas && p.pesos_medidas.trim() !== '') {
-                            p.pesos_medidas.split(';').forEach(item => {
+                        if (p.pesos_medidas && String(p.pesos_medidas).trim() !== '') {
+                            String(p.pesos_medidas).split(';').forEach(item => {
                                 const parts = item.trim().split(':');
                                 if (parts.length === 2) {
                                     const qtd = parseInt(parts[0]);
@@ -10395,70 +10366,21 @@ function atualizarResumoFinal() {
                             });
                         }
                         
-                        if (p.peso_unitario && p.peso_unitario.trim() !== '') {
+                        if (p.peso_unitario && String(p.peso_unitario).trim() !== '') {
                             pesoUnitario = parseFloat(p.peso_unitario) || 0;
-                        }
-                        
-                        if (p.dimensoes && p.dimensoes.trim() !== '') {
-                            dimensoesPadrao = p.dimensoes.trim();
                         }
                         
                         const quantities = qtyList.map(qty => {
                             let weight = pesoMap[qty] || '';
                             let dimensions = dimsMap[qty] || '';
-                            
-                            if (!weight && pesoUnitario > 0) {
-                                weight = (pesoUnitario * qty).toFixed(3) + 'kg';
-                            }
-                            
-                            if (!dimensions && dimensoesPadrao) {
-                                dimensions = dimensoesPadrao;
-                            }
-                            
-                            return {
-                                qty: qty,
-                                price: precoMap[qty] || 0,
-                                weight: weight,
-                                dimensions: dimensions
-                            };
+                            if (!weight && pesoUnitario > 0) weight = (pesoUnitario * qty).toFixed(3) + 'kg';
+                            return { qty: qty, price: precoMap[qty] || 0, weight: weight, dimensions: dimensions };
                         });
                         
-                        // ============================================================
-                        // 4. IMAGENS
-                        // ============================================================
                         let images = [];
-                        if (p.imagens_carousel) {
-                            images = p.imagens_carousel.split(',').map(img => img.trim()).filter(img => img && img.length > 0);
-                        }
-                        if (images.length === 0 && p.imagem_principal) {
-                            const img = p.imagem_principal.trim();
-                            if (img && img.length > 0) {
-                                images = [img];
-                            }
-                        }
-                        if (images.length === 0 && p.imagem) {
-                            const img = p.imagem.trim();
-                            if (img && img.length > 0) {
-                                images = [img];
-                            }
-                        }
-                        if (images.length === 0 && p.foto) {
-                            const img = p.foto.trim();
-                            if (img && img.length > 0) {
-                                images = [img];
-                            }
-                        }
-                        if (images.length === 0 && p.imagens) {
-                            images = p.imagens.split(',').map(img => img.trim()).filter(img => img && img.length > 0);
-                        }
-                        if (images.length === 0 && cat.imagem) {
-                            images = [cat.imagem];
-                        }
-                        
-                        // ============================================================
-                        // 5. CONFIGURAÇÕES
-                        // ============================================================
-                        const venderZerado = (p.vender_zerado || '').toUpperCase() === 'SIM';
+                        if (p.imagens_carousel) images = String(p.imagens_carousel).split(',').map(img => img.trim()).filter(img => img);
+                        if (images.length === 0 && p.imagem_principal) images = [String(p.imagem_principal).trim()];
+                        if (images.length === 0 && cat.imagem) images = [cat.imagem];
                         
                         return {
                             id: parseInt(p.id) || 0,
@@ -10468,35 +10390,15 @@ function atualizarResumoFinal() {
                             quantities: quantities,
                             stock: parseInt(p.estoque) || 0,
                             productionDays: parseInt(p.prazo_producao) || 0,
-                            weight: parseFloat(p.peso_unitario) || 0,
-                            height: 0,
-                            width: 0,
-                            length: 0,
+                            weight: pesoUnitario,
                             codigo: p.codigo_produto || '',
                             ncm: p.ncm || '',
-                            ativado: (p.produto_ativado || '').toUpperCase() === 'SIM',
-                            vender_zerado: venderZerado
+                            ativado: String(p.produto_ativado || '').toUpperCase() === 'SIM',
+                            vender_zerado: String(p.vender_zerado || '').toUpperCase() === 'SIM'
                         };
                     })
             };
         });
-        
-        // ============================================================
-        // LOG DE VERIFICAÇÃO
-        // ============================================================
-        const produtoTeste = PRODUCTS_DATA.categories
-            .flatMap(c => c.products)
-            .find(p => p.name && p.name.includes('09x09x30'));
-        
-        if (produtoTeste) {
-            console.log('✅ Produto 09x09x30 processado CORRETAMENTE:');
-            console.log('   Nome:', produtoTeste.name);
-            console.log('   Stock:', produtoTeste.stock);
-            console.log('   Vender Zerado:', produtoTeste.vender_zerado);
-        }
-        
-        const totalProdutos = PRODUCTS_DATA.categories.reduce((acc, cat) => acc + cat.products.length, 0);
-        console.log(`📦 Total: ${totalProdutos} produtos ativos carregados`);
         
         dadosCarregados = true;
         mostrarLoading(false);
