@@ -6982,7 +6982,7 @@ function ajustarPacoteCarrinho(index, delta) {
         try {
             usuarioLogado = JSON.parse(sessao);
             atualizarInterfaceUsuario();
-            carregarPedidosCliente(usuarioLogado.email);
+           carregarPedidosCliente(usuarioLogado.email, null);
         } catch (e) {
             usuarioLogado = null;
             localStorage.removeItem('usuarioLogado');
@@ -7063,7 +7063,10 @@ function abrirMeusPedidos() {
         return;
     }
     
-    // Cria o modal na tela primeiro
+    // Remove modal antigo se existir
+    const modalAntigo = document.getElementById('meusPedidosModal');
+    if (modalAntigo) modalAntigo.remove();
+    
     const modal = document.createElement('div');
     modal.id = 'meusPedidosModal';
     modal.className = 'modal';
@@ -7074,7 +7077,7 @@ function abrirMeusPedidos() {
         <div class="modal-content" style="max-width:600px;max-height:90vh;overflow-y:auto;">
             <span class="modal-close" onclick="document.getElementById('meusPedidosModal').remove()">&times;</span>
             <h2 style="margin-bottom:20px;color:var(--primary-dark);">📦 Meus Pedidos</h2>
-            <div id="listaPedidosLogado">
+            <div id="meusPedidosListaTemp">
                 <div style="text-align:center;padding:30px;color:#999;">
                     <i class="fas fa-spinner fa-spin"></i> Carregando pedidos...
                 </div>
@@ -7087,21 +7090,23 @@ function abrirMeusPedidos() {
     
     document.body.appendChild(modal);
     
-    // 🔥 O SEGREDO: Espera 50 milissegundos para o navegador desenhar o modal na tela
-    // e SÓ DEPOIS chama a função que busca os dados no Supabase.
-    setTimeout(() => {
-        carregarPedidosCliente(usuarioLogado.email);
-    }, 50);
+    // Passa o próprio elemento temporário para a função de carregar
+    const containerTemp = document.getElementById('meusPedidosListaTemp');
+    carregarPedidosCliente(usuarioLogado.email, containerTemp);
 }
 
 
 // ============================================================
 // CARREGAR PEDIDOS NO MODAL (SEM LOGIN)
 // ============================================================
-async function carregarPedidosCliente(email) {
+async function carregarPedidosCliente(email, container) {
     try {
-        console.log('🔍 Buscando pedidos no Supabase para:', email);
-        
+        // Se não receber o container, tenta achar pelos IDs padrão (para o Login)
+        if (!container) {
+            container = document.getElementById('listaPedidosLogado') || document.getElementById('meusPedidosLista');
+        }
+        if (!container) return;
+
         const { data: pedidos, error } = await supabaseClient
             .from('pedidos')
             .select('*')
@@ -7142,15 +7147,6 @@ async function carregarPedidosCliente(email) {
             return idB - idA;
         });
         
-        // Tenta achar o container em dois lugares diferentes para evitar erro
-        var container = document.getElementById('listaPedidosLogado');
-        if (!container) container = document.getElementById('meusPedidosLista');
-        
-        if (!container) {
-            console.warn('Container de pedidos não encontrado na tela.');
-            return;
-        }
-        
         if (pedidosFiltrados.length === 0) {
             container.innerHTML = `
                 <div class="login-pedido-vazio">
@@ -7161,24 +7157,15 @@ async function carregarPedidosCliente(email) {
         } else {
             container.innerHTML = pedidosFiltrados.map(function(p) {
                 var statusExibido = p.status || 'Pendente';
-                
-                if (statusExibido.toLowerCase() === 'pendente') {
-                    statusExibido = '✅ Pedido efetuado';
-                }
+                if (statusExibido.toLowerCase() === 'pendente') statusExibido = '✅ Pedido efetuado';
                 
                 var statusColor = {
-                    'pendente': '#27ae60',
-                    'pago': '#27ae60',
-                    'em andamento': '#3498db',
-                    'enviado': '#2ecc71',
-                    'entregue': '#27ae60',
-                    'cancelado': '#e74c3c'
+                    'pendente': '#27ae60', 'pago': '#27ae60', 'em andamento': '#3498db',
+                    'enviado': '#2ecc71', 'entregue': '#27ae60', 'cancelado': '#e74c3c'
                 }[p.status?.toLowerCase()] || '#888';
                 
                 var dataExibicao = p.data_pedido || '';
-                if (dataExibicao.includes('T')) {
-                    dataExibicao = dataExibicao.replace('T', ' ').substring(0, 16);
-                }
+                if (dataExibicao.includes('T')) dataExibicao = dataExibicao.replace('T', ' ').substring(0, 16);
                 
                 return `
                     <div class="login-pedido-item" style="cursor:pointer;transition:all 0.3s;border-radius:8px;padding:12px 14px;border:1px solid #f0f0f0;margin-bottom:8px;" 
@@ -7201,15 +7188,9 @@ async function carregarPedidosCliente(email) {
                 `;
             }).join('');
         }
-        
-        if (document.getElementById('pedidosLogado')) {
-            document.getElementById('pedidosLogado').style.display = 'block';
-        }
-        
     } catch (error) {
         console.error('❌ Erro ao carregar pedidos:', error);
-        var c = document.getElementById('listaPedidosLogado') || document.getElementById('meusPedidosLista');
-        if (c) c.innerHTML = `<p style="text-align:center;color:#e74c3c;">Erro ao carregar. Tente novamente.</p>`;
+        if (container) container.innerHTML = `<p style="text-align:center;color:#e74c3c;">Erro ao carregar os pedidos.</p>`;
     }
 }
 
