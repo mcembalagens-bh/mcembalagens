@@ -5246,15 +5246,15 @@ function processarItensPedido(textoItens) {
                 const parsed = JSON.parse(textoItens);
                 if (Array.isArray(parsed)) {
                     return parsed.map(item => {
-                        // O site novo agora manda a quantidade total de unidades
-                        const totalUnidades = parseInt(item.quantidade) || 1;
+                        // O site novo manda o total de unidades compradas
+                        const totalUnidades = parseInt(item.quantidade) || parseInt(item.totalUnidades) || 1;
                         const tamanhoPacote = parseInt(item.pacote_tamanho) || 1;
                         const qtdPacotes = Math.ceil(totalUnidades / tamanhoPacote);
                         
                         return {
                             nome: item.nome || 'Produto',
-                            quantidade: totalUnidades, // Guarda o total (ex: 20)
-                            qtdPacotes: qtdPacotes,    // Calcula os pacotes (ex: 1)
+                            quantidade: totalUnidades, // Ex: 20
+                            qtdPacotes: qtdPacotes,    // Ex: 1
                             tamanhoPacote: tamanhoPacote, // Ex: 20
                             isProducao: item.isProducao || false,
                             productId: item.productId || null,
@@ -5368,28 +5368,28 @@ async function cancelarPedido(id) {
         const itens = processarItensPedido(pedido.itens);
         
         for (const item of itens) {
-            // Se não for produção, devolve ao estoque
             if (!item.isProducao && item.quantidade > 0) {
                 let produto = null;
                 
-                // 1. Tenta achar pelo ID (se o site novo enviou)
+                // 1. Tenta achar pelo ID
                 if (item.productId) {
                     produto = dados.produtos.find(p => parseInt(p.id) === parseInt(item.productId));
                 }
                 
-                // 2. Se não achou pelo ID, tenta pelo Nome (para pedidos antigos ou falhas)
+                // 2. Se não achou, tenta pelo nome exato
                 if (!produto) {
                     produto = dados.produtos.find(p => p.nome && p.nome.toLowerCase() === item.nome.toLowerCase());
                 }
+                
+                // 3. Se não achou, tenta por parte do nome
                 if (!produto) {
                     produto = dados.produtos.find(p => p.nome && p.nome.toLowerCase().includes(item.nome.toLowerCase()));
                 }
                 
                 if (produto) {
                     const estoqueAtual = parseInt(produto.estoque) || 0;
-                    const novoEstoque = estoqueAtual + item.quantidade;
+                    const novoEstoque = estoqueAtual + item.quantidade; // item.quantidade agora é 20
                     
-                    // Atualiza no banco de dados
                     const { error } = await supabaseClient
                         .from('produtos')
                         .update({ estoque: novoEstoque })
@@ -5397,16 +5397,12 @@ async function cancelarPedido(id) {
                         
                     if (error) throw error;
                     
-                    // Atualiza localmente para o gestor refletir na hora
                     produto.estoque = novoEstoque;
                     console.log(`✅ Estoque de "${produto.nome}" devolvido: ${estoqueAtual} + ${item.quantidade} = ${novoEstoque}`);
-                } else {
-                    console.warn(`⚠️ Produto "${item.nome}" não encontrado para devolver estoque.`);
                 }
             }
         }
         
-        // Muda o status do pedido para Cancelado
         const { error: erroStatus } = await supabaseClient
             .from('pedidos')
             .update({ status: 'Cancelado' })
@@ -5415,9 +5411,9 @@ async function cancelarPedido(id) {
         if (erroStatus) throw erroStatus;
         
         esconderSpinner();
-        alert(`✅ Pedido #${id} cancelado com sucesso!\n\nOs produtos disponíveis voltaram para o estoque.`);
+        alert(`✅ Pedido #${id} cancelado com sucesso!`);
         
-        await carregarDados(); // Recarrega tudo para atualizar a tela
+        await carregarDados();
         
     } catch (error) {
         console.error('❌ Erro ao cancelar pedido:', error);
