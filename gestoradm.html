@@ -3475,13 +3475,9 @@ function duplicarProduto(id) {
 // ============================================================
 function deletarProduto(id) {
     const produto = dados.produtos.find(p => parseInt(p.id) === parseInt(id));
-    if (!produto) {
-        alert('Produto não encontrado!');
-        return;
-    }
+    if (!produto) return;
     
-    document.getElementById('confirmMensagem').textContent = 
-        `⚠️ Tem certeza que deseja EXCLUIR o produto "${produto.nome}"?\n\nEsta ação não pode ser desfeita!`;
+    document.getElementById('confirmMensagem').textContent = `⚠️ Tem certeza que deseja EXCLUIR o produto "${produto.nome}"?\n\nEsta ação não pode ser desfeita!`;
     document.getElementById('modalConfirm').classList.add('open');
     
     document.getElementById('confirmBtnSim').onclick = async () => {
@@ -3489,24 +3485,17 @@ function deletarProduto(id) {
         mostrarSpinner('Excluindo produto...');
         
         try {
-            await fetch(API_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    acao: 'deletar_produto',
-                    id_produto: id
-                })
-            });
+            const { error } = await supabaseClient.from('produtos').delete().eq('id', id);
+            if (error) throw error;
             
             esconderSpinner();
             alert(`✅ Produto "${produto.nome}" excluído com sucesso!`);
-            await carregarDados();
+            carregarDados();
             
         } catch (error) {
             console.error('Erro ao excluir produto:', error);
             esconderSpinner();
-            alert('⚠️ Erro ao excluir produto. Verifique sua conexão.');
+            alert('⚠️ Erro ao excluir: ' + error.message);
         }
     };
 }
@@ -4317,88 +4306,41 @@ function editarCampo(id, campo, nome, valorAtual) {
     const valorAtualStr = campo === 'preco_custo' ? valorAtual.toFixed(2) : String(valorAtual);
     
     const input = document.createElement('input');
-    input.type = campo === 'preco_custo' ? 'number' : 'number';
+    input.type = 'number';
     input.step = campo === 'preco_custo' ? '0.01' : '1';
     input.min = '0';
     input.value = valorAtualStr;
     input.className = 'editable-cell-input';
-    if (campo === 'estoque') input.classList.add('estoque');
-    if (campo === 'prazo_producao') input.classList.add('prazo');
-    if (campo === 'preco_custo') input.classList.add('preco');
     input.style.fontWeight = '600';
     input.style.width = campo === 'prazo_producao' ? '40px' : (campo === 'estoque' ? '50px' : '70px');
     
     const originalHTML = pai.innerHTML;
     pai.innerHTML = '';
     pai.appendChild(input);
-    
     input.focus();
     input.select();
     
     const salvar = async () => {
         const novoValor = parseFloat(input.value);
-        if (isNaN(novoValor) || novoValor < 0) {
-            pai.innerHTML = originalHTML;
-            return;
-        }
+        if (isNaN(novoValor) || novoValor < 0) { pai.innerHTML = originalHTML; return; }
         
         mostrarSpinner('Salvando alteração...');
         try {
             const produto = dados.produtos.find(p => parseInt(p.id) === id);
-            if (!produto) {
-                esconderSpinner();
-                pai.innerHTML = originalHTML;
-                return;
-            }
+            if (!produto) throw new Error('Produto não encontrado');
             
             const now = new Date();
-            const dia = String(now.getDate()).padStart(2, '0');
-            const mes = String(now.getMonth() + 1).padStart(2, '0');
-            const ano = now.getFullYear();
-            const dataEstoque = `${dia}/${mes}/${ano}`;
+            const dataEstoque = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
             
-            const produtoAtualizado = {
-                id: produto.id,
-                codigo_produto: produto.codigo_produto || '',
-                categoria: produto.categoria || '',
-                nome: produto.nome || '',
-                descricao: produto.descricao || '',
-                imagem_principal: produto.imagem_principal || '',
-                imagens_carousel: produto.imagens_carousel || '',
-                quantidades: produto.quantidades || '',
-                pesos_medidas: produto.pesos_medidas || '',
-                estoque: campo === 'estoque' ? novoValor : (parseInt(produto.estoque) || 0),
-                prazo_producao: campo === 'prazo_producao' ? novoValor : (parseInt(produto.prazo_producao) || 0),
-                preco_custo: campo === 'preco_custo' ? novoValor : (parseFloat(produto.preco_custo) || 0),
-                preco_venda: produto.preco_venda || '',
-                preco_promocional: produto.preco_promocional || '',
-                produto_ativado: produto.produto_ativado || 'SIM',
-                vender_zerado: produto.vender_zerado || 'NÃO',
-                ncm: produto.ncm || '',
-                observacoes: produto.observacoes || '',
-                data_estoque: campo === 'estoque' ? dataEstoque : (produto.data_estoque || '')
-            };
+            const updateData = {};
+            updateData[campo] = novoValor;
+            if (campo === 'estoque') updateData.data_estoque = dataEstoque;
             
-            console.log('📤 Enviando atualização:', produtoAtualizado);
+            const { error } = await supabaseClient.from('produtos').update(updateData).eq('id', id);
+            if (error) throw error;
             
-            await fetch(API_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    acao: 'atualizar_produto',
-                    produto: produtoAtualizado
-                })
-            });
-            
-            if (campo === 'estoque') {
-                produto.estoque = novoValor;
-                produto.data_estoque = dataEstoque;
-            } else if (campo === 'preco_custo') {
-                produto.preco_custo = novoValor;
-            } else if (campo === 'prazo_producao') {
-                produto.prazo_producao = novoValor;
-            }
+            produto[campo] = novoValor;
+            if (campo === 'estoque') produto.data_estoque = dataEstoque;
             
             esconderSpinner();
             renderizarProdutos();
@@ -4406,19 +4348,15 @@ function editarCampo(id, campo, nome, valorAtual) {
         } catch (error) {
             console.error('Erro ao salvar:', error);
             esconderSpinner();
-            alert('⚠️ Erro ao salvar alteração.');
+            alert('⚠️ Erro ao salvar: ' + error.message);
             pai.innerHTML = originalHTML;
         }
     };
     
     input.addEventListener('blur', salvar);
     input.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            input.blur();
-        }
-        if (e.key === 'Escape') {
-            pai.innerHTML = originalHTML;
-        }
+        if (e.key === 'Enter') input.blur();
+        if (e.key === 'Escape') pai.innerHTML = originalHTML;
     });
 }
 
@@ -4440,61 +4378,22 @@ function toggleStatus(id, campo, valorAtual) {
         
         try {
             const produto = dados.produtos.find(p => parseInt(p.id) === id);
-            if (!produto) {
-                esconderSpinner();
-                alert('Produto não encontrado!');
-                return;
-            }
+            if (!produto) throw new Error('Produto não encontrado');
             
-            const dataEstoque = produto.data_estoque || '';
+            const updateData = {};
+            updateData[campo] = novoValor;
             
-            const produtoAtualizado = {
-                id: produto.id,
-                codigo_produto: produto.codigo_produto || '',
-                categoria: produto.categoria || '',
-                nome: produto.nome || '',
-                descricao: produto.descricao || '',
-                imagem_principal: produto.imagem_principal || '',
-                imagens_carousel: produto.imagens_carousel || '',
-                quantidades: produto.quantidades || '',
-                pesos_medidas: produto.pesos_medidas || '',
-                estoque: parseInt(produto.estoque) || 0,
-                prazo_producao: parseInt(produto.prazo_producao) || 0,
-                preco_custo: parseFloat(produto.preco_custo) || 0,
-                preco_venda: produto.preco_venda || '',
-                preco_promocional: produto.preco_promocional || '',
-                produto_ativado: campo === 'produto_ativado' ? novoValor : (produto.produto_ativado || 'SIM'),
-                vender_zerado: campo === 'vender_zerado' ? novoValor : (produto.vender_zerado || 'NÃO'),
-                ncm: produto.ncm || '',
-                observacoes: produto.observacoes || '',
-                data_estoque: dataEstoque
-            };
+            const { error } = await supabaseClient.from('produtos').update(updateData).eq('id', id);
+            if (error) throw error;
             
-            console.log('📤 Enviando toggle:', produtoAtualizado);
-            
-            await fetch(API_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    acao: 'atualizar_produto',
-                    produto: produtoAtualizado
-                })
-            });
-            
-            if (campo === 'vender_zerado') {
-                produto.vender_zerado = novoValor;
-            } else if (campo === 'produto_ativado') {
-                produto.produto_ativado = novoValor;
-            }
-            
+            produto[campo] = novoValor;
             esconderSpinner();
             renderizarProdutos();
             
         } catch (error) {
             console.error('Erro ao alterar status:', error);
             esconderSpinner();
-            alert('⚠️ Erro ao alterar status.');
+            alert('⚠️ Erro ao alterar status: ' + error.message);
         }
     };
 }
