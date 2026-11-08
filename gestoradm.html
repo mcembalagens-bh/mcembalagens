@@ -5246,29 +5246,29 @@ function fecharModal(id) {
 // ============================================================
 function processarItensPedido(textoItens) {
     const itens = [];
-    
     if (!textoItens) return itens;
     
-    console.log('🔍 Processando itens do pedido:', textoItens);
-    
     try {
+        // 1. Lê o formato novo (JSON) gerado pelo site Supabase
         if (typeof textoItens === 'string' && textoItens.trim().startsWith('[')) {
             try {
                 const parsed = JSON.parse(textoItens);
                 if (Array.isArray(parsed)) {
                     return parsed.map(item => ({
                         nome: item.nome || 'Produto',
-                        quantidade: parseInt(item.quantidade) || parseInt(item.qtdPacotes) || 1,
+                        quantidade: parseInt(item.quantidade) || 1,
                         isProducao: item.isProducao || false,
                         productId: item.productId || null,
-                        prazoProducao: item.prazoProducao || 0
+                        prazoProducao: item.prazoProducao || 0,
+                        price: parseFloat(item.price) || 0
                     }));
                 }
             } catch (e) {
-                console.log('⚠️ Não é JSON válido, tentando parsing manual');
+                console.log('⚠️ Erro ao ler JSON, tentando formato antigo...');
             }
         }
         
+        // 2. Lê o formato antigo (texto separado por |)
         if (typeof textoItens === 'string') {
             let partes = [];
             if (textoItens.includes(' | ')) {
@@ -5280,8 +5280,6 @@ function processarItensPedido(textoItens) {
             partes.forEach(part => {
                 if (!part.trim()) return;
                 
-                console.log('📦 Processando parte:', part);
-                
                 let isProducao = false;
                 let prazoProducao = 0;
                 let nomeLimpo = part.trim();
@@ -5290,11 +5288,9 @@ function processarItensPedido(textoItens) {
                 if (partLower.includes('produção') || partLower.includes('producao')) {
                     isProducao = true;
                     const matchProd = part.match(/Produção\s*(\d*)\s*dias?/i);
-                    if (matchProd) {
-                        prazoProducao = parseInt(matchProd[1]) || 7;
-                    } else {
-                        prazoProducao = 7;
-                    }
+                    if (matchProd) prazoProducao = parseInt(matchProd[1]) || 7;
+                    else prazoProducao = 7;
+                    
                     nomeLimpo = nomeLimpo.replace(/\(Produção\s*\d*\s*dias?\)/i, '');
                     nomeLimpo = nomeLimpo.replace(/\(Produção\)/i, '');
                 }
@@ -5307,6 +5303,7 @@ function processarItensPedido(textoItens) {
                 let quantidade = 0;
                 let qtdPacotes = 1;
                 let tamanhoPacote = 1;
+                let price = 0;
                 
                 let match = nomeLimpo.match(/^(.+?)\s*\((\d+)x\s*(\d+)\s*un\)\s*-\s*R\$\s*([\d,.]+)/);
                 if (match) {
@@ -5314,77 +5311,27 @@ function processarItensPedido(textoItens) {
                     qtdPacotes = parseInt(match[2]) || 1;
                     tamanhoPacote = parseInt(match[3]) || 1;
                     quantidade = qtdPacotes * tamanhoPacote;
+                    price = parseFloat(match[4].replace(',', '.')) || 0;
                 } else {
                     match = nomeLimpo.match(/^(.+?)\s*\((\d+)\s*un\)\s*-\s*R\$\s*([\d,.]+)/);
                     if (match) {
                         nome = match[1].trim();
                         quantidade = parseInt(match[2]) || 1;
-                        qtdPacotes = 1;
-                        tamanhoPacote = quantidade;
+                        price = parseFloat(match[3].replace(',', '.')) || 0;
                     } else {
-                        match = nomeLimpo.match(/^(.+?)\s*-\s*R\$\s*([\d,.]+)/);
-                        if (match) {
-                            nome = match[1].trim();
-                            quantidade = 1;
-                            qtdPacotes = 1;
-                            tamanhoPacote = 1;
-                        } else {
-                            match = nomeLimpo.match(/^(.+?)\s*\((\d+)x\s*(\d+)\s*un\)/);
-                            if (match) {
-                                nome = match[1].trim();
-                                qtdPacotes = parseInt(match[2]) || 1;
-                                tamanhoPacote = parseInt(match[3]) || 1;
-                                quantidade = qtdPacotes * tamanhoPacote;
-                            } else {
-                                nome = nomeLimpo.replace(/\(.*?\)/g, '').trim();
-                                quantidade = 1;
-                                qtdPacotes = 1;
-                                tamanhoPacote = 1;
-                            }
-                        }
+                        nome = nomeLimpo.replace(/\(.*?\)/g, '').trim();
+                        quantidade = 1;
                     }
                 }
                 
                 nome = nome.replace(/[🔄🔨✅📦💰]/g, '').trim();
                 
                 let productId = null;
-                let produtoEncontrado = null;
-                
-                produtoEncontrado = dados.produtos.find(p => 
-                    p.nome && p.nome.toLowerCase() === nome.toLowerCase()
-                );
-                
+                let produtoEncontrado = dados.produtos.find(p => p.nome && p.nome.toLowerCase() === nome.toLowerCase());
                 if (!produtoEncontrado) {
-                    produtoEncontrado = dados.produtos.find(p => 
-                        p.nome && p.nome.toLowerCase().includes(nome.toLowerCase())
-                    );
+                    produtoEncontrado = dados.produtos.find(p => p.nome && p.nome.toLowerCase().includes(nome.toLowerCase()));
                 }
-                
-                if (!produtoEncontrado) {
-                    produtoEncontrado = dados.produtos.find(p => 
-                        p.codigo_produto && p.codigo_produto.toLowerCase() === nome.toLowerCase()
-                    );
-                }
-                
-                if (!produtoEncontrado && nome.length > 3) {
-                    const palavras = nome.split(' ').filter(p => p.length > 2);
-                    if (palavras.length > 0) {
-                        produtoEncontrado = dados.produtos.find(p => {
-                            if (!p.nome) return false;
-                            const nomeProduto = p.nome.toLowerCase();
-                            return palavras.some(palavra => 
-                                nomeProduto.includes(palavra.toLowerCase())
-                            );
-                        });
-                    }
-                }
-                
-                if (produtoEncontrado) {
-                    productId = parseInt(produtoEncontrado.id);
-                    console.log(`✅ Produto encontrado: "${produtoEncontrado.nome}" (ID: ${productId})`);
-                } else {
-                    console.log(`⚠️ Produto NÃO encontrado para: "${nome}"`);
-                }
+                if (produtoEncontrado) productId = parseInt(produtoEncontrado.id);
                 
                 itens.push({
                     nome: nome,
@@ -5394,6 +5341,7 @@ function processarItensPedido(textoItens) {
                     isProducao: isProducao,
                     prazoProducao: prazoProducao,
                     productId: productId,
+                    price: price,
                     textoOriginal: part.trim()
                 });
             });
@@ -5402,7 +5350,6 @@ function processarItensPedido(textoItens) {
         console.error('❌ Erro ao processar itens:', e);
     }
     
-    console.log('📊 Itens processados:', itens);
     return itens;
 }
 
@@ -6385,9 +6332,6 @@ async function finalizarPedidoManual() {
     }
 }
 
-// ============================================================
-// 🔥 IMPRIMIR CUPOM - CORRIGIDO (DATA + IMPRESSÃO ÚNICA + REV)
-// ============================================================
 function imprimirCupom(idPedido) {
     // 🔥 BLOQUEIA MÚLTIPLAS IMPRESSÕES
     if (window._imprimindo) {
@@ -6401,7 +6345,6 @@ function imprimirCupom(idPedido) {
         return;
     }
     
-    // 🔥 VERIFICA SE É REVENDEDOR
     const isRevendedor = isClienteRevendedor(pedido);
     const badgeRevendedor = isRevendedor ? ' 👑 REVENDEDOR' : '';
     
@@ -6416,9 +6359,6 @@ function imprimirCupom(idPedido) {
     // ============================================================
     const totalBerçosPorGomos = {};
     
-    // ============================================================
-    // 🔥 FUNÇÃO PARA EXTRAIR E SOMAR BERÇOS
-    // ============================================================
     function extrairESomarBerços(descricao, totalUnidades, nomeProduto) {
         if (!descricao) return;
         if (totalUnidades <= 0) return;
@@ -6439,10 +6379,7 @@ function imprimirCupom(idPedido) {
                 
                 if (qtdBerçosPorUnidade > 0 && gomos > 0) {
                     const totalBerços = totalUnidades * qtdBerçosPorUnidade;
-                    
-                    if (!totalBerçosPorGomos[gomos]) {
-                        totalBerçosPorGomos[gomos] = 0;
-                    }
+                    if (!totalBerçosPorGomos[gomos]) totalBerçosPorGomos[gomos] = 0;
                     totalBerçosPorGomos[gomos] += totalBerços;
                 }
             }
@@ -6450,300 +6387,58 @@ function imprimirCupom(idPedido) {
     }
     
     // ============================================================
-    // PROCESSAMENTO DOS ITENS
+    // PROCESSA OS ITENS (NOVO FORMATO JSON E ANTIGO)
     // ============================================================
-    let freteNome = 'Retirada na Loja';
-    let freteValor = 0;
+    const itens = processarItensPedido(pedido.itens);
     
-    if (pedido.observacoes) {
-        const matchFrete = pedido.observacoes.match(/Frete:\s*([^|]+)/);
-        if (matchFrete) {
-            const nomeExtraido = matchFrete[1].trim();
-            if (nomeExtraido && nomeExtraido !== 'Retirada na Loja') {
-                freteNome = nomeExtraido;
+    itens.forEach((item, index) => {
+        const preco = parseFloat(item.price) || 0;
+        const qtd = parseInt(item.quantidade) || 1;
+        const tamanhoPacote = parseInt(item.tamanhoPacote) || 1;
+        const totalUnidades = qtd * tamanhoPacote;
+        
+        subtotal += preco;
+        
+        if (item.isProducao && item.prazoProducao > maiorPrazoProducao) {
+            maiorPrazoProducao = item.prazoProducao;
+        }
+        if (item.isProducao) isProducaoGeral = true;
+        
+        let codigoProduto = '';
+        const produtoEncontrado = dados.produtos.find(p => p.nome && p.nome.toLowerCase() === item.nome.toLowerCase());
+        if (produtoEncontrado) {
+            codigoProduto = produtoEncontrado.codigo_produto || '';
+            if (produtoEncontrado.descricao) {
+                extrairESomarBerços(produtoEncontrado.descricao, totalUnidades, item.nome);
             }
         }
-        const matchValor = pedido.observacoes.match(/R\$\s*([\d,.]+)/);
-        if (matchValor) {
-            freteValor = parseFloat(matchValor[1].replace(',', '.')) || 0;
-        }
-    }
-    
-    if (pedido.frete_valor) {
-        freteValor = parseFloat(pedido.frete_valor) || 0;
-    }
-    
-    let pagamento = pedido.pagamento || 'Não informado';
-    if (pagamento === 'Não informado' && pedido.observacoes) {
-        const matchPag = pedido.observacoes.match(/Pagamento:\s*([^|]+)/);
-        if (matchPag) {
-            pagamento = matchPag[1].trim();
-        }
-    }
-    
-    let prazoEntrega = 0;
-    if (pedido.prazo_entrega) {
-        prazoEntrega = parseInt(pedido.prazo_entrega) || 0;
-    }
-    if (prazoEntrega === 0 && pedido.observacoes) {
-        const matchPrazo = pedido.observacoes.match(/Prazo:\s*(\d+)\s*dias/);
-        if (matchPrazo) {
-            prazoEntrega = parseInt(matchPrazo[1]) || 0;
-        }
-    }
-    
-    // ============================================================
-    // BUSCA O CPF/CNPJ DO CLIENTE
-    // ============================================================
-    let documentoCliente = '';
-    let tipoDocumento = '';
-    
-    if (pedido.cliente_documento) {
-        documentoCliente = pedido.cliente_documento;
-    }
-    
-    if (!documentoCliente && pedido.cliente_email) {
-        const clienteEncontrado = dados.clientes.find(c => 
-            c.email && c.email.toLowerCase() === pedido.cliente_email.toLowerCase()
-        );
-        if (clienteEncontrado && clienteEncontrado.cpf) {
-            documentoCliente = clienteEncontrado.cpf;
-        }
-    }
-    
-    if (!documentoCliente && pedido.cliente_nome) {
-        const clienteEncontrado = dados.clientes.find(c => 
-            c.nome && c.nome.toLowerCase() === pedido.cliente_nome.toLowerCase()
-        );
-        if (clienteEncontrado && clienteEncontrado.cpf) {
-            documentoCliente = clienteEncontrado.cpf;
-        }
-    }
-    
-    if (documentoCliente) {
-        const docLimpo = documentoCliente.replace(/\D/g, '');
-        if (docLimpo.length === 11) {
-            documentoCliente = docLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-            tipoDocumento = 'CPF';
-        } else if (docLimpo.length === 14) {
-            documentoCliente = docLimpo.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
-            tipoDocumento = 'CNPJ';
-        } else if (docLimpo.length > 0) {
-            documentoCliente = docLimpo;
-            tipoDocumento = 'DOC';
-        }
-    }
-    
-    // ============================================================
-    // PROCESSAMENTO DOS ITENS
-    // ============================================================
-    try {
-        let itens = [];
-        let textoItens = pedido.itens || '';
         
-        if (typeof textoItens === 'string') {
-            let partes = [];
-            if (textoItens.includes(' | ')) {
-                partes = textoItens.split(' | ');
-            } else if (textoItens.includes('|')) {
-                partes = textoItens.split('|');
-            } else {
-                partes = [textoItens];
-            }
-            
-            partes.forEach(part => {
-                if (!part.trim()) return;
-                
-                let nomeLimpo = part.trim();
-                let isProducao = false;
-                let prazoProducao = 0;
-                
-                const partLower = part.toLowerCase();
-                if (partLower.includes('produção') || partLower.includes('producao')) {
-                    isProducao = true;
-                    const matchProd = part.match(/Produção\s*(\d*)\s*dias?/i);
-                    if (matchProd) {
-                        prazoProducao = parseInt(matchProd[1]) || 7;
-                    } else {
-                        prazoProducao = 7;
-                    }
-                    nomeLimpo = nomeLimpo.replace(/\(Produção\s*\d*\s*dias?\)/i, '');
-                    nomeLimpo = nomeLimpo.replace(/\(Produção\)/i, '');
-                }
-                
-                nomeLimpo = nomeLimpo.replace(/\(Disponível\)/i, '');
-                nomeLimpo = nomeLimpo.trim();
-                
-                let qtdPacotes = 1;
-                let tamanhoPacote = 1;
-                let totalUnidades = 1;
-                let preco = 0;
-                let nome = nomeLimpo;
-                
-                const matchPacote = nomeLimpo.match(/\((\d+)x\s*(\d+)\s*un\)\s*-\s*R\$\s*([\d,.]+)/);
-                if (matchPacote) {
-                    qtdPacotes = parseInt(matchPacote[1]) || 1;
-                    tamanhoPacote = parseInt(matchPacote[2]) || 1;
-                    totalUnidades = qtdPacotes * tamanhoPacote;
-                    preco = parseFloat(matchPacote[3].replace(',', '.')) || 0;
-                    
-                    nome = nomeLimpo.replace(/\((\d+)x\s*(\d+)\s*un\)\s*-\s*R\$\s*([\d,.]+)/, '');
-                    nome = nome.replace(/\(Disponível\)/i, '');
-                    nome = nome.trim();
-                } else {
-                    const matchUnidade = nomeLimpo.match(/\((\d+)\s*un\)\s*-\s*R\$\s*([\d,.]+)/);
-                    if (matchUnidade) {
-                        totalUnidades = parseInt(matchUnidade[1]) || 1;
-                        qtdPacotes = 1;
-                        tamanhoPacote = totalUnidades;
-                        preco = parseFloat(matchUnidade[2].replace(',', '.')) || 0;
-                        
-                        nome = nomeLimpo.replace(/\((\d+)\s*un\)\s*-\s*R\$\s*([\d,.]+)/, '');
-                        nome = nome.replace(/\(Disponível\)/i, '');
-                        nome = nome.trim();
-                    } else {
-                        const matchPreco = nomeLimpo.match(/R\$\s*([\d,.]+)/);
-                        if (matchPreco) {
-                            preco = parseFloat(matchPreco[1].replace(',', '.')) || 0;
-                            nome = nomeLimpo.replace(/-\s*R\$\s*([\d,.]+)/, '');
-                            nome = nome.replace(/\(Disponível\)/i, '');
-                            nome = nome.trim();
-                        }
-                    }
-                }
-                
-                nome = nome.replace(/\(personalizado\)/i, '');
-                nome = nome.replace(/[🔄🔨✅📦💰]/g, '');
-                nome = nome.trim();
-                
-                if (!nome) nome = 'Produto';
-                
-                if (prazoProducao > maiorPrazoProducao) {
-                    maiorPrazoProducao = prazoProducao;
-                }
-                if (isProducao) {
-                    isProducaoGeral = true;
-                }
-                
-                let codigoProduto = '';
-                const produtoEncontrado = dados.produtos.find(p => 
-                    p.nome && p.nome.toLowerCase() === nome.toLowerCase()
-                );
-                if (produtoEncontrado) {
-                    codigoProduto = produtoEncontrado.codigo_produto || '';
-                    if (produtoEncontrado.descricao) {
-                        extrairESomarBerços(produtoEncontrado.descricao, totalUnidades, nome);
-                    }
-                }
-                
-                itens.push({
-                    nome: nome,
-                    codigo: codigoProduto,
-                    quantidade: qtdPacotes,
-                    pacote_tamanho: tamanhoPacote,
-                    totalUnidades: totalUnidades,
-                    price: preco,
-                    isProducao: isProducao,
-                    prazoProducao: prazoProducao,
-                    textoOriginal: part.trim()
-                });
-            });
-        }
+        let statusEstoque = '';
+        if (item.isProducao && item.prazoProducao > 0) statusEstoque = `PRODUCAO ${item.prazoProducao} DIAS`;
+        else if (item.isProducao) statusEstoque = 'PRODUCAO';
+        else statusEstoque = 'DISPONIVEL';
         
-        if (itens.length === 0 && textoItens) {
-            const matchPreco = textoItens.match(/R\$\s*([\d,.]+)/);
-            const preco = matchPreco ? parseFloat(matchPreco[1].replace(',', '.')) : 0;
-            const isProducao = textoItens.toLowerCase().includes('produção') || textoItens.toLowerCase().includes('producao');
-            const prazoMatch = textoItens.match(/Produção\s*(\d*)\s*dias?/i);
-            const prazo = prazoMatch ? parseInt(prazoMatch[1]) : 7;
-            
-            itens = [{
-                nome: String(textoItens).substring(0, 40),
-                codigo: '',
-                quantidade: 1,
-                pacote_tamanho: 1,
-                totalUnidades: 1,
-                price: preco || parseFloat(pedido.total) || 0,
-                isProducao: isProducao,
-                prazoProducao: isProducao ? prazo : 0
-            }];
-        }
+        const codigoExibicao = codigoProduto ? `- Cod ${codigoProduto}` : '';
         
-        if (itens.length === 0) {
-            itens = [{
-                nome: 'Produto',
-                codigo: '',
-                quantidade: 1,
-                pacote_tamanho: 1,
-                totalUnidades: 1,
-                price: parseFloat(pedido.total) || 0,
-                isProducao: false,
-                prazoProducao: 0
-            }];
-        }
-        
-        itens.forEach((item, index) => {
-            const preco = parseFloat(item.price || 0);
-            const qtdPacotes = parseInt(item.quantidade || 1);
-            const tamanhoPacote = parseInt(item.pacote_tamanho || 1);
-            const totalUnidades = qtdPacotes * tamanhoPacote;
-            
-            const unitPrice = totalUnidades > 0 ? preco / totalUnidades : 0;
-            subtotal += preco;
-            
-            const isProducao = item.isProducao || false;
-            const prazoProducao = item.prazoProducao || 0;
-            
-            let statusEstoque = '';
-            if (isProducao && prazoProducao > 0) {
-                statusEstoque = `PRODUCAO ${prazoProducao} DIAS`;
-            } else if (isProducao) {
-                statusEstoque = 'PRODUCAO';
-            } else {
-                statusEstoque = 'DISPONIVEL';
-            }
-            
-            const nome = String(item.nome || 'Produto').trim();
-            const qtdTexto = `${qtdPacotes}x ${tamanhoPacote} un (${totalUnidades} un total)`;
-            const codigoExibicao = item.codigo ? `- Cod ${item.codigo}` : '';
-            
-            itensHtml += `
-                <div style="display:flex;flex-direction:column;padding:2px 0;border-bottom:1px dotted #000;width:100%;max-width:100%;">
-                    <div style="display:flex;justify-content:space-between;width:100%;align-items:flex-start;">
-                        <div style="flex:1;min-width:0;padding-right:6px;">
-                            <span style="font-size:9px;font-weight:bold;color:#000;display:block;word-wrap:break-word;white-space:normal;line-height:1.3;">
-                                ${index+1}. ${nome} ${codigoExibicao}
-                            </span>
-                            <span style="font-size:8px;font-weight:bold;color:#000;display:block;">
-                                ${qtdTexto}
-                            </span>
-                            <span style="font-size:7px;font-weight:bold;color:#000;display:block;">
-                                ${statusEstoque}
-                            </span>
-                        </div>
-                        <span style="font-size:9px;font-weight:bold;color:#000;flex-shrink:0;white-space:nowrap;">R$ ${preco.toFixed(2)}</span>
+        itensHtml += `
+            <div style="display:flex;flex-direction:column;padding:2px 0;border-bottom:1px dotted #000;width:100%;max-width:100%;">
+                <div style="display:flex;justify-content:space-between;width:100%;align-items:flex-start;">
+                    <div style="flex:1;min-width:0;padding-right:6px;">
+                        <span style="font-size:9px;font-weight:bold;color:#000;display:block;word-wrap:break-word;white-space:normal;line-height:1.3;">
+                            ${index+1}. ${item.nome} ${codigoExibicao}
+                        </span>
+                        <span style="font-size:8px;font-weight:bold;color:#000;display:block;">
+                            ${qtd}x ${tamanhoPacote} un (${totalUnidades} un total)
+                        </span>
+                        <span style="font-size:7px;font-weight:bold;color:#000;display:block;">
+                            ${statusEstoque}
+                        </span>
                     </div>
-                    ${unitPrice > 0 ? `<div style="font-size:7px;font-weight:bold;color:#000;padding-top:1px;">UNIT: R$ ${unitPrice.toFixed(2)}</div>` : ''}
-                </div>
-            `;
-        });
-        
-    } catch (e) {
-        console.error('❌ Erro ao processar itens:', e);
-        itensHtml = `
-            <div style="display:flex;flex-direction:column;padding:2px 0;border-bottom:1px dotted #000;width:100%;">
-                <div style="display:flex;justify-content:space-between;width:100%;">
-                    <span style="font-size:9px;font-weight:bold;color:#000;">Pedido #${pedido.id_pedido}</span>
-                    <span style="font-size:9px;font-weight:bold;color:#000;">R$ ${(parseFloat(pedido.total) || 0).toFixed(2)}</span>
-                </div>
-                <div style="font-size:8px;font-weight:bold;color:#000;margin-top:1px;">
-                    ${pedido.itens ? String(pedido.itens).substring(0, 60) : 'Detalhes do pedido'}
+                    <span style="font-size:9px;font-weight:bold;color:#000;flex-shrink:0;white-space:nowrap;">R$ ${preco.toFixed(2)}</span>
                 </div>
             </div>
         `;
-        subtotal = parseFloat(pedido.total) || 0;
-        maiorPrazoProducao = 7;
-    }
+    });
     
     // ============================================================
     // ADICIONA OS BERÇOS AGREGADOS
@@ -6751,8 +6446,7 @@ function imprimirCupom(idPedido) {
     const gomosOrdenados = Object.keys(totalBerçosPorGomos).map(Number).sort((a, b) => a - b);
     
     if (gomosOrdenados.length > 0) {
-        const totalItensExistentes = itensHtml.split('<div style="display:flex;flex-direction:column;padding:2px 0;border-bottom:1px dotted #000;width:100%;max-width:100%;">').length - 1;
-        let itemIndex = totalItensExistentes + 1;
+        let itemIndex = itens.length + 1;
         
         itensHtml += `
             <div style="border-top:1px dashed #000;margin:3px 0;width:100%;"></div>
@@ -6763,8 +6457,6 @@ function imprimirCupom(idPedido) {
         
         gomosOrdenados.forEach(gomos => {
             const totalBerços = totalBerçosPorGomos[gomos];
-            const qtdTexto = `${totalBerços} unidades`;
-            
             itensHtml += `
                 <div style="display:flex;flex-direction:column;padding:2px 0;border-bottom:1px dotted #000;width:100%;max-width:100%;background:#fafffa;">
                     <div style="display:flex;justify-content:space-between;width:100%;align-items:flex-start;">
@@ -6773,15 +6465,11 @@ function imprimirCupom(idPedido) {
                                 ${itemIndex}. 🧩 BERÇO ${gomos} GOMOS
                             </span>
                             <span style="font-size:8px;font-weight:bold;color:#000;display:block;">
-                                ${qtdTexto}
-                            </span>
-                            <span style="font-size:7px;font-weight:bold;color:#000;display:block;">
-                                ⭐ CONFERIR NA SEPARAÇÃO
+                                ${totalBerços} unidades
                             </span>
                         </div>
                         <span style="font-size:9px;font-weight:bold;color:#000;flex-shrink:0;white-space:nowrap;">R$ 0,00</span>
                     </div>
-                    <div style="font-size:7px;font-weight:bold;color:#000;padding-top:1px;">UNIT: R$ 0.00</div>
                 </div>
             `;
             itemIndex++;
@@ -6789,34 +6477,36 @@ function imprimirCupom(idPedido) {
     }
     
     // ============================================================
-    // DADOS FINAIS
+    // DADOS FINAIS DO CUPOM
     // ============================================================
-    let diasEnvio = 1;
-    if (freteNome && freteNome !== 'Retirada na Loja' && freteNome !== 'Retirada') {
-        diasEnvio = 3;
-    }
-    
+    let freteNome = pedido.frete || 'Retirada na Loja';
+    let freteValor = parseFloat(pedido.frete_valor) || 0;
+    let diasEnvio = (freteNome !== 'Retirada na Loja' && freteNome !== 'Retirada') ? 3 : 1;
     let prazoTotal = diasEnvio + maiorPrazoProducao;
     
-    if (prazoEntrega > 0) {
-        prazoTotal = prazoEntrega;
+    if (pedido.prazo_entrega && parseInt(pedido.prazo_entrega) > 0) {
+        prazoTotal = parseInt(pedido.prazo_entrega);
     }
     
     const total = parseFloat(pedido.total) || subtotal;
     const status = pedido.status || 'Pendente';
-    // 🔥 DATA FORMATADA CORRETAMENTE (BRASÍLIA)
     const data = formatarDataHoraBR(pedido.data_pedido) || formatarDataHoraBR(new Date());
     const endereco = pedido.endereco_entrega || 'Retirada na Loja';
     const cliente = (pedido.cliente_nome || 'Não identificado');
     const telefone = pedido.cliente_telefone || '';
-    const observacoes = pedido.observacoes || '';
+    const pagamento = pedido.pagamento || 'Não informado';
     
-    let obsLimpa = observacoes;
-    if (obsLimpa) {
-        obsLimpa = obsLimpa.replace(/Prazo:\s*undefined\s*dias/gi, '');
-        obsLimpa = obsLimpa.replace(/\|\s*$/g, '');
-        obsLimpa = obsLimpa.trim();
-        obsLimpa = obsLimpa.replace(/\|\s*\|/g, '|');
+    let documentoCliente = pedido.cliente_documento || '';
+    let tipoDocumento = 'DOC';
+    if (documentoCliente) {
+        const docLimpo = documentoCliente.replace(/\D/g, '');
+        if (docLimpo.length === 11) {
+            documentoCliente = docLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+            tipoDocumento = 'CPF';
+        } else if (docLimpo.length === 14) {
+            documentoCliente = docLimpo.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+            tipoDocumento = 'CNPJ';
+        }
     }
     
     printArea.innerHTML = `
@@ -6885,11 +6575,6 @@ function imprimirCupom(idPedido) {
             <div style="font-size:8px;font-weight:bold;padding:0.3px 0;width:100%;word-wrap:break-word;white-space:normal;line-height:1.4;color:#000;">
                 ${endereco}
             </div>
-            
-            ${obsLimpa ? `
-            <div style="font-size:7px;font-weight:bold;padding:0.3px 0;width:100%;margin-top:2px;border-top:1px dotted #000;padding-top:2px;color:#000;">
-                Obs: ${obsLimpa}
-            </div>` : ''}
         </div>
         
         <div style="text-align:center;border-top:2px solid #000;padding-top:3px;margin-top:3px;font-size:7px;width:100%;">
@@ -6900,8 +6585,6 @@ function imprimirCupom(idPedido) {
     `;
     
     printArea.style.display = 'block';
-    
-    // 🔥 BLOQUEIA MÚLTIPLAS IMPRESSÕES
     window._imprimindo = true;
     
     setTimeout(function() {
