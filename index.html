@@ -7121,47 +7121,36 @@ function ajustarPacoteCarrinho(index, delta) {
 function abrirMeusPedidos() {
     if (!usuarioLogado) {
         mostrarNotificacao('🔐 Faça login para ver seus pedidos.', 'warning');
-        setTimeout(function() { abrirLogin(); }, 1000);
+        setTimeout(() => { abrirLogin(); }, 1000);
         return;
     }
     
-    // CARREGA OS PEDIDOS
-    carregarPedidosCliente(usuarioLogado.email);
-    
-    // CRIA UM MODAL ESPECÍFICO PARA PEDIDOS (SEM CAMPOS DE LOGIN)
-    var modal = document.createElement('div');
+    // Abre o modal
+    const modal = document.createElement('div');
     modal.id = 'meusPedidosModal';
     modal.className = 'modal';
     modal.style.display = 'block';
     modal.style.zIndex = '3000';
     
     modal.innerHTML = `
-        <div class="modal-content" style="max-width:700px;max-height:90vh;overflow-y:auto;">
-            <span class="modal-close" onclick="fecharModal('meusPedidosModal')">&times;</span>
-            
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
-                <div style="background:var(--primary-blue);color:white;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:18px;">
-                    <i class="fas fa-box"></i>
-                </div>
-                <div>
-                    <h2 style="color:var(--primary-dark);margin:0;font-size:20px;">Meus Pedidos</h2>
-                    <p style="color:#888;font-size:13px;margin:0;">Olá, ${usuarioLogado.nome || 'Cliente'}!</p>
-                </div>
-            </div>
-            
-            <div id="listaPedidosContainer" style="max-height:500px;overflow-y:auto;">
+        <div class="modal-content" style="max-width:600px;max-height:90vh;overflow-y:auto;">
+            <span class="modal-close" onclick="document.getElementById('meusPedidosModal').remove()">&times;</span>
+            <h2 style="margin-bottom:20px;color:var(--primary-dark);">📦 Meus Pedidos</h2>
+            <div id="meusPedidosLista">
                 <div style="text-align:center;padding:30px;color:#999;">
-                    <i class="fas fa-spinner fa-spin" style="font-size:24px;display:block;margin-bottom:10px;"></i>
-                    Carregando pedidos...
+                    <i class="fas fa-spinner fa-spin"></i> Carregando pedidos...
                 </div>
             </div>
+            <button onclick="document.getElementById('meusPedidosModal').remove()" style="margin-top:15px;width:100%;padding:12px;background:var(--primary-blue);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:15px;transition:all 0.3s;">
+                <i class="fas fa-times"></i> Fechar
+            </button>
         </div>
     `;
     
     document.body.appendChild(modal);
     
-    // CARREGA OS PEDIDOS DENTRO DO MODAL
-    carregarPedidosClienteModal(usuarioLogado.email);
+    // Chama a função de carregar (que agora usa Supabase)
+    carregarPedidosCliente(usuarioLogado.email);
 }
 
 
@@ -7212,7 +7201,14 @@ async function carregarPedidosCliente(email) {
             return idB - idA;
         });
         
+        // Tenta achar o container em dois lugares diferentes para evitar erro
         var container = document.getElementById('listaPedidosLogado');
+        if (!container) container = document.getElementById('meusPedidosLista');
+        
+        if (!container) {
+            console.warn('Container de pedidos não encontrado na tela.');
+            return;
+        }
         
         if (pedidosFiltrados.length === 0) {
             container.innerHTML = `
@@ -7224,6 +7220,11 @@ async function carregarPedidosCliente(email) {
         } else {
             container.innerHTML = pedidosFiltrados.map(function(p) {
                 var statusExibido = p.status || 'Pendente';
+                
+                if (statusExibido.toLowerCase() === 'pendente') {
+                    statusExibido = '✅ Pedido efetuado';
+                }
+                
                 var statusColor = {
                     'pendente': '#27ae60',
                     'pago': '#27ae60',
@@ -7259,7 +7260,11 @@ async function carregarPedidosCliente(email) {
                 `;
             }).join('');
         }
-        document.getElementById('pedidosLogado').style.display = 'block';
+        
+        if (document.getElementById('pedidosLogado')) {
+            document.getElementById('pedidosLogado').style.display = 'block';
+        }
+        
     } catch (error) {
         console.error('❌ Erro ao carregar pedidos:', error);
     }
@@ -7449,10 +7454,14 @@ async function carregarPedidosCliente(email) {
         // ============================================================
         // VER DETALHES DO PEDIDO
         // ============================================================
-        function verDetalhesPedido(pedidoId) {
-            carregarDetalhesPedido(pedidoId);
-        }
-
+       function verDetalhesPedido(pedidoId) {
+    // Se o modal de Meus Pedidos estiver aberto, fecha ele
+    const modalAntigo = document.getElementById('meusPedidosModal');
+    if (modalAntigo) modalAntigo.remove();
+    
+    // Chama a função original que já existe no seu código para carregar os detalhes
+    carregarDetalhesPedido(pedidoId);
+}
         async function carregarDetalhesPedido(pedidoId) {
             const loadingModal = document.createElement('div');
             loadingModal.id = 'loadingDetalhesModal';
