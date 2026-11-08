@@ -7208,6 +7208,8 @@ async function carregarPedidosCliente(email) {
         
     } catch (error) {
         console.error('❌ Erro ao carregar pedidos:', error);
+        var c = document.getElementById('listaPedidosLogado') || document.getElementById('meusPedidosLista');
+        if (c) c.innerHTML = `<p style="text-align:center;color:#e74c3c;">Erro ao carregar. Tente novamente.</p>`;
     }
 }
 
