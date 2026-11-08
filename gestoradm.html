@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>📦 Gerenciamento - Embalagens Express</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+      // Substitua com os dados do seu projeto em Project Settings > API
+      const supabaseUrl = 'https://ddtiraoxbxexstozncwj.supabase.co/rest/v1/'; 
+      const supabaseKey = 'sb_publishable_JJBVWA5QR9N9WZTJ_PROcA_PaioDgKR'; 
+      const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    </script>
     <style>
         * {
             margin: 0;
@@ -2774,7 +2781,7 @@ setInterval(atualizarTempoRestante, 10000); // a cada 10 segundos para ficar mai
 
 
 
-const API_URL = 'https://script.google.com/macros/s/AKfycbyYsK2yKe0lTfOHadXQOd9XTUMNAQRySrw4bgg6Zboc2hWS6-losCnZspwCTzII7QmNWg/exec';
+
 const SENHA_GESTOR = '123456';
 
 let dados = {
@@ -3987,12 +3994,10 @@ async function finalizarPedidoCheckout() {
 }
 
 // ============================================================
-// CARREGAR DADOS - MODIFICADO PARA VERIFICAR SESSÃO
+// CARREGAR DADOS - SUPABASE
 // ============================================================
 async function carregarDados() {
-    // Verifica se a sessão ainda é válida antes de carregar
     if (!verificarSessao()) {
-        // Sessão expirada, força logout
         localStorage.removeItem('sessao_gestor');
         document.getElementById('loginOverlay').classList.remove('hidden');
         document.getElementById('app').classList.remove('logged-in');
@@ -4001,13 +4006,18 @@ async function carregarDados() {
     
     mostrarSpinner('Carregando dados...');
     try {
-        const response = await fetch(API_URL);
-        const data = await response.json();
-        
-        dados.produtos = data.produtos || [];
-        dados.categorias = data.categorias || [];
-        dados.pedidos = data.pedidos || [];
-        dados.clientes = data.clientes || [];
+        // Busca os dados do Supabase em paralelo (muito mais rápido)
+        const [resProdutos, resCategorias, resPedidos, resClientes] = await Promise.all([
+            supabase.from('produtos').select('*'),
+            supabase.from('categorias').select('*'),
+            supabase.from('pedidos').select('*').order('id_pedido', { ascending: false }),
+            supabase.from('clientes').select('*')
+        ]);
+
+        dados.produtos = resProdutos.data || [];
+        dados.categorias = resCategorias.data || [];
+        dados.pedidos = resPedidos.data || [];
+        dados.clientes = resClientes.data || [];
 
         ordenarProdutosPorNome();
         popularFiltroCategorias();
@@ -4024,27 +4034,28 @@ async function carregarDados() {
     } catch (error) {
         console.error('Erro ao carregar dados:', error);
         esconderSpinner();
-        if (!error.message.includes('Failed to fetch')) {
-            alert('⚠️ Erro ao carregar dados. Verifique sua conexão.');
-        }
+        alert('⚠️ Erro ao carregar dados. Verifique sua conexão.');
     }
 }
 
 // ============================================================
-// CARREGAR DADOS PARCIAL
+// CARREGAR DADOS PARCIAL - SUPABASE
 // ============================================================
 async function carregarDadosParcial() {
     try {
-        const response = await fetch(API_URL);
-        const data = await response.json();
-        
-        dados.produtos = data.produtos || [];
-        dados.categorias = data.categorias || [];
-        dados.pedidos = data.pedidos || [];
-        dados.clientes = data.clientes || [];
+        const [resProdutos, resCategorias, resPedidos, resClientes] = await Promise.all([
+            supabase.from('produtos').select('*'),
+            supabase.from('categorias').select('*'),
+            supabase.from('pedidos').select('*').order('id_pedido', { ascending: false }),
+            supabase.from('clientes').select('*')
+        ]);
+
+        dados.produtos = resProdutos.data || [];
+        dados.categorias = resCategorias.data || [];
+        dados.pedidos = resPedidos.data || [];
+        dados.clientes = resClientes.data || [];
 
         ordenarProdutosPorNome();
-
         renderizarPendentes();
         renderizarTodosPedidos();
         renderizarRevendedores();
