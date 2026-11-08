@@ -5848,168 +5848,87 @@ function abrirWhatsAppAtendente(cep) {
         // ============================================================
         // VERIFICAR ESTOQUE DO CARRINHO
         // ============================================================
-        async function verificarEstoqueCarrinho() {
-            if (carrinho.length === 0) return { atualizado: false, mensagem: 'Carrinho vazio' };
+       async function verificarEstoqueCarrinho() {
+    if (carrinho.length === 0) return { atualizado: false, mensagem: 'Carrinho vazio' };
+    
+    console.log('🔄 Verificando estoque do carrinho...');
+    let precisaAtualizar = false;
+    let mensagem = '';
+    let itensRemovidos = [];
+    let itensAjustados = [];
+    
+    try {
+        // Busca os produtos no Supabase
+        const { data: produtos, error } = await supabaseClient.from('produtos').select('id, nome, estoque, vender_zerado');
+        if (error) throw error;
+        
+        const produtosPlanilha = {};
+        produtos.forEach(p => {
+            const nome = String(p.nome || '').trim();
+            if (nome) {
+                produtosPlanilha[nome] = {
+                    estoque: parseInt(p.estoque) || 0,
+                    vender_zerado: String(p.vender_zerado || '').toUpperCase() === 'SIM'
+                };
+            }
+        });
+        
+        for (let i = 0; i < carrinho.length; i++) {
+            const item = carrinho[i];
+            const produtoAtual = produtosPlanilha[item.name];
             
-            console.log('🔄 Verificando estoque do carrinho...');
-            let precisaAtualizar = false;
-            let mensagem = '';
-            let itensRemovidos = [];
-            let itensAjustados = [];
+            if (!produtoAtual) continue;
             
-            try {
-                const response = await fetch(API_URL);
-                if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
-                const data = await response.json();
+            const estoqueAtual = produtoAtual.estoque;
+            const venderZerado = produtoAtual.vender_zerado;
+            const estoqueAntigo = item.stock || 999;
+            
+            if (!venderZerado && estoqueAtual !== estoqueAntigo) {
+                item.stock = estoqueAtual;
+                precisaAtualizar = true;
                 
-                if (!data.produtos) return { atualizado: false, mensagem: 'Dados não encontrados' };
-                
-                const produtosPlanilha = {};
-                data.produtos.forEach(p => {
-                    const nome = String(p.nome || '').trim();
-                    if (nome) {
-                        produtosPlanilha[nome] = {
-                            estoque: parseInt(p.estoque) || 0,
-                            vender_zerado: String(p.vender_zerado || '').toUpperCase() === 'SIM'
-                        };
-                    }
-                });
-                
-                for (let i = 0; i < carrinho.length; i++) {
-                    const item = carrinho[i];
-                    const produtoAtual = produtosPlanilha[item.name];
-                    
-                    if (!produtoAtual) continue;
-                    
-                    const estoqueAtual = produtoAtual.estoque;
-                    const venderZerado = produtoAtual.vender_zerado;
-                    const estoqueAntigo = item.stock || 999;
-                    
-                    if (!venderZerado && estoqueAtual !== estoqueAntigo) {
-                        item.stock = estoqueAtual;
-                        precisaAtualizar = true;
-                        
-                        if (estoqueAtual < item.quantity) {
-                            if (estoqueAtual === 0) {
-                                itensRemovidos.push(item.name);
-                                carrinho.splice(i, 1);
-                                i--;
-                                continue;
-                            } else {
-                                if (item.detalhes && item.detalhes.length > 0) {
-                                    let totalAjustado = 0;
-                                    let itensParaRemover = [];
-                                    
-                                    for (let d = 0; d < item.detalhes.length; d++) {
-                                        const detalhe = item.detalhes[d];
-                                        const unidadesPacote = detalhe.step;
-                                        const unidadesTotais = detalhe.totalUnits || (detalhe.qty * unidadesPacote);
-                                        
-                                        if (totalAjustado + unidadesTotais <= estoqueAtual) {
-                                            totalAjustado += unidadesTotais;
-                                        } else {
-                                            const restante = estoqueAtual - totalAjustado;
-                                            if (restante > 0) {
-                                                const pacotesPossiveis = Math.floor(restante / unidadesPacote);
-                                                if (pacotesPossiveis > 0) {
-                                                    detalhe.qty = pacotesPossiveis;
-                                                    detalhe.totalUnits = pacotesPossiveis * unidadesPacote;
-                                                    totalAjustado += detalhe.totalUnits;
-                                                    itensAjustados.push(`${item.name}: ${detalhe.totalUnits} unidades`);
-                                                } else {
-                                                    itensParaRemover.push(d);
-                                                }
-                                            } else {
-                                                itensParaRemover.push(d);
-                                            }
-                                        }
-                                    }
-                                    
-                                    itensParaRemover.forEach(d => {
-                                        const idx = item.detalhes.indexOf(d);
-                                        if (idx > -1) item.detalhes.splice(idx, 1);
-                                    });
-                                    
-                                    let novaQtd = 0;
-                                    let novoPreco = 0;
-                                    const product = encontrarProduto(item.productId);
-                                    
-                                    item.detalhes.forEach(d => {
-                                        novaQtd += d.totalUnits || (d.qty * d.step);
-                                        if (product) {
-                                            const qtyOption = product.quantities.find(q => q.qty === d.step);
-                                            if (qtyOption) {
-                                                const unidades = d.totalUnits || (d.qty * d.step);
-                                                novoPreco += (unidades * qtyOption.price) / qtyOption.qty;
-                                            }
-                                        }
-                                    });
-                                    
-                                    item.quantity = novaQtd;
-                                    item.price = novoPreco;
-                                    
-                                    if (item.quantity === 0) {
-                                        itensRemovidos.push(item.name);
-                                        carrinho.splice(i, 1);
-                                        i--;
-                                        continue;
-                                    }
-                                    
-                                } else {
-                                    if (estoqueAtual > 0) {
-                                        item.quantity = estoqueAtual;
-                                        const product = encontrarProduto(item.productId);
-                                        if (product) {
-                                            let melhorOpcao = product.quantities[0];
-                                            for (const qty of product.quantities) {
-                                                if (item.quantity >= qty.qty) {
-                                                    melhorOpcao = qty;
-                                                }
-                                            }
-                                            item.price = (item.quantity * melhorOpcao.price) / melhorOpcao.qty;
-                                            itensAjustados.push(`${item.name}: ${item.quantity} unidades`);
-                                        }
-                                    } else {
-                                        itensRemovidos.push(item.name);
-                                        carrinho.splice(i, 1);
-                                        i--;
-                                        continue;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                if (precisaAtualizar) {
-                    salvarCarrinho();
-                    atualizarBadge();
-                    
-                    let mensagemFinal = '';
-                    if (itensRemovidos.length > 0) {
-                        mensagemFinal += `❌ Produtos removidos: ${itensRemovidos.join(', ')}\n`;
-                    }
-                    if (itensAjustados.length > 0) {
-                        mensagemFinal += `📦 Produtos ajustados: ${itensAjustados.join(', ')}\n`;
-                    }
-                    
-                    if (mensagemFinal) {
-                        mostrarNotificacao(`⚠️ Estoque atualizado! Alguns itens foram ajustados.`, 'warning');
-                        console.log('📊 Ajustes realizados:', mensagemFinal);
+                if (estoqueAtual < item.quantity) {
+                    if (estoqueAtual === 0) {
+                        itensRemovidos.push(item.name);
+                        carrinho.splice(i, 1);
+                        i--;
+                        continue;
                     } else {
-                        mostrarNotificacao('✅ Estoque do carrinho atualizado!', 'success');
+                        item.quantity = estoqueAtual;
+                        if (item.detalhes && item.detalhes.length > 0) {
+                            item.detalhes[0].qty = estoqueAtual;
+                        }
+                        itensAjustados.push(`${item.name}: ${estoqueAtual} unidades`);
+                        item.price = estoqueAtual * item.unitPrice;
                     }
-                    
-                    return { atualizado: true, mensagem: mensagemFinal, removidos: itensRemovidos, ajustados: itensAjustados };
                 }
-                
-                return { atualizado: false, mensagem: 'Estoque OK' };
-                
-            } catch (error) {
-                console.error('❌ Erro ao verificar estoque:', error);
-                return { atualizado: false, mensagem: 'Erro ao verificar estoque' };
             }
         }
+        
+        if (precisaAtualizar) {
+            salvarCarrinho();
+            atualizarBadge();
+            
+            let mensagemFinal = '';
+            if (itensRemovidos.length > 0) mensagemFinal += `❌ Produtos removidos: ${itensRemovidos.join(', ')}\n`;
+            if (itensAjustados.length > 0) mensagemFinal += `📦 Produtos ajustados: ${itensAjustados.join(', ')}\n`;
+            
+            if (mensagemFinal) {
+                mostrarNotificacao(`⚠️ Estoque atualizado! Alguns itens foram ajustados.`, 'warning');
+            } else {
+                mostrarNotificacao('✅ Estoque do carrinho atualizado!', 'success');
+            }
+            
+            return { atualizado: true, mensagem: mensagemFinal, removidos: itensRemovidos, ajustados: itensAjustados };
+        }
+        
+        return { atualizado: false, mensagem: 'Estoque OK' };
+        
+    } catch (error) {
+        console.error('❌ Erro ao verificar estoque:', error);
+        return { atualizado: false, mensagem: 'Erro ao verificar estoque' };
+    }
+}
 
         function verificarCarrinhoValido() {
             if (carrinho.length === 0) {
@@ -8821,38 +8740,27 @@ async function buscarClientePorEmailCheckout() {
         erroEl.style.display = 'block';
         return;
     }
-    if (email.indexOf('@') === -1 || email.indexOf('.') === -1) {
-        erroEl.textContent = '⚠️ Digite um email válido (ex: nome@email.com).';
-        erroEl.style.display = 'block';
-        return;
-    }
 
     erroEl.style.display = 'none';
     loadingEl.style.display = 'block';
     btnBuscar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Buscando...';
     btnBuscar.disabled = true;
-
     areaNovoCadastro.style.display = 'none';
     dadosCliente.style.display = 'none';
 
     try {
-        var response = await fetch(API_URL);
-        if (!response.ok) throw new Error('Erro HTTP: ' + response.status);
-        
-        var data = await response.json();
-        var clientes = data.clientes || [];
-        var emailLower = email.toLowerCase().trim();
-        
-        var clienteEncontrado = null;
-        for (var i = 0; i < clientes.length; i++) {
-            var cEmail = String(clientes[i].email || '').toLowerCase().trim();
-            if (cEmail === emailLower) {
-                clienteEncontrado = clientes[i];
-                break;
-            }
-        }
+        // Busca o cliente no Supabase
+        const { data: clientes, error } = await supabaseClient
+            .from('clientes')
+            .select('*')
+            .eq('email', email)
+            .limit(1);
+            
+        if (error) throw error;
 
-        if (clienteEncontrado) {
+        if (clientes && clientes.length > 0) {
+            const clienteEncontrado = clientes[0];
+            
             checkoutState.clienteEncontrado = true;
             checkoutState.clienteData = clienteEncontrado;
             checkoutState.emailBuscado = email;
@@ -8865,7 +8773,6 @@ async function buscarClientePorEmailCheckout() {
             var enderecosContainer = document.getElementById('enderecosLista');
             enderecosContainer.innerHTML = '';
             
-            // CONSTRUIR ENDEREÇO COMPLETO
             var enderecoCompleto = '';
             if (clienteEncontrado.endereco) enderecoCompleto += clienteEncontrado.endereco;
             if (clienteEncontrado.numero) enderecoCompleto += ', ' + clienteEncontrado.numero;
@@ -8877,7 +8784,6 @@ async function buscarClientePorEmailCheckout() {
             
             var enderecoCamuflado = camuflarEndereco(enderecoCompleto);
             
-            // EXTRAIR DADOS DO ENDEREÇO
             var enderecoData = {
                 endereco: clienteEncontrado.endereco || 'Rua Teste',
                 numero: clienteEncontrado.numero || '123',
@@ -8888,7 +8794,6 @@ async function buscarClientePorEmailCheckout() {
                 complemento: clienteEncontrado.complemento || ''
             };
             
-            // CRIA CARD DO ENDEREÇO
             var enderecoCard = document.createElement('div');
             enderecoCard.style.cssText = 'background:white;border:2px solid #ddd;border-radius:8px;padding:12px 15px;margin-bottom:8px;cursor:pointer;transition:all 0.3s;';
             enderecoCard.innerHTML = `
@@ -8903,15 +8808,9 @@ async function buscarClientePorEmailCheckout() {
                 </div>
             `;
             
-            // ============================================================
-            // CLICK NO BOTÃO CONFIRMAR - CARREGA O FRETE E LIBERA
-            // ============================================================
             enderecoCard.querySelector('.btn-selecionar-endereco').onclick = function(e) {
                 e.stopPropagation();
                 
-                console.log('✅ Cliente confirmou o endereço! Carregando fretes...');
-                
-                // 1. MARCA O ENDEREÇO COMO SELECIONADO E CONFIRMADO
                 checkoutState.enderecoSelecionado = {
                     nome: clienteEncontrado.nome || 'Cliente',
                     endereco: enderecoCompleto,
@@ -8919,7 +8818,7 @@ async function buscarClientePorEmailCheckout() {
                     cep: enderecoData.cep,
                     telefone: clienteEncontrado.telefone || '',
                     email: clienteEncontrado.email || '',
-                    documento: clienteEncontrado.cpf || '',
+                    documento: clienteEncontrado.cpf || clienteEncontrado.documento || '',
                     endereco: enderecoData.endereco,
                     numero: enderecoData.numero,
                     bairro: enderecoData.bairro,
@@ -8929,26 +8828,18 @@ async function buscarClientePorEmailCheckout() {
                 };
                 
                 checkoutState.dadosConfirmados = true;
-                console.log('✅ dadosConfirmados:', checkoutState.dadosConfirmados);
                 
-                // 2. DESTACA O CARD
                 var card = e.currentTarget.closest('div');
                 card.style.borderColor = '#27ae60';
                 card.style.background = '#e8f5e9';
                 
-                // 3. ATUALIZA INDICADORES
                 document.getElementById('stepIndicator2').style.color = 'var(--primary-blue)';
                 document.getElementById('stepIndicator2').style.fontWeight = '600';
                 document.getElementById('step1Status').textContent = '✅ Completo';
                 document.getElementById('step1Status').style.color = '#27ae60';
-                
-                // 4. EXIBE A ÁREA DE FRETE
                 document.getElementById('checkoutStep2').style.display = 'block';
                 document.getElementById('step2Status').textContent = '⏳ Carregando...';
                 
-                // ============================================================
-                // 5. CARREGA O FRETE (AGORA CONFIRMADO E LIBERADO)
-                // ============================================================
                 carregarOpcoesFreteCheckout();
             };
             
@@ -8959,23 +8850,14 @@ async function buscarClientePorEmailCheckout() {
             document.getElementById('step1Status').textContent = '✅ Completo';
             erroEl.style.display = 'none';
             
-            // ============================================================
-            // 📌 NÃO CARREGA O FRETE AUTOMATICAMENTE
-            // O frete só será carregado quando o cliente clicar em "Confirmar"
-            // ============================================================
-            // Apenas mostra uma mensagem na área de frete
             var container = document.getElementById('freteOpcoesContainer');
             container.innerHTML = `
                 <div style="text-align:center;padding:30px 20px;color:#888;background:#f8f9fa;border-radius:8px;border:1px dashed #ddd;">
                     <i class="fas fa-map-pin" style="font-size:28px;display:block;margin-bottom:10px;color:#f39c12;"></i>
                     <p style="font-size:15px;font-weight:600;color:#666;">Clique em "Confirmar e carregar fretes"</p>
-                    <p style="font-size:13px;color:#999;">Para carregar as opções de frete</p>
                 </div>
             `;
             
-            // ============================================================
-            // 🔒 BLOQUEIA O PAGAMENTO
-            // ============================================================
             document.querySelectorAll('.pagamento-opcao-checkout').forEach(function(el) {
                 el.style.opacity = '0.5';
                 el.style.pointerEvents = 'none';
@@ -8983,10 +8865,7 @@ async function buscarClientePorEmailCheckout() {
             
             document.getElementById('btnFinalizarPedido').disabled = true;
             document.getElementById('btnFinalizarPedido').style.opacity = '0.5';
-            document.getElementById('btnFinalizarPedido').title = 'Confirme o endereço primeiro';
-            
             document.getElementById('step3Status').textContent = '🔒 Confirme o endereço';
-            document.getElementById('checkoutStep3Status').textContent = '🔒 Clique em "Confirmar e carregar fretes" para liberar o pagamento.';
             
         } else {
             checkoutState.clienteEncontrado = false;
