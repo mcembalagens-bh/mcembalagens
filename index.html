@@ -9401,7 +9401,7 @@ async function finalizarPedidoCheckout() {
             
             return {
                 nome: nomeCompleto,
-                quantidade: totalUnidades, // <--- CORRIGIDO
+                quantidade: totalUnidades,
                 pacote_tamanho: tamanhoPacote,
                 totalUnidades: totalUnidades,
                 price: preco,
@@ -9422,8 +9422,8 @@ async function finalizarPedidoCheckout() {
             cliente_email: clienteEmail,
             cliente_telefone: clienteTelefone,
             cliente_documento: clienteDocumento,
-            itens: JSON.stringify(itensFormatados), // Salva como JSON para facilitar a leitura
-            total: String(totalFinal.toFixed(2)),   // Salva como texto para evitar erros de vírgula
+            itens: JSON.stringify(itensFormatados),
+            total: String(totalFinal.toFixed(2)),
             total_produtos: String(totalProdutos.toFixed(2)),
             desconto: String(desconto.toFixed(2)),
             endereco_entrega: enderecoCompleto.enderecoCompleto || '',
@@ -9474,7 +9474,6 @@ async function finalizarPedidoCheckout() {
             }
 
             if (checkoutState.pagamentoSelecionado === 'PIX') {
-                // PIX usa o modal manual (aquele que gera o QR Code no próprio site)
                 mostrarPixManual(novoId, totalFinal);
                 fecharCheckout();
                 carrinho = [];
@@ -9483,7 +9482,6 @@ async function finalizarPedidoCheckout() {
                 if (currentProducts && currentProducts.length > 0) renderizarProdutos();
                 mostrarNotificacao('✅ Pedido criado! Escaneie o QR Code para pagar.', 'success');
             } else {
-                               // Cartão e Boleto usam a Edge Function do Pagar.me
                 const { data: pagamento, error: erroPagamento } = await supabaseClient.functions.invoke('criar-link-pagamento', {
                     body: {
                         pedidoId: novoId,
@@ -9497,33 +9495,34 @@ async function finalizarPedidoCheckout() {
                     }
                 });
 
-                if (erroPagamento) throw erroPagamento;
+                if (erroPagamento) {
+                    console.error('Erro detalhado (Edge Function):', erroPagamento);
+                    alert('Erro do Pagar.me:\n\n' + JSON.stringify(erroPagamento, null, 2));
+                    throw erroPagamento;
+                }
+
+                console.log('Resposta do Pagar.me:', pagamento);
 
                 // A Edge Function do Pagar.me devolve os dados com a propriedade 'paymentLink'
                 const linkPagamento = pagamento?.paymentLink || pagamento?.url;
 
                 if (linkPagamento) {
-                    // Atualiza os dados do modal
                     document.getElementById('confirmacaoNumeroPedido').textContent = `#${novoId}`;
                     document.getElementById('confirmacaoMensagem').textContent = 'Clique no botão abaixo para pagar com segurança.';
                     
-                    // Configura o botão do modal
                     const btnPagar = document.getElementById('btnFinalizarPagamento');
                     btnPagar.style.display = 'block';
                     btnPagar.innerHTML = '<i class="fas fa-credit-card"></i> Ir para o Pagamento';
                     
-                    // O botão abre o link do Pagar.me
                     btnPagar.onclick = function() {
                         window.open(linkPagamento, '_blank');
                     };
                     
-                    // Mostra o modal de confirmação
                     document.getElementById('confirmacaoModal').style.display = 'block';
                 } else {
-                    alert('⚠️ Pedido salvo, mas não foi possível gerar o link de pagamento. Contate o suporte.');
+                    alert('⚠️ Pedido salvo, mas não foi possível gerar o link de pagamento. O Pagar.me não retornou uma URL.\n\nResposta recebida:\n' + JSON.stringify(pagamento, null, 2));
                 }
 
-                // Limpa o carrinho e fecha o checkout
                 fecharCheckout();
                 carrinho = [];
                 salvarCarrinho();
@@ -9532,7 +9531,6 @@ async function finalizarPedidoCheckout() {
             }
         } catch (errPagamento) {
             console.error('❌ Erro no pagamento:', errPagamento);
-            mostrarNotificacao('⚠️ Pedido salvo, mas erro ao gerar pagamento. Contate o suporte.', 'warning');
             fecharCheckout();
         }
 
