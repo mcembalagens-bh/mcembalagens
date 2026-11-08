@@ -10,7 +10,7 @@
       // Substitua com os dados do seu projeto em Project Settings > API
       const supabaseUrl = 'https://ddtiraoxbxexstozncwj.supabase.co'; 
       const supabaseKey = 'sb_publishable_JJBVWA5QR9N9WZTJ_PROcA_PaioDgKR'; 
-      const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+      const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
     </script>
     <style>
         * {
@@ -4008,10 +4008,10 @@ async function carregarDados() {
     try {
         // Busca os dados do Supabase em paralelo (muito mais rápido)
         const [resProdutos, resCategorias, resPedidos, resClientes] = await Promise.all([
-            supabase.from('produtos').select('*'),
-            supabase.from('categorias').select('*'),
-            supabase.from('pedidos').select('*').order('id_pedido', { ascending: false }),
-            supabase.from('clientes').select('*')
+            supabaseClient.from('produtos').select('*'),
+            supabaseClient.from('categorias').select('*'),
+           supabaseClient.from('pedidos').select('*').order('id_pedido', { ascending: false }),
+           supabaseClient.from('clientes').select('*')
         ]);
 
         dados.produtos = resProdutos.data || [];
@@ -4044,10 +4044,10 @@ async function carregarDados() {
 async function carregarDadosParcial() {
     try {
         const [resProdutos, resCategorias, resPedidos, resClientes] = await Promise.all([
-            supabase.from('produtos').select('*'),
-            supabase.from('categorias').select('*'),
-            supabase.from('pedidos').select('*').order('id_pedido', { ascending: false }),
-            supabase.from('clientes').select('*')
+            supabaseClient.from('produtos').select('*'),
+            supabaseClient.from('categorias').select('*'),
+            supabaseClient.from('pedidos').select('*').order('id_pedido', { ascending: false }),
+            supabaseClient.from('clientes').select('*')
         ]);
 
         dados.produtos = resProdutos.data || [];
