@@ -5165,13 +5165,10 @@ async function salvarProduto(event) {
     const codigo = document.getElementById('produto_codigo').value.trim();
     const idAtual = document.getElementById('produto_id').value;
     
-    // VALIDAÇÃO DE CÓDIGO DUPLICADO
     if (codigo && !validarCodigoDuplicado(codigo, idAtual)) {
-        alert(`⚠️ O código "${codigo}" já está sendo usado por outro produto!\n\nPor favor, escolha um código diferente.`);
+        alert(`⚠️ O código "${codigo}" já está sendo usado por outro produto!`);
         btnSalvar.disabled = false;
         btnSalvar.innerHTML = '<i class="fas fa-save"></i> Salvar';
-        document.getElementById('produto_codigo').focus();
-        document.getElementById('produto_codigo').select();
         return;
     }
     
@@ -5188,12 +5185,8 @@ async function salvarProduto(event) {
         const peso = document.getElementById(`peso_${qty}`);
         const medida = document.getElementById(`medida_${qty}`);
         
-        if (preco && preco.value && parseFloat(preco.value) > 0) {
-            precoVendaParts.push(`${qty}:${parseFloat(preco.value).toFixed(2)}`);
-        }
-        if (promo && promo.value && parseFloat(promo.value) > 0) {
-            precoPromoParts.push(`${qty}:${parseFloat(promo.value).toFixed(2)}`);
-        }
+        if (preco && preco.value && parseFloat(preco.value) > 0) precoVendaParts.push(`${qty}:${parseFloat(preco.value).toFixed(2)}`);
+        if (promo && promo.value && parseFloat(promo.value) > 0) precoPromoParts.push(`${qty}:${parseFloat(promo.value).toFixed(2)}`);
         if (peso && peso.value && medida && medida.value) {
             pesoMedidaParts.push(`${qty}:${peso.value}-${medida.value}`);
         } else if (peso && peso.value) {
@@ -5201,26 +5194,17 @@ async function salvarProduto(event) {
         }
     });
     
-    const observacoes = document.getElementById('produto_observacoes')?.value || '';
-    console.log('Observações salvas:', observacoes);
-    
     const now = new Date();
-    const dia = String(now.getDate()).padStart(2, '0');
-    const mes = String(now.getMonth() + 1).padStart(2, '0');
-    const ano = now.getFullYear();
-    const dataEstoque = `${dia}/${mes}/${ano}`;
+    const dataEstoque = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
     
     let estoqueAntigo = 0;
     if (idAtual) {
         const produtoExistente = dados.produtos.find(p => parseInt(p.id) === parseInt(idAtual));
-        if (produtoExistente) {
-            estoqueAntigo = parseInt(produtoExistente.estoque) || 0;
-        }
+        if (produtoExistente) estoqueAntigo = parseInt(produtoExistente.estoque) || 0;
     }
     const estoqueNovo = parseInt(document.getElementById('produto_estoque').value) || 0;
     
     const produto = {
-        id: idAtual || null,
         codigo_produto: codigo,
         categoria: document.getElementById('produto_categoria').value,
         nome: document.getElementById('produto_nome').value,
@@ -5237,34 +5221,37 @@ async function salvarProduto(event) {
         produto_ativado: document.getElementById('produto_ativado').value,
         vender_zerado: document.getElementById('produto_vender_zerado').value,
         ncm: document.getElementById('produto_ncm').value,
-        observacoes: observacoes,
-        data_estoque: estoqueNovo !== estoqueAntigo ? dataEstoque : (document.getElementById('produto_quantidades').dataset?.dataEstoque || '')
+        observacoes: document.getElementById('produto_observacoes')?.value || '',
+        data_estoque: estoqueNovo !== estoqueAntigo ? dataEstoque : null
     };
 
-    const acao = produto.id ? 'atualizar_produto' : 'criar_produto';
-    
     try {
-        console.log('Enviando produto:', produto);
+        let error;
         
-        await fetch(API_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                acao: acao,
-                produto: produto
-            })
-        });
+        if (idAtual) {
+            // Atualizar produto existente
+            const { error: errUpdate } = await supabaseClient
+                .from('produtos')
+                .update(produto)
+                .eq('id', parseInt(idAtual));
+            error = errUpdate;
+        } else {
+            // Criar novo produto
+            const { error: errInsert } = await supabaseClient
+                .from('produtos')
+                .insert([produto]);
+            error = errInsert;
+        }
 
-        ordenarProdutosPorNome();
+        if (error) throw error;
 
         alert(produto.id ? '✅ Produto atualizado com sucesso!' : '✅ Produto criado com sucesso!');
         fecharModal('modalProduto');
-        carregarDados();
+        carregarDados(); // Recarrega os dados do Supabase
 
     } catch (error) {
         console.error('Erro ao salvar produto:', error);
-        alert('⚠️ Erro ao salvar produto. Verifique sua conexão.');
+        alert('⚠️ Erro ao salvar produto: ' + error.message);
     } finally {
         btnSalvar.disabled = false;
         btnSalvar.innerHTML = '<i class="fas fa-save"></i> Salvar';
