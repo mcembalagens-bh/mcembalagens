@@ -7056,9 +7056,6 @@ function ajustarPacoteCarrinho(index, delta) {
         // ============================================================
 // ABRIR MEUS PEDIDOS - CORRIGIDO (SEM EMAIL/SENHA)
 // ============================================================
-// ============================================================
-// ABRIR MEUS PEDIDOS - CORRIGIDO (SEM EMAIL/SENHA)
-// ============================================================
 function abrirMeusPedidos() {
     if (!usuarioLogado) {
         mostrarNotificacao('🔐 Faça login para ver seus pedidos.', 'warning');
@@ -7066,7 +7063,7 @@ function abrirMeusPedidos() {
         return;
     }
     
-    // Abre o modal
+    // Cria o modal na tela primeiro
     const modal = document.createElement('div');
     modal.id = 'meusPedidosModal';
     modal.className = 'modal';
@@ -7077,7 +7074,7 @@ function abrirMeusPedidos() {
         <div class="modal-content" style="max-width:600px;max-height:90vh;overflow-y:auto;">
             <span class="modal-close" onclick="document.getElementById('meusPedidosModal').remove()">&times;</span>
             <h2 style="margin-bottom:20px;color:var(--primary-dark);">📦 Meus Pedidos</h2>
-            <div id="meusPedidosLista">
+            <div id="listaPedidosLogado">
                 <div style="text-align:center;padding:30px;color:#999;">
                     <i class="fas fa-spinner fa-spin"></i> Carregando pedidos...
                 </div>
@@ -7090,8 +7087,11 @@ function abrirMeusPedidos() {
     
     document.body.appendChild(modal);
     
-    // Chama a função de carregar (que agora usa Supabase)
-    carregarPedidosCliente(usuarioLogado.email);
+    // 🔥 O SEGREDO: Espera 50 milissegundos para o navegador desenhar o modal na tela
+    // e SÓ DEPOIS chama a função que busca os dados no Supabase.
+    setTimeout(() => {
+        carregarPedidosCliente(usuarioLogado.email);
+    }, 50);
 }
 
 
