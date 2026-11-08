@@ -6688,21 +6688,38 @@ function renderizarFretes() {
 let intervaloAtualizacao = null;
 
 function iniciarAtualizacaoAutomatica() {
-    if (intervaloAtualizacao) {
-        clearInterval(intervaloAtualizacao);
+    // Limpa qualquer intervalo antigo, se existir
+    if (window.intervaloAtualizacaoGestor) {
+        clearInterval(window.intervaloAtualizacaoGestor);
     }
-    
-    intervaloAtualizacao = setInterval(() => {
-        if (verificarSessao()) {
-            console.log('🔄 Atualizando dados em segundo plano...');
-            atualizarEmSegundoPlano();
-        } else {
-            clearInterval(intervaloAtualizacao);
-            localStorage.removeItem('sessao_gestor');
-            document.getElementById('loginOverlay').classList.remove('hidden');
-            document.getElementById('app').classList.remove('logged-in');
-        }
-    }, 600000);
+
+    console.log('⚡ Ativando tempo real no Gestor...');
+
+    // 🔥 CONFIGURA O TEMPO REAL PARA PEDIDOS
+    supabaseClient
+        .channel('gestor-pedidos')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' }, payload => {
+            console.log('⚡ Evento em pedidos:', payload.eventType);
+            
+            // Se um pedido novo entrou, ou foi alterado, recarrega a lista
+            carregarDadosParcial();
+            
+            if (payload.eventType === 'INSERT') {
+                mostrarNotificacao('🔔 Novo pedido recebido!', 'success');
+            } else if (payload.eventType === 'UPDATE') {
+                mostrarNotificacao('🔄 Status de pedido atualizado!', 'info');
+            }
+        })
+        .subscribe();
+
+    // 🔥 CONFIGURA O TEMPO REAL PARA PRODUTOS (Estoque)
+    supabaseClient
+        .channel('gestor-produtos')
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'produtos' }, payload => {
+            console.log('⚡ Produto alterado:', payload.new.nome);
+            carregarDadosParcial();
+        })
+        .subscribe();
 }
 
 async function atualizarEmSegundoPlano() {
