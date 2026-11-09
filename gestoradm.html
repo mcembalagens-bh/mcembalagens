@@ -4209,7 +4209,7 @@ async function finalizarPedidoCheckout() {
     }
 }
 
-      // ============================================================
+        // ============================================================
     // GERENCIAR CLIENTE — MODAL AVANÇADO
     // ============================================================
     let gcParcelasTemporarias = [];
@@ -4236,7 +4236,7 @@ async function finalizarPedidoCheckout() {
         if (cliente.parcelas_config && Array.isArray(cliente.parcelas_config) && cliente.parcelas_config.length > 0) {
             parcelas = cliente.parcelas_config.map(p => ({ dias: parseInt(p.dias) || 0, minimo: parseFloat(p.minimo) || 0 }));
         } else if (isRevendedor) {
-            // Fallback para clientes antigos que só tinham "REVENDA-7/14"
+            // Fallback para clientes antigos
             const parser = parseObservacaoRevendedor(cliente.observacoes);
             if (parser.opcoes && parser.opcoes.length > 0) {
                 parser.opcoes.forEach(op => {
@@ -4376,7 +4376,6 @@ async function finalizarPedidoCheckout() {
 
         const parcelasConfig = gcParcelasTemporarias.slice().sort((a, b) => a.dias - b.dias).map(p => ({ dias: p.dias, minimo: p.minimo }));
 
-        // VERIFICA SE HOUVE MUDANÇA DE COMUM PARA REVENDEDOR
         const clienteLocal = dados.clientes.find(c => parseInt(c.id_cliente) === idCliente);
         const eraRevendedor = clienteLocal ? String(clienteLocal.observacoes || '').toUpperCase().startsWith('REVENDA') : false;
         const agoraERevendedor = isRev && !temPend && !emAnalise;
@@ -4384,7 +4383,6 @@ async function finalizarPedidoCheckout() {
         let avisoPendente = clienteLocal ? clienteLocal.aviso_aprovacao_pendente : false;
         let dataAprovacao = clienteLocal ? clienteLocal.data_aprovacao_revenda : null;
 
-        // Se virou revendedor agora, aciona o aviso em tempo real
         if (agoraERevendedor && !eraRevendedor) {
             avisoPendente = true;
             dataAprovacao = new Date().toISOString();
@@ -4411,7 +4409,6 @@ async function finalizarPedidoCheckout() {
 
             if (error) throw error;
 
-            // Atualiza no array local
             if (clienteLocal) {
                 clienteLocal.observacoes = observacaoFinal;
                 clienteLocal.limite_credito = limiteCredito;
