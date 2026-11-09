@@ -4262,6 +4262,940 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 console.log('✅ PARTE 5/7 carregada — Produtos, Categorias e Carrinho prontos');
+
+  // ============================================================
+// PARTE 6/7 — CHECKOUT, FRETE, PAGAMENTO E PIX
+// ============================================================
+
+// Tabela de Entrega Própria
+const TABELA_FRETE_ENTREGA_PROPRIA = {
+    'Belo Horizonte': [
+        { min: 0.01, max: 50.00, cost: 16.90 },
+        { min: 50.01, max: 299.99, cost: 7.90 },
+        { min: 300.00, max: 999999, cost: -12.00 }
+    ],
+    'Betim': [
+        { min: 50.00, max: 120.00, cost: 44.90 },
+        { min: 120.01, max: 299.99, cost: 35.90 },
+        { min: 300.00, max: 999999, cost: 25.90 }
+    ],
+    'Contagem': [
+        { min: 50.00, max: 120.00, cost: 26.90 },
+        { min: 120.01, max: 299.99, cost: 17.90 },
+        { min: 300.00, max: 999999, cost: 7.90 }
+    ],
+    'Sabará': [
+        { min: 50.00, max: 120.00, cost: 26.90 },
+        { min: 120.01, max: 299.99, cost: 17.90 },
+        { min: 300.00, max: 999999, cost: 12.90 }
+    ],
+    'Ibirité': [
+        { min: 50.00, max: 120.00, cost: 44.90 },
+        { min: 120.01, max: 299.99, cost: 35.90 },
+        { min: 300.00, max: 999999, cost: 25.90 }
+    ],
+    'Ribeirão das Neves': [
+        { min: 50.00, max: 120.00, cost: 44.90 },
+        { min: 120.01, max: 299.99, cost: 35.90 },
+        { min: 300.00, max: 999999, cost: 25.90 }
+    ],
+    'Santa Luzia': [
+        { min: 50.00, max: 120.00, cost: 37.90 },
+        { min: 120.01, max: 299.99, cost: 27.90 },
+        { min: 300.00, max: 999999, cost: 17.90 }
+    ],
+    'Vespasiano': [
+        { min: 50.00, max: 120.00, cost: 44.90 },
+        { min: 120.01, max: 299.99, cost: 35.90 },
+        { min: 300.00, max: 999999, cost: 25.90 }
+    ],
+    'Lagoa Santa': [
+        { min: 50.00, max: 120.00, cost: 44.90 },
+        { min: 120.01, max: 299.99, cost: 35.90 },
+        { min: 300.00, max: 999999, cost: 25.90 }
+    ],
+    'Nova Lima': [
+        { min: 50.00, max: 120.00, cost: 44.90 },
+        { min: 120.01, max: 299.99, cost: 35.90 },
+        { min: 300.00, max: 999999, cost: 25.90 }
+    ]
+};
+
+// ============================================================
+// HELPERS DE FRETE
+// ============================================================
+function obterCidadePorCep(cep) {
+    if (!cep) return null;
+    const c = String(cep).replace(/\D/g, '');
+    const mapa = {
+        '30': 'Belo Horizonte', '31': 'Belo Horizonte', '32': 'Belo Horizonte',
+        '326': 'Betim', '325': 'Contagem', '345': 'Sabará', '348': 'Nova Lima',
+        '324': 'Ibirité', '333': 'Ribeirão das Neves', '332': 'Santa Luzia', '347': 'Lagoa Santa'
+    };
+    const prefixos = Object.keys(mapa).sort((a, b) => b.length - a.length);
+    for (const p of prefixos) {
+        if (c.indexOf(p) === 0) return mapa[p];
+    }
+    return null;
+}
+
+function calcularEntregaPropria(cidade, total) {
+    if (!cidade) return { encontrado: false };
+    const norm = cidade.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    for (const key in TABELA_FRETE_ENTREGA_PROPRIA) {
+        const kn = key.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        if (kn === norm) {
+            for (const f of TABELA_FRETE_ENTREGA_PROPRIA[key]) {
+                if (total >= f.min && total <= f.max) {
+                    return { encontrado: true, cost: f.cost, cidade: key };
+                }
+            }
+        }
+    }
+    return { encontrado: false };
+}
+
+function calcularPesoTotal() {
+    let peso = 0, tem = false;
+    for (const item of carrinho) {
+        const p = encontrarProduto(item.productId);
+        if (!p) continue;
+        let enc = false;
+        if (item.step) {
+            const q = p.quantities.find(x => x.qty === item.step);
+            if (q && q.weight) {
+                const n = parseFloat(String(q.weight).replace(/[^0-9.,]/g, '').replace(',', '.'));
+                if (!isNaN(n) && n > 0) {
+                    peso += n * (item.qty || 1);
+                    tem = true;
+                    enc = true;
+                }
+            }
+        }
+        if (!enc && p.weight > 0) {
+            peso += p.weight * (item.totalUnits || item.quantity || 0);
+            tem = true;
+        }
+    }
+    if (!tem || peso === 0) {
+        let t = 0;
+        for (const i of carrinho) t += i.quantity || 1;
+        peso = 0.5 * Math.max(t, 1);
+    }
+    return Math.max(peso, 0.1);
+}
+
+function calcularDimensoes() {
+    return { altura: 16, largura: 16, comprimento: 16 };
+}
+
+function calcularPrazoProducao() {
+    let maior = 0;
+    for (const item of carrinho) {
+        const p = encontrarProduto(item.productId);
+        const pr = p ? (p.productionDays || 0) : (item.productionDays || 0);
+        if (pr > maior) maior = pr;
+    }
+    return maior;
+}
+
+function formatarOpcoesFrete(opcoes) {
+    const out = [];
+    const prod = checkoutState.producaoDias || calcularPrazoProducao();
+    out.push({
+        nome: 'Retirada na Loja',
+        valor: 0,
+        prazoEnvio: 1,
+        prazoProducao: prod,
+        prazoTotal: 1 + prod,
+        codigo: 'RETIRADA',
+        freteGratis: true,
+        isEntregaPropria: false
+    });
+    
+    for (const op of opcoes) {
+        const isEP = op.is_entrega_propria === true || op.id === 'ENTREGA_PROPRIA' || (op.nome && op.nome.toLowerCase().indexOf('entrega própria') !== -1);
+        if (isEP && out.some(o => o.codigo === 'ENTREGA_PROPRIA')) continue;
+        const valorBase = parseFloat(op.price || op.preco || 0);
+        const prazoBase = parseInt(op.delivery_time || op.prazo || 0);
+        const valorFinal = valorBase + 12.00; // ACRÉSCIMO FIXO
+        const prazoEnvio = prazoBase + 2;
+        const prazoTotal = prazoEnvio + prod;
+        let nome = op.nome || op.name || 'Frete';
+        if (nome.indexOf('PAC') !== -1) nome = 'PAC';
+        else if (nome.indexOf('SEDEX') !== -1) nome = 'SEDEX';
+        else if (nome.indexOf('Jadlog') !== -1) nome = 'Jadlog';
+        else if (nome.indexOf('Loggi') !== -1) nome = 'Loggi';
+        out.push({
+            nome: nome,
+            valor: valorFinal,
+            prazoEnvio: prazoEnvio,
+            prazoProducao: prod,
+            prazoTotal: prazoTotal,
+            codigo: op.id || op.codigo || nome,
+            freteGratis: valorFinal === 0,
+            isEntregaPropria: isEP
+        });
+    }
+    out.sort((a, b) => a.valor - b.valor);
+    const idx = out.findIndex(o => o.codigo === 'RETIRADA');
+    if (idx > 0) out.unshift(out.splice(idx, 1)[0]);
+    return out;
+}
+
+async function calcularFreteCarrinho() {
+    const cep = document.getElementById('cepCarrinho').value.trim();
+    const erroEl = document.getElementById('freteErroCarrinho');
+    const resultadoEl = document.getElementById('freteResultadoCarrinho');
+    const btn = document.getElementById('btnCalcularFreteCarrinho');
+    
+    erroEl.classList.remove('show');
+    resultadoEl.style.display = 'none';
+    resultadoEl.innerHTML = '';
+    
+    if (!cep || cep.length < 8) {
+        erroEl.textContent = '⚠️ Digite um CEP válido com 8 dígitos.';
+        erroEl.classList.add('show');
+        return;
+    }
+    
+    resultadoEl.innerHTML = '<div class="frete-carregando"><i class="fas fa-spinner fa-spin"></i> Calculando frete...</div>';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Calculando...';
+    btn.disabled = true;
+    
+    try {
+        const peso = calcularPesoTotal();
+        const dims = calcularDimensoes();
+        
+        const { data, error } = await supabaseClient.functions.invoke('calcular-frete', {
+            body: { cepDestino: cep, peso: peso, altura: dims.altura, largura: dims.largura, comprimento: dims.comprimento }
+        });
+        if (error) throw error;
+        
+        const opcoes = [];
+        if (data && data.opcoes && data.opcoes.length > 0) {
+            data.opcoes.forEach(op => {
+                opcoes.push({
+                    id: op.codigo || 'FRETE',
+                    nome: op.nome || 'Frete',
+                    price: parseFloat(String(op.preco).replace(',', '.')) || 0,
+                    delivery_time: parseInt(op.prazo) || 0
+                });
+            });
+        }
+        
+        const cidade = obterCidadePorCep(cep);
+        if (cidade) {
+            let totalPedido = 0;
+            carrinho.forEach(i => totalPedido += i.price || 0);
+            const ep = calcularEntregaPropria(cidade, totalPedido);
+            if (ep.encontrado) {
+                opcoes.push({
+                    id: 'ENTREGA_PROPRIA',
+                    nome: ep.cost === 0 ? 'Entrega Própria (Grátis)' : 'Entrega Própria',
+                    price: ep.cost,
+                    delivery_time: 1,
+                    is_entrega_propria: true
+                });
+            }
+        }
+        
+        const formatadas = formatarOpcoesFrete(opcoes);
+        resultadoEl.style.display = 'block';
+        
+        const sucessoDiv = document.createElement('div');
+        sucessoDiv.className = 'frete-sucesso show';
+        sucessoDiv.textContent = '✅ Frete calculado!';
+        resultadoEl.appendChild(sucessoDiv);
+        
+        formatadas.forEach(op => {
+            const div = document.createElement('div');
+            div.className = 'opcao-frete';
+            div.style.cursor = 'pointer';
+            const valorClass = op.valor === 0 ? 'frete-valor gratis' : 'frete-valor';
+            const infoPrazos = op.prazoEnvio !== undefined ? (op.prazoProducao > 0 ? 'Envio: ' + op.prazoEnvio + ' + ' + op.prazoProducao + ' prod' : 'Envio: ' + op.prazoEnvio + ' dias') : '';
+            
+            div.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;width:100%;">' +
+                '<div class="frete-info"><div class="frete-nome">' + op.nome + '</div><div class="frete-prazo">' + infoPrazos + '</div></div>' +
+                '<div class="' + valorClass + '">' + (op.valor === 0 ? 'Grátis' : 'R$ ' + op.valor.toFixed(2)) + '</div></div>';
+            
+            div.onclick = function() {
+                document.querySelectorAll('#freteResultadoCarrinho .opcao-frete').forEach(el => {
+                    el.style.borderColor = 'transparent';
+                    el.style.background = 'transparent';
+                });
+                this.style.borderColor = '#1a3a5c';
+                this.style.background = '#f0f8ff';
+                mostrarNotificacao('📦 Frete selecionado: ' + op.nome, 'info');
+            };
+            resultadoEl.appendChild(div);
+        });
+        
+    } catch (error) {
+        console.error('❌ Erro frete:', error);
+        resultadoEl.style.display = 'none';
+        erroEl.textContent = '⚠️ Não foi possível calcular o frete. Tente novamente.';
+        erroEl.classList.add('show');
+    } finally {
+        btn.innerHTML = '<i class="fas fa-truck"></i> Calcular Frete';
+        btn.disabled = false;
+    }
+}
+
+// ============================================================
+// CHECKOUT
+// ============================================================
+function abrirCheckout() {
+    if (!usuarioLogado) {
+        mostrarNotificacao('🔐 Faça login para continuar.', 'warning');
+        setTimeout(abrirLogin, 1000);
+        return;
+    }
+    
+    let totalProdutos = 0;
+    carrinho.forEach(i => totalProdutos += i.price || 0);
+    
+    if (!vendaSemDescontoAtiva && usuarioLogado.isRevendedor && totalProdutos < PEDIDO_MINIMO_REVENDEDOR) {
+        alert('⚠️ Pedido mínimo R$ ' + PEDIDO_MINIMO_REVENDEDOR.toFixed(2) + '.\nSeu pedido: R$ ' + totalProdutos.toFixed(2));
+        return;
+    }
+
+    document.body.classList.add('checkout-ativo');
+    document.getElementById('checkoutPage').style.display = 'block';
+    document.getElementById('checkoutContent').style.display = 'flex';
+    document.getElementById('checkoutLoading').style.display = 'none';
+    fecharModal('cartModal');
+
+    checkoutState = {
+        passo: 1,
+        enderecoSelecionado: null,
+        freteSelecionado: null,
+        pagamentoSelecionado: null,
+        clienteEncontrado: false,
+        clienteData: null,
+        emailBuscado: '',
+        dadosConfirmados: false,
+        opcoesFrete: [],
+        producaoDias: calcularPrazoProducao(),
+        boletoFaturadoSelecionado: null,
+        opcoesBoleto: usuarioLogado.opcoesBoleto || []
+    };
+
+    document.getElementById('emailBusca').value = usuarioLogado.email || '';
+    document.getElementById('erroBusca').style.display = 'none';
+    document.getElementById('dadosClienteEncontrado').style.display = 'none';
+    document.getElementById('areaNovoCadastro').style.display = 'none';
+    document.getElementById('checkoutStep2').style.display = 'none';
+    document.getElementById('freteOpcoesContainer').innerHTML = '<div style="text-align:center;padding:20px;color:#999;"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
+    document.getElementById('checkoutCepDisplay').textContent = '_____-___';
+    document.getElementById('step1Status').textContent = '⏳ Pendente';
+    document.getElementById('step2Status').textContent = '⏳ Aguardando';
+    document.getElementById('step3Status').textContent = '🔒 Bloqueado';
+    document.getElementById('checkoutStep3Status').textContent = '🔒 Selecione o frete';
+    document.getElementById('btnFinalizarPedido').disabled = true;
+    document.getElementById('btnFinalizarPedido').style.opacity = '0.5';
+    document.getElementById('stepIndicator1').style.color = 'var(--primary-blue)';
+    document.getElementById('stepIndicator1').style.fontWeight = '600';
+    document.getElementById('stepIndicator2').style.color = '#ccc';
+    document.getElementById('stepIndicator3').style.color = '#ccc';
+    document.getElementById('pedidoMinimoAviso').classList.remove('show');
+
+    document.querySelectorAll('.pagamento-opcao-checkout').forEach(el => {
+        el.style.borderColor = '#ddd';
+        el.style.background = 'white';
+        el.style.opacity = '0.5';
+        el.style.pointerEvents = 'none';
+    });
+
+    const boletoDiv = document.getElementById('opcoesBoletoFaturado');
+    const boletoContainer = document.getElementById('opcoesBoletoContainer');
+    if (checkoutState.opcoesBoleto.length > 0) {
+        boletoContainer.innerHTML = checkoutState.opcoesBoleto.map((op, i) =>
+            '<div class="opcao-boleto-faturado" onclick="selecionarBoletoFaturado(this, ' + i + ')" style="opacity:0.5;pointer-events:none;">' +
+            '<div class="icone"><i class="fas fa-file-invoice"></i></div>' +
+            '<div class="info"><div class="titulo">' + op.label + '</div><div class="subtitulo">50% sinal + 50% faturado</div></div>' +
+            '</div>'
+        ).join('');
+        boletoDiv.style.display = 'block';
+        boletoDiv.style.opacity = '0.5';
+        boletoDiv.style.pointerEvents = 'none';
+    } else {
+        boletoDiv.style.display = 'none';
+    }
+
+    atualizarResumoCheckout();
+    setTimeout(() => buscarClientePorEmailCheckout(), 400);
+}
+
+function fecharCheckout() {
+    document.body.classList.remove('checkout-ativo');
+    document.getElementById('checkoutPage').style.display = 'none';
+    showHome();
+}
+
+function atualizarResumoCheckout() {
+    const container = document.getElementById('checkoutResumoProdutos');
+    const totalEl = document.getElementById('checkoutSubtotal');
+    if (!container || !totalEl) return;
+
+    if (carrinho.length === 0) {
+        container.innerHTML = '<div style="text-align:center;padding:20px;color:#999;">Seu carrinho está vazio</div>';
+        totalEl.textContent = 'R$ 0,00';
+        return;
+    }
+
+    let html = '';
+    let total = 0;
+    carrinho.forEach(item => {
+        const preco = item.price || 0;
+        total += preco;
+        const step = item.step || 1;
+        const qtdPacotes = item.qty || 1;
+        const totalUnidades = item.totalUnits || (qtdPacotes * step);
+        html += '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:13px;">' +
+            '<div><span style="font-weight:500;">' + item.name + '</span>' +
+            '<span style="color:#888;font-size:11px;display:block;">' + qtdPacotes + ' pacote(s) x ' + step + ' un = ' + totalUnidades + ' unidade(s)</span></div>' +
+            '<span style="font-weight:600;color:#27ae60;font-size:14px;">R$ ' + preco.toFixed(2) + '</span>' +
+            '</div>';
+    });
+    container.innerHTML = html;
+    totalEl.textContent = 'R$ ' + total.toFixed(2);
+}
+
+async function buscarClientePorEmailCheckout() {
+    const email = document.getElementById('emailBusca').value.trim();
+    const erroEl = document.getElementById('erroBusca');
+    const loadingEl = document.getElementById('loadingBusca');
+    const btn = document.getElementById('btnBuscarCliente');
+    const areaNovo = document.getElementById('areaNovoCadastro');
+    const dadosDiv = document.getElementById('dadosClienteEncontrado');
+
+    if (!email) {
+        erroEl.textContent = '⚠️ Digite um email.';
+        erroEl.style.display = 'block';
+        return;
+    }
+
+    erroEl.style.display = 'none';
+    loadingEl.style.display = 'block';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    btn.disabled = true;
+    areaNovo.style.display = 'none';
+    dadosDiv.style.display = 'none';
+
+    try {
+        const { data: clientes, error } = await supabaseClient.from('clientes').select('*').eq('email', email).limit(1);
+        if (error) throw error;
+
+        if (clientes && clientes.length > 0) {
+            const c = clientes[0];
+            checkoutState.clienteEncontrado = true;
+            checkoutState.clienteData = c;
+            checkoutState.emailBuscado = email;
+
+            document.getElementById('clienteNomeEncontrado').textContent = c.nome || '---';
+            document.getElementById('clienteTelefoneEncontrado').textContent = c.telefone || '---';
+            document.getElementById('emailConfirmado').textContent = '📧 ' + email;
+
+            const endCompleto = (c.endereco || '') + ', ' + (c.numero || '') + (c.complemento ? ' - ' + c.complemento : '') + ' - ' + (c.bairro || '') + ', ' + (c.cidade || '') + ' - ' + (c.estado || '') + ', CEP ' + (c.cep || '');
+
+            const containerEnd = document.getElementById('enderecosLista');
+            containerEnd.innerHTML = '<div style="background:white;border:2px solid #ddd;border-radius:8px;padding:12px 15px;">' +
+                '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">' +
+                '<div><div style="font-weight:600;color:var(--primary-dark);font-size:13px;">' + endCompleto + '</div>' +
+                '<div style="font-size:12px;color:#888;">CEP: ' + (c.cep || 'Não informado') + '</div></div>' +
+                '<button class="btn-selecionar-endereco" style="background:#27ae60;color:white;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-weight:600;font-size:13px;">' +
+                '<i class="fas fa-check"></i> Confirmar</button></div></div>';
+
+            containerEnd.querySelector('.btn-selecionar-endereco').onclick = function(e) {
+                e.stopPropagation();
+                checkoutState.enderecoSelecionado = {
+                    enderecoCompleto: endCompleto,
+                    cep: c.cep || '30100000',
+                    endereco: c.endereco || '',
+                    numero: c.numero || '',
+                    bairro: c.bairro || '',
+                    cidade: c.cidade || '',
+                    uf: c.estado || '',
+                    complemento: c.complemento || '',
+                    telefone: c.telefone || '',
+                    documento: c.cpf || ''
+                };
+                checkoutState.dadosConfirmados = true;
+                document.getElementById('stepIndicator2').style.color = 'var(--primary-blue)';
+                document.getElementById('stepIndicator2').style.fontWeight = '600';
+                document.getElementById('step1Status').textContent = '✅ Completo';
+                document.getElementById('step1Status').style.color = '#27ae60';
+                document.getElementById('checkoutStep2').style.display = 'block';
+                document.getElementById('step2Status').textContent = '⏳ Carregando...';
+                carregarOpcoesFreteCheckout();
+            };
+
+            dadosDiv.style.display = 'block';
+            areaNovo.style.display = 'none';
+            document.getElementById('step1Status').textContent = '✅ Completo';
+            document.getElementById('step1Status').style.color = '#27ae60';
+        } else {
+            dadosDiv.style.display = 'none';
+            areaNovo.style.display = 'block';
+            erroEl.textContent = '❌ Nenhum cliente encontrado.';
+            erroEl.style.display = 'block';
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        erroEl.textContent = '❌ Erro ao buscar.';
+        erroEl.style.display = 'block';
+    } finally {
+        loadingEl.style.display = 'none';
+        btn.innerHTML = '<i class="fas fa-search"></i> Buscar';
+        btn.disabled = false;
+    }
+}
+
+async function carregarOpcoesFreteCheckout() {
+    const container = document.getElementById('freteOpcoesContainer');
+    container.innerHTML = '<div style="text-align:center;padding:30px;color:#666;"><i class="fas fa-spinner fa-spin" style="font-size:24px;display:block;margin-bottom:10px;"></i> Carregando fretes...</div>';
+
+    try {
+        const cep = checkoutState.enderecoSelecionado ? checkoutState.enderecoSelecionado.cep : '00000000';
+        document.getElementById('checkoutCepDisplay').textContent = cep;
+        checkoutState.producaoDias = calcularPrazoProducao();
+        const peso = calcularPesoTotal();
+        const dims = calcularDimensoes();
+
+        const { data, error } = await supabaseClient.functions.invoke('calcular-frete', {
+            body: { cepDestino: cep, peso: peso, altura: dims.altura, largura: dims.largura, comprimento: dims.comprimento }
+        });
+        if (error) throw error;
+
+        const opcoes = [];
+        if (data && data.opcoes) {
+            data.opcoes.forEach(op => {
+                opcoes.push({
+                    id: op.codigo || 'FRETE',
+                    nome: op.nome || 'Frete',
+                    price: parseFloat(String(op.preco).replace(',', '.')) || 0,
+                    delivery_time: parseInt(op.prazo) || 0
+                });
+            });
+        }
+
+        const cidade = obterCidadePorCep(cep);
+        if (cidade) {
+            let totalPedido = 0;
+            carrinho.forEach(i => totalPedido += i.price || 0);
+            const ep = calcularEntregaPropria(cidade, totalPedido);
+            if (ep.encontrado) {
+                opcoes.push({ id: 'ENTREGA_PROPRIA', nome: ep.cost === 0 ? 'Entrega Própria (Grátis)' : 'Entrega Própria', price: ep.cost, delivery_time: 1, is_entrega_propria: true });
+            }
+        }
+
+        const formatadas = formatarOpcoesFrete(opcoes);
+        checkoutState.opcoesFrete = formatadas;
+        container.innerHTML = '';
+
+        const desabilitado = !checkoutState.dadosConfirmados;
+        formatadas.forEach(op => {
+            const div = document.createElement('div');
+            div.className = 'frete-opcao';
+            const valorClass = op.valor === 0 ? 'frete-valor gratis' : 'frete-valor';
+            const prazo = op.prazoTotal || (op.prazoEnvio + checkoutState.producaoDias);
+            const info = checkoutState.producaoDias > 0 ? prazo + ' dias (' + op.prazoEnvio + ' + ' + checkoutState.producaoDias + ' prod)' : prazo + ' dias';
+            div.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;width:100%;">' +
+                '<div><div class="frete-nome">' + op.nome + '</div><div class="frete-prazo">' + info + '</div></div>' +
+                '<div class="' + valorClass + '">' + (op.valor === 0 ? 'Grátis' : 'R$ ' + op.valor.toFixed(2)) + '</div></div>';
+            
+            if (!desabilitado) {
+                div.style.cursor = 'pointer';
+                div.onclick = function() {
+                    document.querySelectorAll('#freteOpcoesContainer .frete-opcao').forEach(e => e.classList.remove('selecionado'));
+                    this.classList.add('selecionado');
+                    checkoutState.freteSelecionado = op;
+                    liberarPagamento();
+                    atualizarResumoFinal();
+                    mostrarNotificacao('✅ Frete selecionado!', 'success');
+                };
+            }
+            container.appendChild(div);
+        });
+        document.getElementById('step2Status').textContent = '✅ Completo';
+        atualizarResumoFinal();
+    } catch (error) {
+        console.error('Erro frete:', error);
+        container.innerHTML = '<div style="text-align:center;padding:20px;color:#e74c3c;"><i class="fas fa-exclamation-circle"></i> Erro ao carregar fretes.</div>';
+    }
+}
+
+function liberarPagamento() {
+    document.querySelectorAll('.pagamento-opcao-checkout').forEach(el => {
+        el.style.opacity = '1';
+        el.style.pointerEvents = 'auto';
+    });
+    const boletoDiv = document.getElementById('opcoesBoletoFaturado');
+    if (boletoDiv && checkoutState.opcoesBoleto.length > 0) {
+        boletoDiv.style.opacity = '1';
+        boletoDiv.style.pointerEvents = 'auto';
+        document.querySelectorAll('.opcao-boleto-faturado').forEach(el => {
+            el.style.opacity = '1';
+            el.style.pointerEvents = 'auto';
+        });
+    }
+    document.getElementById('stepIndicator3').style.color = 'var(--primary-blue)';
+    document.getElementById('stepIndicator3').style.fontWeight = '600';
+    document.getElementById('step3Status').textContent = '⏳ Selecione';
+    document.getElementById('checkoutStep3Status').textContent = '💳 Escolha uma forma de pagamento';
+}
+
+function selecionarPagamentoCheckout(elemento, metodo) {
+    if (!checkoutState.enderecoSelecionado) return mostrarNotificacao('⚠️ Confirme o endereço primeiro!', 'warning');
+    if (!checkoutState.freteSelecionado) return mostrarNotificacao('⚠️ Selecione um frete primeiro!', 'warning');
+
+    document.querySelectorAll('.pagamento-opcao-checkout').forEach(el => {
+        el.style.borderColor = '#ddd';
+        el.style.background = 'white';
+    });
+    document.querySelectorAll('.opcao-boleto-faturado').forEach(el => {
+        el.classList.remove('selecionado');
+        el.style.borderColor = '#ddd';
+        el.style.background = 'white';
+    });
+    checkoutState.boletoFaturadoSelecionado = null;
+
+    elemento.style.borderColor = '#c2410c';
+    elemento.style.background = '#ffedd5';
+    checkoutState.pagamentoSelecionado = metodo;
+
+    let totalProdutos = 0;
+    carrinho.forEach(i => totalProdutos += i.price || 0);
+    const freteValor = checkoutState.freteSelecionado ? checkoutState.freteSelecionado.valor : 0;
+
+    if (metodo === 'PIX') {
+        const desc = totalProdutos * DESCONTO_PIX;
+        const total = (totalProdutos - desc) + freteValor;
+        document.getElementById('checkoutStep3Status').textContent = '✅ PIX: desconto R$ ' + desc.toFixed(2);
+        document.getElementById('checkoutTotalResumo').textContent = 'R$ ' + total.toFixed(2);
+        document.getElementById('checkoutTotalResumo').style.color = '#27ae60';
+    } else {
+        document.getElementById('checkoutStep3Status').textContent = '✅ ' + metodo + ' selecionado';
+        document.getElementById('checkoutTotalResumo').textContent = 'R$ ' + (totalProdutos + freteValor).toFixed(2);
+        document.getElementById('checkoutTotalResumo').style.color = 'var(--primary-blue)';
+    }
+
+    document.getElementById('step3Status').textContent = '✅ Selecionado';
+    document.getElementById('btnFinalizarPedido').disabled = false;
+    document.getElementById('btnFinalizarPedido').style.opacity = '1';
+    mostrarNotificacao('✅ ' + metodo + ' selecionado!', 'success');
+}
+
+function selecionarBoletoFaturado(elemento, index) {
+    if (!checkoutState.freteSelecionado) return mostrarNotificacao('⚠️ Selecione o frete primeiro!', 'warning');
+    document.querySelectorAll('.opcao-boleto-faturado').forEach(el => {
+        el.classList.remove('selecionado');
+        el.style.borderColor = '#ddd';
+        el.style.background = 'white';
+    });
+    elemento.classList.add('selecionado');
+    elemento.style.borderColor = '#f39c12';
+    elemento.style.background = '#fff3cd';
+
+    const op = checkoutState.opcoesBoleto[index];
+    if (op) {
+        checkoutState.boletoFaturadoSelecionado = op;
+        checkoutState.pagamentoSelecionado = 'Boleto Faturado';
+        document.getElementById('checkoutStep3Status').textContent = '✅ ' + op.label;
+        document.getElementById('step3Status').textContent = '✅ Selecionado';
+        document.getElementById('btnFinalizarPedido').disabled = false;
+        document.getElementById('btnFinalizarPedido').style.opacity = '1';
+        mostrarNotificacao('✅ ' + op.label + ' selecionado!', 'success');
+    }
+}
+
+function atualizarResumoFinal() {
+    let total = 0;
+    carrinho.forEach(i => total += i.price || 0);
+    const frete = checkoutState.freteSelecionado ? checkoutState.freteSelecionado.valor : 0;
+    const nomeFrete = checkoutState.freteSelecionado ? checkoutState.freteSelecionado.nome : '--';
+    const prod = checkoutState.producaoDias || 0;
+    const envio = checkoutState.freteSelecionado ? checkoutState.freteSelecionado.prazoEnvio : 0;
+
+    document.getElementById('checkoutFreteResumo').textContent = frete === 0 ? 'Grátis (' + nomeFrete + ')' : 'R$ ' + frete.toFixed(2) + ' (' + nomeFrete + ')';
+    document.getElementById('checkoutTotalResumo').textContent = 'R$ ' + (total + frete).toFixed(2);
+    document.getElementById('checkoutPrazoResumo').textContent = (envio + prod) + ' dias úteis';
+    document.getElementById('checkoutPrazoDetalhe').textContent = prod > 0 ? '🔄 Produção: ' + prod + ' dias + 🚚 Envio: ' + envio + ' dias' : '🚚 Envio: ' + envio + ' dias';
+}
+
+// ============================================================
+// PIX MANUAL (Geração de Copia e Cola)
+// ============================================================
+function gerarPixCopiaCola(chave, nome, cidade, valor, descricao) {
+    function crc16(payload) {
+        let crc = 0xFFFF;
+        for (let i = 0; i < payload.length; i++) {
+            crc ^= payload.charCodeAt(i) << 8;
+            for (let j = 0; j < 8; j++) {
+                if (crc & 0x8000) crc = (crc << 1) ^ 0x1021;
+                else crc <<= 1;
+                crc &= 0xFFFF;
+            }
+        }
+        return crc.toString(16).toUpperCase().padStart(4, '0');
+    }
+    function fmt(id, val) {
+        const s = String(val);
+        return id + String(s.length).padStart(2, '0') + s;
+    }
+    const chaveL = String(chave).trim();
+    const nomeL = String(nome || 'MC Embalagens').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s/g, '').substring(0, 25);
+    const cidadeL = String(cidade || 'Belo Horizonte').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s/g, '').substring(0, 15);
+    const valorF = (parseFloat(valor) || 0).toFixed(2);
+    const descL = String(descricao || 'Pedido').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s/g, '').substring(0, 20);
+
+    let payload = '000201';
+    let mi = '00' + '14' + 'br.gov.bcb.pix';
+    mi += '01' + String(chaveL.length).padStart(2, '0') + chaveL;
+    if (descL) mi += '02' + String(descL.length).padStart(2, '0') + descL;
+    payload += '26' + String(mi.length).padStart(2, '0') + mi;
+    payload += '52040000' + '5303986';
+    if (parseFloat(valorF) > 0) payload += '54' + String(valorF.length).padStart(2, '0') + valorF;
+    payload += '5802BR';
+    payload += fmt('59', nomeL) + fmt('60', cidadeL);
+    if (descL) {
+        const ce = '05' + String(descL.length).padStart(2, '0') + descL;
+        payload += '62' + String(ce.length).padStart(2, '0') + ce;
+    }
+    payload += '6304' + crc16(payload + '6304');
+    return payload;
+}
+
+function mostrarPixManual(pedidoId, total) {
+    const modal = document.getElementById('pixManualModal');
+    const qr = document.getElementById('pixQrCode');
+    const copia = document.getElementById('pixManualCopiaCola');
+    document.getElementById('pixManualTotal').textContent = total.toFixed(2).replace('.', ',');
+    document.getElementById('pixManualPedido').textContent = pedidoId;
+    document.getElementById('pixManualChave').textContent = PIX_KEY;
+
+    const codigo = gerarPixCopiaCola(PIX_KEY, 'MC Embalagens', 'Belo Horizonte', total, 'Pedido' + pedidoId);
+    copia.textContent = codigo;
+
+    qr.innerHTML = '';
+    try {
+        if (typeof QRCode !== 'undefined') {
+            new QRCode(qr, {
+                text: codigo,
+                width: 200,
+                height: 200,
+                colorDark: '#1a3a5c',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        } else {
+            qr.innerHTML = '<img src="https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=' + encodeURIComponent(codigo) + '" width="200" height="200">';
+        }
+    } catch (e) {
+        qr.innerHTML = '<p style="color:#888;">QR Code indisponível</p>';
+    }
+    modal.style.display = 'block';
+}
+
+function copiarPixManual() {
+    const t = document.getElementById('pixManualCopiaCola').textContent;
+    if (!t) return mostrarNotificacao('⚠️ Código não disponível.', 'warning');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(t)
+            .then(() => mostrarNotificacao('✅ PIX copiado!', 'success'))
+            .catch(() => fallbackCopiar(t));
+    } else {
+        fallbackCopiar(t);
+    }
+}
+
+function fallbackCopiar(texto) {
+    const t = document.createElement('textarea');
+    t.value = texto;
+    t.style.position = 'fixed';
+    t.style.opacity = '0';
+    document.body.appendChild(t);
+    t.select();
+    document.execCommand('copy');
+    document.body.removeChild(t);
+    mostrarNotificacao('✅ Copiado!', 'success');
+}
+
+// ============================================================
+// FINALIZAR PEDIDO
+// ============================================================
+async function finalizarPedidoCheckout() {
+    const btn = document.getElementById('btnFinalizarPedido');
+    const txtOrig = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+    btn.disabled = true;
+
+    try {
+        if (carrinho.length === 0) {
+            alert('Carrinho vazio!'); btn.innerHTML = txtOrig; btn.disabled = false; return;
+        }
+        
+        let totalProdutos = 0;
+        carrinho.forEach(i => totalProdutos += i.price || 0);
+        
+        if (!usuarioLogado) {
+            alert('Faça login novamente.'); fecharCheckout(); abrirLogin(); return;
+        }
+
+        document.getElementById('checkoutLoading').style.display = 'block';
+        document.getElementById('checkoutContent').style.display = 'none';
+
+        const c = checkoutState.clienteData;
+        const nome = (c && c.nome) || usuarioLogado.nome;
+        const email = (c && c.email) || usuarioLogado.email;
+        const tel = (c && c.telefone) || usuarioLogado.telefone || '';
+        const doc = (c && c.cpf) || usuarioLogado.documento || '';
+
+        const end = checkoutState.enderecoSelecionado;
+        const freteValor = checkoutState.freteSelecionado.valor;
+        const freteNome = checkoutState.freteSelecionado.nome;
+        const prazoEnvio = checkoutState.freteSelecionado.prazoEnvio || 0;
+        const prodDias = checkoutState.producaoDias || 0;
+
+        let desconto = 0;
+        if (checkoutState.pagamentoSelecionado === 'PIX') {
+            desconto = totalProdutos * DESCONTO_PIX;
+        }
+        const total = (totalProdutos - desconto) + freteValor;
+
+        let obs = 'Frete: ' + freteNome + ' (R$ ' + freteValor.toFixed(2) + ') | Pagamento: ' + checkoutState.pagamentoSelecionado;
+        if (desconto > 0) obs += ' | Desconto PIX: R$ ' + desconto.toFixed(2);
+        if (checkoutState.boletoFaturadoSelecionado) obs += ' | ' + checkoutState.boletoFaturadoSelecionado.label;
+        if (vendaSemDescontoAtiva) obs += ' | Venda sem desconto de revenda';
+        obs += ' | Prazo: ' + (prazoEnvio + prodDias) + ' dias';
+
+        const itensTexto = carrinho.map(item => item.name + ' (' + item.qty + 'x ' + item.step + ' un) - R$ ' + (item.price || 0).toFixed(2)).join(' | ');
+
+        const { data: pedidoSalvo, error } = await supabaseClient.from('pedidos').insert([{
+            cliente_nome: nome,
+            cliente_email: email,
+            cliente_telefone: tel,
+            cliente_documento: doc,
+            itens: itensTexto,
+            total: String(total.toFixed(2)),
+            total_produtos: String(totalProdutos.toFixed(2)),
+            desconto: String(desconto.toFixed(2)),
+            endereco_entrega: end.enderecoCompleto,
+            frete: freteNome,
+            frete_valor: String(freteValor.toFixed(2)),
+            observacoes: obs,
+            prazo_entrega: prazoEnvio + prodDias,
+            producao_dias: prodDias,
+            pagamento: checkoutState.pagamentoSelecionado,
+            status: 'Pendente',
+            data_pedido: new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+        }]).select().single();
+
+        if (error) throw error;
+        const novoId = pedidoSalvo.id_pedido;
+
+        // Baixar Estoque
+        for (const item of carrinho) {
+            const p = encontrarProduto(item.productId);
+            if (!p) continue;
+            const estoqueAtual = parseInt(p.stock) || 0;
+            const qtd = parseInt(item.totalUnits);
+            if (qtd <= estoqueAtual) {
+                await supabaseClient.from('produtos').update({ estoque: Math.max(0, estoqueAtual - qtd) }).eq('id', item.productId);
+            }
+        }
+
+        if (checkoutState.pagamentoSelecionado === 'Boleto Faturado') {
+            carrinho = [];
+            salvarCarrinho();
+            atualizarBadge();
+            document.getElementById('confirmacaoNumeroPedido').textContent = '#' + novoId;
+            document.getElementById('confirmacaoMensagem').innerHTML = '✅ Pedido confirmado!<br><span style="font-size:13px;color:#666;">Opção: <strong>' + checkoutState.boletoFaturadoSelecionado.label + '</strong></span>';
+            document.getElementById('btnFinalizarPagamento').style.display = 'none';
+            document.getElementById('confirmacaoModal').style.display = 'block';
+            fecharCheckout();
+            mostrarNotificacao('✅ Pedido #' + novoId + ' confirmado!', 'success');
+            return;
+        }
+
+        if (checkoutState.pagamentoSelecionado === 'PIX') {
+            mostrarPixManual(novoId, total);
+            carrinho = [];
+            salvarCarrinho();
+            atualizarBadge();
+            fecharCheckout();
+            mostrarNotificacao('✅ Pedido #' + novoId + ' criado! Pague o PIX.', 'success');
+            return;
+        }
+
+        // Cartão/Boleto Pré
+        try {
+            const itensPag = carrinho.map(item => ({ nome: item.name, price: item.price, quantity: item.totalUnits || item.quantity }));
+            if (freteValor > 0) itensPag.push({ nome: 'Frete (' + freteNome + ')', price: freteValor, quantity: 1 });
+
+            let metodo = 'credit_card';
+            if (checkoutState.pagamentoSelecionado === 'Boleto') metodo = 'boleto';
+
+            const { data: pagamento, error: errPag } = await supabaseClient.functions.invoke('criar-link-pagamento', {
+                body: {
+                    pedidoId: novoId,
+                    clienteNome: nome,
+                    clienteEmail: email,
+                    clienteDocumento: doc || '12345678909',
+                    clienteTelefone: tel || '31999999999',
+                    itens: itensPag,
+                    total: total,
+                    metodosPagamento: [metodo]
+                }
+            });
+
+            if (errPag) throw errPag;
+
+            const link = (pagamento && pagamento.paymentLink) || (pagamento && pagamento.url);
+            if (link) {
+                document.getElementById('confirmacaoNumeroPedido').textContent = '#' + novoId;
+                document.getElementById('confirmacaoMensagem').textContent = 'Clique abaixo para pagar com segurança.';
+                const btnPag = document.getElementById('btnFinalizarPagamento');
+                btnPag.style.display = 'block';
+                btnPag.innerHTML = '<i class="fas fa-credit-card"></i> Ir para Pagamento';
+                btnPag.onclick = function() { window.open(link, '_blank'); };
+                document.getElementById('confirmacaoModal').style.display = 'block';
+            } else {
+                alert('⚠️ Pedido salvo, mas não foi possível gerar link de pagamento.');
+            }
+
+            carrinho = [];
+            salvarCarrinho();
+            atualizarBadge();
+            fecharCheckout();
+        } catch (errPag) {
+            console.error('Erro pagamento:', errPag);
+            alert('❌ Erro no pagamento. Pedido salvo: #' + novoId);
+            fecharCheckout();
+        }
+
+        // Tracking
+        try {
+            if (typeof fbq !== 'undefined') fbq('track', 'Purchase', { value: total, currency: 'BRL' });
+            const itensTracking = carrinho.map(item => ({ nome: item.name, price: item.price, quantidade: item.totalUnits || item.quantity }));
+            if (typeof enviarCompraGA4 === 'function') enviarCompraGA4(itensTracking, total, novoId);
+            if (typeof enviarConversaoGoogleAds === 'function') enviarConversaoGoogleAds(total, novoId);
+        } catch (e) {}
+
+    } catch (error) {
+        console.error('Erro finalizar:', error);
+        alert('❌ Erro ao processar pedido: ' + (error.message || ''));
+    } finally {
+        btn.innerHTML = txtOrig;
+        btn.disabled = false;
+        document.getElementById('checkoutLoading').style.display = 'none';
+        document.getElementById('checkoutContent').style.display = 'flex';
+    }
+}
+
+console.log('✅ PARTE 6/7 carregada — Checkout, Frete, PIX e Pagamento prontos');  
+
 </script>
 
 </body>
