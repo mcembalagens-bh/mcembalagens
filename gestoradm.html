@@ -4209,229 +4209,229 @@ async function finalizarPedidoCheckout() {
     }
 }
 
-       // ============================================================
-    // GERENCIAR CLIENTE — MODAL AVANÇADO
-    // ============================================================
-    let gcParcelasTemporarias = [];
+// ============================================================
+// GERENCIAR CLIENTE — MODAL AVANÇADO
+// ============================================================
+let gcParcelasTemporarias = [];
 
-    function abrirGerenciarCliente(idCliente) {
-        const cliente = dados.clientes.find(c => parseInt(c.id_cliente) === parseInt(idCliente));
-        if (!cliente) { alert('Cliente não encontrado!'); return; }
+function abrirGerenciarCliente(idCliente) {
+    const cliente = dados.clientes.find(c => parseInt(c.id_cliente) === parseInt(idCliente));
+    if (!cliente) { alert('Cliente não encontrado!'); return; }
 
-        document.getElementById('gcIdCliente').value = cliente.id_cliente;
-        document.getElementById('gcNomeCliente').textContent = (cliente.nome || 'Sem nome') + ' (#' + cliente.id_cliente + ')';
-        document.getElementById('gcInfoCliente').textContent = (cliente.email || 'sem email') + ' | ' + (cliente.telefone || 'sem telefone');
+    document.getElementById('gcIdCliente').value = cliente.id_cliente;
+    document.getElementById('gcNomeCliente').textContent = (cliente.nome || 'Sem nome') + ' (#' + cliente.id_cliente + ')';
+    document.getElementById('gcInfoCliente').textContent = (cliente.email || 'sem email') + ' | ' + (cliente.telefone || 'sem telefone');
 
-        const obsAtual = String(cliente.observacoes || '').trim().toUpperCase();
-        const isRevendedor = obsAtual.startsWith('REVENDA');
-        const temPendencia = obsAtual.includes('PENDENCIA') || obsAtual.includes('PENDÊNCIA');
-        const emAnalise = obsAtual.includes('ANALISE');
+    const obsAtual = String(cliente.observacoes || '').trim().toUpperCase();
+    const isRevendedor = obsAtual.startsWith('REVENDA');
+    const temPendencia = obsAtual.includes('PENDENCIA') || obsAtual.includes('PENDÊNCIA');
+    const emAnalise = obsAtual.includes('ANALISE');
 
-        document.getElementById('gcIsRevendedor').checked = isRevendedor;
-        document.getElementById('gcPendencia').checked = temPendencia;
-        document.getElementById('gcAnalise').checked = emAnalise;
+    document.getElementById('gcIsRevendedor').checked = isRevendedor;
+    document.getElementById('gcPendencia').checked = temPendencia;
+    document.getElementById('gcAnalise').checked = emAnalise;
 
-        let parcelas = [];
-        if (cliente.parcelas_config && Array.isArray(cliente.parcelas_config) && cliente.parcelas_config.length > 0) {
-            parcelas = cliente.parcelas_config.map(p => ({ dias: parseInt(p.dias) || 0, minimo: parseFloat(p.minimo) || 0 }));
-        } else if (isRevendedor) {
-            const parser = parseObservacaoRevendedor(cliente.observacoes);
-            if (parser.opcoes && parser.opcoes.length > 0) {
-                parser.opcoes.forEach(op => {
-                    if (op.dias && Array.isArray(op.dias)) {
-                        op.dias.forEach(d => parcelas.push({ dias: d, minimo: 0 }));
-                    } else if (op.dias) {
-                        parcelas.push({ dias: op.dias, minimo: 0 });
-                    }
-                });
-            }
+    let parcelas = [];
+    if (cliente.parcelas_config && Array.isArray(cliente.parcelas_config) && cliente.parcelas_config.length > 0) {
+        parcelas = cliente.parcelas_config.map(p => ({ dias: parseInt(p.dias) || 0, minimo: parseFloat(p.minimo) || 0 }));
+    } else if (isRevendedor) {
+        const parser = parseObservacaoRevendedor(cliente.observacoes);
+        if (parser.opcoes && parser.opcoes.length > 0) {
+            parser.opcoes.forEach(op => {
+                if (op.dias && Array.isArray(op.dias)) {
+                    op.dias.forEach(d => parcelas.push({ dias: d, minimo: 0 }));
+                } else if (op.dias) {
+                    parcelas.push({ dias: op.dias, minimo: 0 });
+                }
+            });
         }
-        gcParcelasTemporarias = parcelas;
-
-        document.getElementById('gcNovaParcelaDias').value = '';
-        document.getElementById('gcNovaParcelaMinimo').value = '';
-        document.getElementById('gcLimiteCredito').value = parseFloat(cliente.limite_credito) || 0;
-        document.getElementById('gcProximoVencimento').value = cliente.proximo_vencimento || '';
-        document.getElementById('gcSituacao').value = cliente.situacao_financeira || 'Em dia';
-
-        const parserObs = parseObservacaoRevendedor(cliente.observacoes);
-        document.getElementById('gcObservacaoInterna').value = parserObs.obsInterna || '';
-
-        gcRenderizarParcelas();
-        gcAtualizarPreview();
-        document.getElementById('modalGerenciarCliente').classList.add('open');
     }
+    gcParcelasTemporarias = parcelas;
 
-    function gcRenderizarParcelas() {
-        const container = document.getElementById('gcListaParcelas');
-        if (gcParcelasTemporarias.length === 0) {
-            container.innerHTML = '<div class="parcela-vazia"><i class="fas fa-calendar-plus"></i> Nenhuma parcela configurada ainda</div>';
-            return;
-        }
-        gcParcelasTemporarias.sort((a, b) => a.dias - b.dias);
-        container.innerHTML = gcParcelasTemporarias.map((p, index) => `
-            <div class="parcela-item">
-                <div class="parcela-info">
-                    <strong><i class="fas fa-clock"></i> ${p.dias} dias</strong>
-                    ${p.minimo > 0 ? `<small>Valor mínimo: R$ ${p.minimo.toFixed(2)}</small>` : '<small>Sem valor mínimo</small>'}
-                </div>
-                <button class="btn-remover-parcela" onclick="gcRemoverParcela(${index})"><i class="fas fa-trash"></i> Remover</button>
+    document.getElementById('gcNovaParcelaDias').value = '';
+    document.getElementById('gcNovaParcelaMinimo').value = '';
+    document.getElementById('gcLimiteCredito').value = parseFloat(cliente.limite_credito) || 0;
+    document.getElementById('gcProximoVencimento').value = cliente.proximo_vencimento || '';
+    document.getElementById('gcSituacao').value = cliente.situacao_financeira || 'Em dia';
+
+    const parserObs = parseObservacaoRevendedor(cliente.observacoes);
+    document.getElementById('gcObservacaoInterna').value = parserObs.obsInterna || '';
+
+    gcRenderizarParcelas();
+    gcAtualizarPreview();
+    document.getElementById('modalGerenciarCliente').classList.add('open');
+}
+
+function gcRenderizarParcelas() {
+    const container = document.getElementById('gcListaParcelas');
+    if (gcParcelasTemporarias.length === 0) {
+        container.innerHTML = '<div class="parcela-vazia"><i class="fas fa-calendar-plus"></i> Nenhuma parcela configurada ainda</div>';
+        return;
+    }
+    gcParcelasTemporarias.sort((a, b) => a.dias - b.dias);
+    container.innerHTML = gcParcelasTemporarias.map((p, index) => `
+        <div class="parcela-item">
+            <div class="parcela-info">
+                <strong><i class="fas fa-clock"></i> ${p.dias} dias</strong>
+                ${p.minimo > 0 ? `<small>Valor mínimo: R$ ${p.minimo.toFixed(2)}</small>` : '<small>Sem valor mínimo</small>'}
             </div>
-        `).join('');
-    }
+            <button class="btn-remover-parcela" onclick="gcRemoverParcela(${index})"><i class="fas fa-trash"></i> Remover</button>
+        </div>
+    `).join('');
+}
 
-    function gcAdicionarParcela() {
-        const diasInput = document.getElementById('gcNovaParcelaDias');
-        const minimoInput = document.getElementById('gcNovaParcelaMinimo');
-        const dias = parseInt(diasInput.value);
-        const minimo = parseFloat(minimoInput.value) || 0;
+function gcAdicionarParcela() {
+    const diasInput = document.getElementById('gcNovaParcelaDias');
+    const minimoInput = document.getElementById('gcNovaParcelaMinimo');
+    const dias = parseInt(diasInput.value);
+    const minimo = parseFloat(minimoInput.value) || 0;
 
-        if (!dias || dias <= 0) { alert('⚠️ Digite um número de dias válido (ex: 7, 14, 30)'); diasInput.focus(); return; }
-        if (gcParcelasTemporarias.some(p => p.dias === dias)) { alert('⚠️ Já existe uma parcela com ' + dias + ' dias.'); diasInput.focus(); return; }
+    if (!dias || dias <= 0) { alert('⚠️ Digite um número de dias válido (ex: 7, 14, 30)'); diasInput.focus(); return; }
+    if (gcParcelasTemporarias.some(p => p.dias === dias)) { alert('⚠️ Já existe uma parcela com ' + dias + ' dias.'); diasInput.focus(); return; }
 
-        gcParcelasTemporarias.push({ dias: dias, minimo: minimo });
-        gcRenderizarParcelas();
-        gcAtualizarPreview();
-        diasInput.value = '';
-        minimoInput.value = '';
-        diasInput.focus();
-    }
+    gcParcelasTemporarias.push({ dias: dias, minimo: minimo });
+    gcRenderizarParcelas();
+    gcAtualizarPreview();
+    diasInput.value = '';
+    minimoInput.value = '';
+    diasInput.focus();
+}
 
-    function gcRemoverParcela(index) {
-        if (!confirm('Remover esta parcela?')) return;
-        gcParcelasTemporarias.splice(index, 1);
-        gcRenderizarParcelas();
-        gcAtualizarPreview();
-    }
+function gcRemoverParcela(index) {
+    if (!confirm('Remover esta parcela?')) return;
+    gcParcelasTemporarias.splice(index, 1);
+    gcRenderizarParcelas();
+    gcAtualizarPreview();
+}
 
-    function gcAtualizarPreview() {
-        const isRev = document.getElementById('gcIsRevendedor').checked;
-        const temPend = document.getElementById('gcPendencia').checked;
-        const emAnalise = document.getElementById('gcAnalise').checked;
-        const obsInterna = document.getElementById('gcObservacaoInterna').value.trim();
+function gcAtualizarPreview() {
+    const isRev = document.getElementById('gcIsRevendedor').checked;
+    const temPend = document.getElementById('gcPendencia').checked;
+    const emAnalise = document.getElementById('gcAnalise').checked;
+    const obsInterna = document.getElementById('gcObservacaoInterna').value.trim();
 
-        document.getElementById('gcAreaParcelas').style.display = (isRev && !temPend) ? 'block' : 'none';
+    document.getElementById('gcAreaParcelas').style.display = (isRev && !temPend) ? 'block' : 'none';
 
-        let partes = [];
-        if (temPend) {
-            if (isRev) partes.push('REVENDA PENDENCIA'); else partes.push('PENDENCIA');
-        } else if (emAnalise) {
-            if (isRev) partes.push('REVENDA ANALISE'); else partes.push('ANALISE');
-        } else if (isRev) {
-            if (gcParcelasTemporarias.length > 0) {
-                const diasOrdenados = gcParcelasTemporarias.slice().sort((a, b) => a.dias - b.dias).map(p => p.dias);
-                partes.push('REVENDA-' + diasOrdenados.join('/'));
-            } else {
-                partes.push('REVENDA');
-            }
+    let partes = [];
+    if (temPend) {
+        if (isRev) partes.push('REVENDA PENDENCIA'); else partes.push('PENDENCIA');
+    } else if (emAnalise) {
+        if (isRev) partes.push('REVENDA ANALISE'); else partes.push('ANALISE');
+    } else if (isRev) {
+        if (gcParcelasTemporarias.length > 0) {
+            const diasOrdenados = gcParcelasTemporarias.slice().sort((a, b) => a.dias - b.dias).map(p => p.dias);
+            partes.push('REVENDA-' + diasOrdenados.join('/'));
         } else {
-            partes.push('');
+            partes.push('REVENDA');
         }
-
-        let textoFinal = partes.filter(p => p).join(' ');
-        if (obsInterna) {
-            if (textoFinal) textoFinal += ', ' + obsInterna;
-            else textoFinal = obsInterna;
-        }
-
-        document.getElementById('gcPreviewObservacoes').textContent = textoFinal || '(vazio)';
+    } else {
+        partes.push('');
     }
 
-    document.addEventListener('input', function(e) {
-        if (e.target && e.target.id === 'gcObservacaoInterna') gcAtualizarPreview();
-    });
+    let textoFinal = partes.filter(p => p).join(' ');
+    if (obsInterna) {
+        if (textoFinal) textoFinal += ', ' + obsInterna;
+        else textoFinal = obsInterna;
+    }
 
-    async function gcSalvarCliente() {
-        const idCliente = parseInt(document.getElementById('gcIdCliente').value);
-        if (!idCliente) { alert('Cliente inválido.'); return; }
+    document.getElementById('gcPreviewObservacoes').textContent = textoFinal || '(vazio)';
+}
 
-        const isRev = document.getElementById('gcIsRevendedor').checked;
-        const temPend = document.getElementById('gcPendencia').checked;
-        const emAnalise = document.getElementById('gcAnalise').checked;
-        const obsInterna = document.getElementById('gcObservacaoInterna').value.trim();
-        const limiteCredito = parseFloat(document.getElementById('gcLimiteCredito').value) || 0;
-        const proximoVencimento = document.getElementById('gcProximoVencimento').value || null;
-        const situacao = document.getElementById('gcSituacao').value;
+document.addEventListener('input', function(e) {
+    if (e.target && e.target.id === 'gcObservacaoInterna') gcAtualizarPreview();
+});
 
-        let partes = [];
-        if (temPend) {
-            if (isRev) partes.push('REVENDA PENDENCIA'); else partes.push('PENDENCIA');
-        } else if (emAnalise) {
-            if (isRev) partes.push('REVENDA ANALISE'); else partes.push('ANALISE');
-        } else if (isRev) {
-            if (gcParcelasTemporarias.length > 0) {
-                const diasOrdenados = gcParcelasTemporarias.slice().sort((a, b) => a.dias - b.dias).map(p => p.dias);
-                partes.push('REVENDA-' + diasOrdenados.join('/'));
-            } else {
-                partes.push('REVENDA');
-            }
-        }
-        let observacaoFinal = partes.filter(p => p).join(' ');
-        if (obsInterna) {
-            if (observacaoFinal) observacaoFinal += ', ' + obsInterna;
-            else observacaoFinal = obsInterna;
-        }
+async function gcSalvarCliente() {
+    const idCliente = parseInt(document.getElementById('gcIdCliente').value);
+    if (!idCliente) { alert('Cliente inválido.'); return; }
 
-        const parcelasConfig = gcParcelasTemporarias.slice().sort((a, b) => a.dias - b.dias).map(p => ({ dias: p.dias, minimo: p.minimo }));
+    const isRev = document.getElementById('gcIsRevendedor').checked;
+    const temPend = document.getElementById('gcPendencia').checked;
+    const emAnalise = document.getElementById('gcAnalise').checked;
+    const obsInterna = document.getElementById('gcObservacaoInterna').value.trim();
+    const limiteCredito = parseFloat(document.getElementById('gcLimiteCredito').value) || 0;
+    const proximoVencimento = document.getElementById('gcProximoVencimento').value || null;
+    const situacao = document.getElementById('gcSituacao').value;
 
-        const clienteLocal = dados.clientes.find(c => parseInt(c.id_cliente) === idCliente);
-        const eraRevendedor = clienteLocal ? String(clienteLocal.observacoes || '').toUpperCase().startsWith('REVENDA') : false;
-        const agoraERevendedor = isRev && !temPend && !emAnalise;
-        
-        let avisoPendente = clienteLocal ? clienteLocal.aviso_aprovacao_pendente : false;
-        let dataAprovacao = clienteLocal ? clienteLocal.data_aprovacao_revenda : null;
-
-        if (agoraERevendedor && !eraRevendedor) {
-            avisoPendente = true;
-            dataAprovacao = new Date().toISOString();
-        }
-
-        const btn = document.getElementById('gcBtnSalvar');
-        const txtOriginal = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
-        btn.disabled = true;
-
-        try {
-            const { error } = await supabaseClient
-                .from('clientes')
-                .update({
-                    observacoes: observacaoFinal,
-                    limite_credito: limiteCredito,
-                    proximo_vencimento: proximoVencimento,
-                    situacao_financeira: situacao,
-                    parcelas_config: parcelasConfig,
-                    aviso_aprovacao_pendente: avisoPendente,
-                    data_aprovacao_revenda: dataAprovacao
-                })
-                .eq('id_cliente', idCliente);
-
-            if (error) throw error;
-
-            if (clienteLocal) {
-                clienteLocal.observacoes = observacaoFinal;
-                clienteLocal.limite_credito = limiteCredito;
-                clienteLocal.proximo_vencimento = proximoVencimento;
-                clienteLocal.situacao_financeira = situacao;
-                clienteLocal.parcelas_config = parcelasConfig;
-                clienteLocal.aviso_aprovacao_pendente = avisoPendente;
-                clienteLocal.data_aprovacao_revenda = dataAprovacao;
-            }
-
-            alert('✅ Cliente atualizado com sucesso!\n\n' + (agoraERevendedor && !eraRevendedor ? '🚀 O cliente foi notificado em tempo real!' : ''));
-
-            fecharModal('modalGerenciarCliente');
-            renderizarClientes();
-            renderizarRevendedores();
-            atualizarBages();
-
-        } catch (error) {
-            console.error('Erro ao salvar:', error);
-            alert('⚠️ Erro ao salvar: ' + error.message);
-        } finally {
-            btn.innerHTML = txtOriginal;
-            btn.disabled = false;
+    let partes = [];
+    if (temPend) {
+        if (isRev) partes.push('REVENDA PENDENCIA'); else partes.push('PENDENCIA');
+    } else if (emAnalise) {
+        if (isRev) partes.push('REVENDA ANALISE'); else partes.push('ANALISE');
+    } else if (isRev) {
+        if (gcParcelasTemporarias.length > 0) {
+            const diasOrdenados = gcParcelasTemporarias.slice().sort((a, b) => a.dias - b.dias).map(p => p.dias);
+            partes.push('REVENDA-' + diasOrdenados.join('/'));
+        } else {
+            partes.push('REVENDA');
         }
     }
+    let observacaoFinal = partes.filter(p => p).join(' ');
+    if (obsInterna) {
+        if (observacaoFinal) observacaoFinal += ', ' + obsInterna;
+        else observacaoFinal = obsInterna;
+    }
+
+    const parcelasConfig = gcParcelasTemporarias.slice().sort((a, b) => a.dias - b.dias).map(p => ({ dias: p.dias, minimo: p.minimo }));
+
+    const clienteLocal = dados.clientes.find(c => parseInt(c.id_cliente) === idCliente);
+    const eraRevendedor = clienteLocal ? String(clienteLocal.observacoes || '').toUpperCase().startsWith('REVENDA') : false;
+    const agoraERevendedor = isRev && !temPend && !emAnalise;
+    
+    let avisoPendente = clienteLocal ? clienteLocal.aviso_aprovacao_pendente : false;
+    let dataAprovacao = clienteLocal ? clienteLocal.data_aprovacao_revenda : null;
+
+    if (agoraERevendedor && !eraRevendedor) {
+        avisoPendente = true;
+        dataAprovacao = new Date().toISOString();
+    }
+
+    const btn = document.getElementById('gcBtnSalvar');
+    const txtOriginal = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+    btn.disabled = true;
+
+    try {
+        const { error } = await supabaseClient
+            .from('clientes')
+            .update({
+                observacoes: observacaoFinal,
+                limite_credito: limiteCredito,
+                proximo_vencimento: proximoVencimento,
+                situacao_financeira: situacao,
+                parcelas_config: parcelasConfig,
+                aviso_aprovacao_pendente: avisoPendente,
+                data_aprovacao_revenda: dataAprovacao
+            })
+            .eq('id_cliente', idCliente);
+
+        if (error) throw error;
+
+        if (clienteLocal) {
+            clienteLocal.observacoes = observacaoFinal;
+            clienteLocal.limite_credito = limiteCredito;
+            clienteLocal.proximo_vencimento = proximoVencimento;
+            clienteLocal.situacao_financeira = situacao;
+            clienteLocal.parcelas_config = parcelasConfig;
+            clienteLocal.aviso_aprovacao_pendente = avisoPendente;
+            clienteLocal.data_aprovacao_revenda = dataAprovacao;
+        }
+
+        alert('✅ Cliente atualizado com sucesso!\n\n' + (agoraERevendedor && !eraRevendedor ? '🚀 O cliente foi notificado em tempo real!' : ''));
+
+        fecharModal('modalGerenciarCliente');
+        renderizarClientes();
+        renderizarRevendedores();
+        atualizarBages();
+
+    } catch (error) {
+        console.error('Erro ao salvar:', error);
+        alert('⚠️ Erro ao salvar: ' + error.message);
+    } finally {
+        btn.innerHTML = txtOriginal;
+        btn.disabled = false;
+    }
+}
 
 // ============================================================
 // CARREGAR DADOS - SUPABASE
