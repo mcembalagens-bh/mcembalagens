@@ -2189,23 +2189,22 @@
     .bloqueio-banner .btn-group { flex-direction: column; align-items: stretch; }
     .bloqueio-banner .btn-group button { width: 100%; justify-content: center; }
 }
-        /* ===== BOTÃO REVENDEDOR DISCRETO NO HEADER ===== */
-/* ===== BOTÃO REVENDEDOR DISCRETO NO HEADER ===== */
+ /* ===== BOTÃO REVENDEDOR DISCRETO ===== */
 .btn-revendedor-header {
     background: var(--orange-accent);
     color: white;
     border: none;
     border-radius: 20px;
-    padding: 8px 16px;
+    padding: 8px 14px;
     font-weight: 700;
     font-size: 13px;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     transition: all 0.3s ease;
     white-space: nowrap;
-    margin-right: 15px; /* Afasta do carrinho */
+    margin-right: 10px;
 }
 .btn-revendedor-header:hover {
     background: var(--orange-top);
@@ -2215,6 +2214,18 @@
     font-size: 14px;
 }
 
+/* Ajuste para evitar que o cabeçalho quebre no PC */
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 @media (max-width: 768px) {
     .btn-revendedor-header {
         padding: 0;
@@ -2222,7 +2233,7 @@
         height: 36px;
         border-radius: 50%;
         justify-content: center;
-        margin-right: 5px; /* Menos margem no mobile */
+        margin-right: 0;
     }
     .btn-revendedor-header span { display: none; }
     .btn-revendedor-header i { font-size: 16px; margin: 0; }
@@ -2262,40 +2273,44 @@
                 <i class="fas fa-search search-icon" onclick="buscarProdutoTopo()"></i>
             </div>
 
-            <div class="header-actions">
-                <span class="cliente-nome" id="clienteNomeHeader"></span>
-                <button class="btn-revendedor-header" onclick="abrirBannerRevendedor()" title="Seja um Revendedor">
-    <i class="fas fa-store"></i> <span>Seja Revendedor</span>
-</button>
-                <!-- Busca mobile (só ícone) -->
-                <button class="btn-search-mobile" onclick="buscarProdutoTopo()" aria-label="Buscar"
-                        style="display:none;" id="btnBuscaMobile">
-                    <i class="fas fa-search"></i>
-                </button>
-                <button class="btn-cart" onclick="abrirCarrinho()" aria-label="Carrinho">
-                    <i class="fas fa-shopping-cart"></i>
-                    <span class="badge" id="cartBadgeTop">0</span>
-                </button>
-                <div class="user-dropdown">
-                    <button class="btn-login" onclick="toggleUserMenu()" aria-label="Login" id="btnUserMenu">
-                        <i class="fas fa-user"></i>
-                    </button>
-                    <div class="user-dropdown-content" id="userDropdown">
-                        <div class="dropdown-item login-item" onclick="abrirLogin()">
-                            <i class="fas fa-sign-in-alt"></i> Entrar / Cadastrar
-                        </div>
-                        <div class="dropdown-item" onclick="abrirDadosPessoais()" style="display:none;" data-item="dados">
-                            <i class="fas fa-user-circle"></i> Dados Pessoais
-                        </div>
-                        <div class="dropdown-item" onclick="abrirMeusPedidos()" style="display:none;" data-item="pedidos">
-                            <i class="fas fa-box"></i> Meus Pedidos
-                        </div>
-                        <div class="dropdown-item sair" onclick="sairConta()" style="display:none;" data-item="sair">
-                            <i class="fas fa-sign-out-alt"></i> Sair da Conta
-                        </div>
-                    </div>
-                </div>
+          <div class="header-actions">
+    <span class="cliente-nome" id="clienteNomeHeader"></span>
+    
+    <!-- NOVO BOTÃO: Texto no PC, Ícone no Celular -->
+    <button class="btn-revendedor-header" onclick="abrirBannerRevendedor()" title="Seja um Revendedor">
+        <i class="fas fa-store"></i> <span>Seja Revendedor</span>
+    </button>
+
+    <!-- Botão de busca mobile (aparece no celular) -->
+    <button class="btn-search-mobile" onclick="buscarProdutoTopo()" aria-label="Buscar" style="display:none;" id="btnBuscaMobile">
+        <i class="fas fa-search"></i>
+    </button>
+    
+    <button class="btn-cart" onclick="abrirCarrinho()" aria-label="Carrinho">
+        <i class="fas fa-shopping-cart"></i>
+        <span class="badge" id="cartBadgeTop">0</span>
+    </button>
+    
+    <div class="user-dropdown">
+        <button class="btn-login" onclick="toggleUserMenu()" aria-label="Login" id="btnUserMenu">
+            <i class="fas fa-user"></i>
+        </button>
+        <div class="user-dropdown-content" id="userDropdown">
+            <div class="dropdown-item login-item" onclick="abrirLogin()">
+                <i class="fas fa-sign-in-alt"></i> Entrar / Cadastrar
             </div>
+            <div class="dropdown-item" onclick="abrirDadosPessoais()" style="display:none;" data-item="dados">
+                <i class="fas fa-user-circle"></i> Dados Pessoais
+            </div>
+            <div class="dropdown-item" onclick="abrirMeusPedidos()" style="display:none;" data-item="pedidos">
+                <i class="fas fa-box"></i> Meus Pedidos
+            </div>
+            <div class="dropdown-item sair" onclick="sairConta()" style="display:none;" data-item="sair">
+                <i class="fas fa-sign-out-alt"></i> Sair da Conta
+            </div>
+        </div>
+    </div>
+</div>
         </div>
     </header>
 
@@ -3271,17 +3286,17 @@
         <i class="fas fa-copy"></i> Copiar
     </button>
     
-    <!-- NOVO BOTÃO DE CONFIRMAÇÃO -->
     <button onclick="confirmarRegrasECadastrar()" 
             style="flex:2;min-width:200px;padding:12px;background:#27ae60;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 10px rgba(39,174,96,0.3);">
         <i class="fas fa-check-circle"></i> Estou Ciente e Quero me Cadastrar
     </button>
+    
+    <!-- BOTÃO FECHAR MOVIDO PARA CÁ -->
+    <button onclick="fecharModal('regrasModal')"
+            style="flex:1;min-width:120px;padding:12px;background:var(--primary-blue);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;">
+        <i class="fas fa-times"></i> Fechar
+    </button>
 </div>
-                <button onclick="fecharModal('regrasModal')"
-                        style="flex:1;min-width:150px;padding:12px;background:var(--primary-blue);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:15px;">
-                    <i class="fas fa-times"></i> Fechar
-                </button>
-            </div>
         </div>
     </div>
 
