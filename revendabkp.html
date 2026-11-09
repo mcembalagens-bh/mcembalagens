@@ -65,7 +65,7 @@
     </script>
 
     <title>MC Embalagens BH - Área do Revendedor</title>
-    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcng9IjIwIiBmaWxsPSIjMWEzYTVjIi8+PHRleHQgeD0iNTAiIHk9IjUwIiBmb250LWZhbWlseT0iQXJpYWwsc2Fucy1zZXJpZiIgZm9udC1zaXplPSI1MCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IiNmZmZmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJjZW50cmFsIj5NQzwvdGV4dD48L3N2Zz4=">
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcng9IjIwIiBmaWxsPSIjYzI0MTBjIi8+PHRleHQgeD0iNTAiIHk9IjUwIiBmb250LWZhbWlseT0iQXJpYWwsc2Fucy1zZXJpZiIgZm9udC1zaXplPSI1MCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IiNmZmZmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJjZW50cmFsIj5NQzwvdGV4dD48L3N2Zz4=">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -79,21 +79,24 @@
         /* ===== RESET ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        :root {
-            --primary-blue: #1a3a5c;
-            --primary-dark: #0d1b2a;
-            --secondary-blue: #2a5a8c;
-            --text-dark: #1a1a1a;
-            --shadow: 0 4px 6px rgba(0,0,0,0.1);
-            --shadow-hover: 0 8px 15px rgba(0,0,0,0.15);
-            --radius: 12px;
-            --transition: all 0.3s ease;
-            --success: #27ae60;
-            --warning: #f39c12;
-            --danger: #e74c3c;
-            --whatsapp: #25D366;
-            --orange-top: #f57c00;
-        }
+     :root {
+    /* AZUL ORIGINAL (volta) */
+    --primary-blue: #1a3a5c;        /* ← Azul original */
+    --primary-dark: #0d1b2a;        /* ← Azul escuro original */
+    --secondary-blue: #2a5a8c;      /* ← Azul médio original */
+    --accent-blue: #3a7ab5;         /* ← Azul accent original */
+    
+    /* LARANJA COMO DETALHE */
+    --orange-top: #f57c00;          /* ← Tarja superior laranja original */
+    --orange-accent: #f39c12;       /* ← Badge revendedor + regras */
+    
+    /* MANTIDOS */
+    --success: #27ae60;
+    --warning: #f39c12;
+    --danger: #e74c3c;
+    --whatsapp: #25D366;
+    --text-dark: #1a1a1a;
+}
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -105,6 +108,11 @@
 
         body.checkout-ativo .top-bar { display: none !important; }
         body.checkout-ativo { padding-top: 0 !important; }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
 
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
@@ -192,7 +200,7 @@
 
         /* ===== BANNER BLOQUEIO ===== */
         .bloqueio-banner {
-            background: linear-gradient(135deg, #1a3a5c, #2a5a8c);
+            background: linear-gradient(135deg, #7c2d12, #c2410c);
             color: white; padding: 40px 20px; border-radius: 12px;
             text-align: center; margin: 20px 0 30px;
             position: relative; overflow: hidden;
@@ -217,7 +225,7 @@
             transition: all 0.3s; text-decoration: none;
             display: inline-flex; align-items: center; gap: 8px;
         }
-        .btn-entrar { background: white; color: #1a3a5c; }
+        .btn-entrar { background: white; color: #c2410c; }
         .btn-entrar:hover { transform: scale(1.05); box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
         .btn-cadastrar { background: #25D366; color: white; }
         .btn-cadastrar:hover { transform: scale(1.05); background: #1da851; }
@@ -309,7 +317,7 @@
         .category-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-hover); }
         .category-card .category-image-wrapper {
             width: 100%; aspect-ratio: 1/1; overflow: hidden;
-            border-radius: var(--radius); background: #f0f4f8;
+            border-radius: var(--radius); background: #fff7ed;
             display: flex; align-items: center; justify-content: center;
         }
         .category-card .category-image-wrapper img {
@@ -389,7 +397,7 @@
             font-size: 11px; color: #999; margin-bottom: 4px;
         }
         .product-info .product-codigo span {
-            background: #f0f4f8; padding: 1px 8px; border-radius: 4px;
+            background: #fff7ed; padding: 1px 8px; border-radius: 4px;
         }
         .product-info .product-description {
             color: #666; font-size: 12px; margin-bottom: 8px; flex: 1;
@@ -400,7 +408,7 @@
 
         .quantity-option {
             display: flex; align-items: center; gap: 6px;
-            background: #f8f9fa; padding: 4px 8px; border-radius: 6px;
+            background: #fff7ed; padding: 4px 8px; border-radius: 6px;
             flex-wrap: wrap; justify-content: space-between;
         }
         .quantity-option label {
@@ -440,8 +448,8 @@
             font-weight: 700; color: #27ae60; font-size: 14px; line-height: 1.2;
         }
         .price-info-revenda .price-pix {
-            font-weight: 600; color: #1a3a5c; font-size: 11px;
-            background: #e8f5e9; padding: 0 6px; border-radius: 8px;
+            font-weight: 600; color: #c2410c; font-size: 11px;
+            background: #ffedd5; padding: 0 6px; border-radius: 8px;
             line-height: 1.4;
         }
         @media (max-width: 768px) {
@@ -453,7 +461,7 @@
 
         .price-display {
             font-weight: 700; color: var(--primary-blue); font-size: 14px;
-            text-align: center; padding: 4px; background: #f0f4f8;
+            text-align: center; padding: 4px; background: #fff7ed;
             border-radius: 6px; min-height: 32px;
             display: flex; align-items: center; justify-content: center;
         }
@@ -533,7 +541,7 @@
             text-decoration: none; border-bottom: 1px solid #f5f5f5;
             transition: var(--transition); cursor: pointer; font-size: 15px;
         }
-        .side-menu-item:hover { background: #f8f9fa; color: var(--primary-blue); padding-left: 15px; }
+        .side-menu-item:hover { background: #fff7ed; color: var(--primary-blue); padding-left: 15px; }
         .side-menu-item i { margin-right: 12px; width: 20px; color: var(--primary-blue); }
         @media (max-width: 768px) { .side-menu { width: 280px; left: -300px; } }
 
@@ -571,7 +579,7 @@
         .modal-carousel { flex: 1; min-width: 250px; position: relative; }
         .carousel-container {
             width: 100%; height: 300px; overflow: hidden;
-            border-radius: var(--radius); background: #f0f2f5;
+            border-radius: var(--radius); background: #fff7ed;
             display: flex; scroll-behavior: smooth; position: relative;
         }
         .carousel-container img {
@@ -592,7 +600,7 @@
         .modal-info { flex: 1; min-width: 250px; }
         .modal-info h3 { font-size: 22px; color: var(--primary-dark); margin-bottom: 4px; }
         .modal-info .modal-codigo { font-size: 13px; color: #999; margin-bottom: 10px; }
-        .modal-info .modal-codigo span { background: #f0f4f8; padding: 2px 10px; border-radius: 4px; }
+        .modal-info .modal-codigo span { background: #fff7ed; padding: 2px 10px; border-radius: 4px; }
         .modal-info .description { color: #666; margin-bottom: 20px; line-height: 1.6; }
         .modal-prices { margin: 20px 0; }
         .price-item {
@@ -606,11 +614,11 @@
         }
         .price-item .price-revenda-modal { color: #27ae60; font-weight: 700; }
         .price-item .price-pix-modal {
-            font-size: 12px; color: #1a3a5c; background: #e8f5e9;
+            font-size: 12px; color: #c2410c; background: #ffedd5;
             padding: 1px 8px; border-radius: 10px; font-weight: 600;
         }
         .modal-specs {
-            margin: 15px 0; padding: 12px; background: #f8f9fa; border-radius: 8px;
+            margin: 15px 0; padding: 12px; background: #fff7ed; border-radius: 8px;
         }
         .modal-specs h4 { color: var(--primary-dark); margin-bottom: 8px; font-size: 14px; }
         .modal-specs .spec-item {
@@ -713,7 +721,7 @@
         }
 
         .cart-total {
-            margin-top: 20px; padding: 15px; background: #f8f9fa;
+            margin-top: 20px; padding: 15px; background: #fff7ed;
             border-radius: var(--radius); text-align: right;
             display: flex; justify-content: space-between; align-items: center;
         }
@@ -783,7 +791,7 @@
         #loginModal .form-group input:focus,
         #loginModal .form-group select:focus {
             border-color: var(--primary-blue); outline: none;
-            box-shadow: 0 0 0 3px rgba(26,58,92,0.1);
+            box-shadow: 0 0 0 3px rgba(194,65,12,0.1);
         }
         #loginModal .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         @media (max-width: 768px) { #loginModal .form-row { grid-template-columns: 1fr; } }
@@ -826,7 +834,7 @@
             border-bottom: 1px solid #eee; color: var(--text-dark);
             font-size: 14px; display: flex; align-items: center; gap: 10px;
         }
-        .user-dropdown-content .dropdown-item:hover { background: #f0f4f8; color: var(--primary-blue); }
+        .user-dropdown-content .dropdown-item:hover { background: #fff7ed; color: var(--primary-blue); }
         .user-dropdown-content .dropdown-item:last-child { border-bottom: none; }
         .user-dropdown-content .dropdown-item i { width: 20px; color: var(--primary-blue); }
         .user-dropdown-content .dropdown-item.sair { color: var(--danger); }
@@ -881,9 +889,9 @@
             gap: 8px !important; min-height: 44px; background: white;
             border: 2px solid #ddd; cursor: pointer; transition: all 0.3s;
         }
-        .frete-opcao:hover { border-color: var(--primary-blue); background: #f8f9fa; }
-        .frete-opcao.selecionado { border-color: var(--primary-blue); background: #f0f8ff; }
-        .frete-opcao .frete-nome { font-size: 13px; font-weight: 600; color: #0d1b2a; }
+        .frete-opcao:hover { border-color: var(--primary-blue); background: #fff7ed; }
+        .frete-opcao.selecionado { border-color: var(--primary-blue); background: #ffedd5; }
+        .frete-opcao .frete-nome { font-size: 13px; font-weight: 600; color: #7c2d12; }
         .frete-opcao .frete-prazo { font-size: 11px; color: #888; }
         .frete-opcao .frete-valor { font-size: 14px; font-weight: 700; }
         .frete-opcao .frete-valor.gratis { color: var(--success); }
@@ -903,7 +911,7 @@
         .opcao-boleto-faturado:hover { border-color: #f39c12; background: #fff8e1; }
         .opcao-boleto-faturado.selecionado { border-color: #f39c12; background: #fff3cd; }
         .opcao-boleto-faturado .icone { font-size: 20px; color: #f39c12; width: 36px; text-align: center; }
-        .opcao-boleto-faturado .info .titulo { font-weight: 600; font-size: 14px; color: #0d1b2a; }
+        .opcao-boleto-faturado .info .titulo { font-weight: 600; font-size: 14px; color: #7c2d12; }
         .opcao-boleto-faturado .info .subtitulo { font-size: 11px; color: #888; }
         @media (max-width: 768px) {
             #checkoutContent > div { min-width: 100% !important; flex: 1 1 100% !important; }
@@ -935,7 +943,7 @@
         }
         .confirmacao-modal .numero-pedido {
             font-size: 24px; font-weight: 700; color: var(--primary-blue);
-            background: #f0f4f8; padding: 10px; border-radius: 8px;
+            background: #fff7ed; padding: 10px; border-radius: 8px;
             margin: 15px 0; text-align: center;
         }
 
@@ -1168,7 +1176,8 @@
         <a class="side-menu-item" href="sobre-nos.html" target="_blank"><i class="fas fa-info-circle"></i> Sobre Nós</a>
         <a class="side-menu-item" href="sobre-prazos.html" target="_blank"><i class="fas fa-clock"></i> Sobre os Prazos</a>
     </div>
-        <!-- ============================================================ -->
+
+    <!-- ============================================================ -->
     <!-- MODAL REGRAS DE COMPRA -->
     <!-- ============================================================ -->
     <div class="modal regras-modal" id="regrasModal">
@@ -1264,8 +1273,7 @@
             </div>
         </div>
     </div>
-
-    <!-- ============================================================ -->
+        <!-- ============================================================ -->
     <!-- MODAL PRODUTO -->
     <!-- ============================================================ -->
     <div class="modal" id="productModal">
@@ -1469,8 +1477,8 @@
                     </div>
                 </div>
 
-                <div style="background:#e3f2fd;padding:12px 15px;border-radius:8px;margin:10px 0;border-left:4px solid #1a3a5c;">
-                    <p style="font-size:13px;color:#0d47a1;margin:0;">
+                <div style="background:#ffedd5;padding:12px 15px;border-radius:8px;margin:10px 0;border-left:4px solid #c2410c;">
+                    <p style="font-size:13px;color:#7c2d12;margin:0;">
                         <i class="fas fa-info-circle"></i> 
                         <strong>Como funciona o cadastro de revendedor?</strong><br>
                         Após preencher os dados e clicar em "Cadastrar", seu acesso estará liberado imediatamente com preços exclusivos. Em caso de dúvidas, chame no WhatsApp.
@@ -1602,11 +1610,11 @@
             </div>
         </div>
     </div>
-        <!-- ============================================================ -->
+
+    <!-- ============================================================ -->
     <!-- CHECKOUT - PÁGINA ÚNICA -->
     <!-- ============================================================ -->
     <div id="checkoutPage">
-        <!-- HEADER DO CHECKOUT -->
         <div style="background:white;padding:15px 25px;box-shadow:0 2px 10px rgba(0,0,0,0.08);position:sticky;top:0;z-index:10;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
             <div style="display:flex;align-items:center;gap:15px;">
                 <button onclick="fecharCheckout()" 
@@ -1624,20 +1632,16 @@
             </div>
         </div>
 
-        <!-- LOADING -->
         <div id="checkoutLoading" style="display:none;text-align:center;padding:80px 20px;">
             <div style="width:50px;height:50px;border:4px solid #e0e0e0;border-top:4px solid var(--primary-blue);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px;"></div>
             <p style="color:#666;font-size:16px;">Processando seu pedido...</p>
             <p style="color:#999;font-size:13px;">Aguarde um momento</p>
         </div>
 
-        <!-- CONTEÚDO -->
         <div id="checkoutContent" style="max-width:1200px;margin:0 auto;padding:20px;display:flex;flex-wrap:wrap;gap:30px;min-height:calc(100vh - 80px);">
             
-            <!-- COLUNA ESQUERDA: IDENTIFICAÇÃO + FRETE -->
             <div style="flex:1.5;min-width:300px;">
                 
-                <!-- STEP 1: IDENTIFICAÇÃO -->
                 <div style="background:white;border-radius:12px;padding:20px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
                     <div style="display:flex;align-items:center;gap:10px;margin-bottom:15px;">
                         <span style="background:var(--primary-blue);color:white;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;">1</span>
@@ -1658,7 +1662,6 @@
                         <i class="fas fa-spinner fa-spin"></i> Buscando dados...
                     </div>
                     
-                    <!-- CLIENTE ENCONTRADO -->
                     <div id="dadosClienteEncontrado" 
                          style="display:none;background:#e8f5e9;border-radius:8px;padding:15px;margin-top:12px;border-left:4px solid #27ae60;">
                         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:4px;">
@@ -1671,7 +1674,7 @@
                             <span style="color:#555;">Nome:</span>
                             <span style="font-weight:600;color:#1a1a1a;" id="clienteNomeEncontrado">---</span>
                             <span style="color:#555;">Telefone:</span>
-                            <span style="font-weight:600;color:#1a3a5c;" id="clienteTelefoneEncontrado">---</span>
+                            <span style="font-weight:600;color:#c2410c;" id="clienteTelefoneEncontrado">---</span>
                         </div>
                         <div style="margin-top:12px;padding-top:12px;border-top:1px solid #c8e6c9;">
                             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:4px;">
@@ -1685,7 +1688,6 @@
                         </div>
                     </div>
                     
-                    <!-- NOVO CADASTRO -->
                     <div id="areaNovoCadastro" 
                          style="display:none;background:#fff3cd;border-radius:8px;padding:15px;margin-top:12px;border-left:4px solid #f39c12;">
                         <p style="font-weight:600;color:#856404;margin:0 0 8px 0;">
@@ -1701,7 +1703,6 @@
                     </div>
                 </div>
 
-                <!-- STEP 2: FRETE -->
                 <div id="checkoutStep2" 
                      style="display:none;background:white;border-radius:12px;padding:20px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
                     <div style="display:flex;align-items:center;gap:10px;margin-bottom:15px;">
@@ -1721,10 +1722,8 @@
                 </div>
             </div>
 
-            <!-- COLUNA DIREITA: RESUMO + PAGAMENTO -->
             <div style="flex:1;min-width:280px;">
                 
-                <!-- RESUMO -->
                 <div style="background:white;border-radius:12px;padding:20px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
                     <h3 style="color:var(--primary-dark);font-size:16px;margin:0 0 12px 0;">📋 Resumo do Pedido</h3>
                     <div id="checkoutResumoProdutos" style="font-size:13px;color:#666;max-height:180px;overflow-y:auto;"></div>
@@ -1749,7 +1748,6 @@
                     </div>
                 </div>
 
-                <!-- STEP 3: PAGAMENTO -->
                 <div id="checkoutStep3" 
                      style="background:white;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
                     <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
@@ -1758,7 +1756,6 @@
                         <span style="font-size:12px;color:#999;margin-left:auto;" id="step3Status">🔒 Bloqueado</span>
                     </div>
 
-                    <!-- PIX -->
                     <div class="pagamento-opcao-checkout" 
                          onclick="selecionarPagamentoCheckout(this, 'PIX')" 
                          style="background:white;border:2px solid #ddd;border-radius:8px;padding:12px 15px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:12px;opacity:0.5;pointer-events:none;">
@@ -1766,12 +1763,11 @@
                             <i class="fas fa-qrcode"></i>
                         </div>
                         <div>
-                            <div style="font-weight:600;font-size:14px;color:#0d1b2a;">PIX - 3% de DESCONTO</div>
+                            <div style="font-weight:600;font-size:14px;color:#7c2d12;">PIX - 3% de DESCONTO</div>
                             <div style="font-size:11px;color:#888;">Pagamento instantâneo com desconto</div>
                         </div>
                     </div>
 
-                    <!-- CARTÃO -->
                     <div class="pagamento-opcao-checkout" 
                          onclick="selecionarPagamentoCheckout(this, 'Cartão')" 
                          style="background:white;border:2px solid #ddd;border-radius:8px;padding:12px 15px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:12px;opacity:0.5;pointer-events:none;">
@@ -1779,12 +1775,11 @@
                             <i class="fas fa-credit-card"></i>
                         </div>
                         <div>
-                            <div style="font-weight:600;font-size:14px;color:#0d1b2a;">Cartão de Crédito</div>
+                            <div style="font-weight:600;font-size:14px;color:#7c2d12;">Cartão de Crédito</div>
                             <div style="font-size:11px;color:#888;">Visa, Mastercard, Elo, Amex</div>
                         </div>
                     </div>
 
-                    <!-- BOLETO PRÉ -->
                     <div class="pagamento-opcao-checkout" 
                          onclick="selecionarPagamentoCheckout(this, 'Boleto')" 
                          style="background:white;border:2px solid #ddd;border-radius:8px;padding:12px 15px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:12px;opacity:0.5;pointer-events:none;">
@@ -1792,12 +1787,11 @@
                             <i class="fas fa-barcode"></i>
                         </div>
                         <div>
-                            <div style="font-weight:600;font-size:14px;color:#0d1b2a;">Boleto Pré</div>
+                            <div style="font-weight:600;font-size:14px;color:#7c2d12;">Boleto Pré</div>
                             <div style="font-size:11px;color:#888;">Boleto bancário tradicional</div>
                         </div>
                     </div>
 
-                    <!-- BOLETO FATURADO -->
                     <div id="opcoesBoletoFaturado" 
                          style="display:none;margin-top:15px;padding:15px;background:#f8f9fa;border-radius:8px;border:1px solid #e0e0e0;opacity:0.5;pointer-events:none;">
                         <h4 style="color:var(--primary-dark);margin-bottom:10px;font-size:15px;">
@@ -1827,7 +1821,8 @@
             </div>
         </div>
     </div>
-        <!-- ============================================================ -->
+
+    <!-- ============================================================ -->
     <!-- MODAL CONFIRMAÇÃO DE PEDIDO -->
     <!-- ============================================================ -->
     <div class="modal confirmacao-modal" id="confirmacaoModal">
@@ -1909,9 +1904,52 @@
         </div>
     </div>
 
-
+    
     <!-- ============================================================ -->
-    <!-- SCRIPT PRINCIPAL — PARTE 6A/9 -->
+    <!-- MODAL DE APROVAÇÃO REVENDEDOR (BOAS-VINDAS) -->
+    <!-- ============================================================ -->
+    <div class="modal" id="modalAprovacaoRevendedor">
+        <div class="modal-content" style="max-width:500px;text-align:center;border-top:6px solid #27ae60;">
+            <span class="modal-close" onclick="fecharModalAprovacaoRevendedor()">&times;</span>
+            
+            <div style="font-size:72px;color:#27ae60;margin:10px 0 15px;animation:pulse 1.5s infinite;">
+                🎉
+            </div>
+            
+            <h2 style="color:var(--primary-dark);margin-bottom:10px;font-size:24px;">
+                Parabéns!
+            </h2>
+            <p style="font-size:16px;color:#333;font-weight:600;margin-bottom:20px;">
+                Você agora é um <span style="color:#27ae60;">Revendedor MC Embalagens</span>
+            </p>
+            
+            <div style="background:#e8f5e9;border-radius:8px;padding:20px;text-align:left;margin-bottom:20px;">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:14px;color:#155724;font-weight:600;">
+                    <i class="fas fa-check-circle" style="color:#27ae60;font-size:18px;"></i> Desconto de 10% em todos os produtos
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:14px;color:#155724;font-weight:600;">
+                    <i class="fas fa-check-circle" style="color:#27ae60;font-size:18px;"></i> Desconto extra de 3% no PIX
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:14px;color:#155724;font-weight:600;">
+                    <i class="fas fa-check-circle" style="color:#27ae60;font-size:18px;"></i> Boleto faturado exclusivo
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;font-size:14px;color:#155724;font-weight:600;">
+                    <i class="fas fa-check-circle" style="color:#27ae60;font-size:18px;"></i> Frete para todo o Brasil
+                </div>
+            </div>
+            
+            <p style="font-size:14px;color:#666;margin-bottom:20px;">
+                Seu acesso já está liberado.<br>Você já pode comprar com preços exclusivos!
+            </p>
+            
+            <button onclick="fecharModalAprovacaoRevendedor()" 
+                    style="background:#27ae60;color:white;border:none;padding:16px 20px;border-radius:10px;cursor:pointer;font-weight:700;font-size:18px;width:100%;transition:all 0.3s;box-shadow:0 4px 15px rgba(39,174,96,0.3);">
+                <i class="fas fa-shopping-cart"></i> Começar a Comprar
+            </button>
+        </div>
+    </div>
+        <!-- ============================================================ -->
+    <!-- SCRIPT PRINCIPAL — PARTE 3/4 -->
     <!-- ============================================================ -->
     <script>
     // ============================================================
@@ -2082,18 +2120,27 @@
     function mostrarNotificacao(mensagem, tipo) {
         if (tipo === undefined) tipo = 'info';
         const anterior = document.querySelector('.notification-floating');
-        if (anterior) { anterior.classList.add('removing'); setTimeout(() => anterior.remove(), 400); }
-        const cores = { success: '#27ae60', error: '#e74c3c', warning: '#f39c12', info: '#1a3a5c' };
+        if (anterior) {
+            anterior.classList.add('removing');
+            setTimeout(() => anterior.remove(), 400);
+        }
+        const cores = { success: '#27ae60', error: '#e74c3c', warning: '#f39c12', info: '#c2410c' };
         const notif = document.createElement('div');
         notif.className = 'notification-floating';
         notif.style.background = cores[tipo] || cores.info;
         notif.style.color = 'white';
         notif.textContent = mensagem;
         document.body.appendChild(notif);
-        setTimeout(() => { notif.classList.add('removing'); setTimeout(() => notif.remove(), 400); }, 4000);
+        setTimeout(() => {
+            notif.classList.add('removing');
+            setTimeout(() => notif.remove(), 400);
+        }, 4000);
     }
 
-    function fecharModal(id) { const m = document.getElementById(id); if (m) m.style.display = 'none'; }
+    function fecharModal(id) {
+        const m = document.getElementById(id);
+        if (m) m.style.display = 'none';
+    }
 
     // ============================================================
     // WHATSAPP
@@ -2103,7 +2150,9 @@
         urlWhatsApp = 'https://wa.me/' + WHATSAPP_NUMBER + '?text=Olá!%20Gostaria%20de%20informações%20sobre%20embalagens.';
         document.getElementById('whatsappModal').classList.add('open');
     }
-    function fecharWhatsAppModal() { document.getElementById('whatsappModal').classList.remove('open'); }
+    function fecharWhatsAppModal() {
+        document.getElementById('whatsappModal').classList.remove('open');
+    }
     function irParaWhatsApp() {
         fecharWhatsAppModal();
         setTimeout(() => window.open(urlWhatsApp, '_blank'), 300);
@@ -2151,7 +2200,10 @@
             '</div>';
         document.body.appendChild(modal);
     }
-    function fecharAtendimento() { const m = document.getElementById('atendimentoModal'); if (m) m.remove(); }
+    function fecharAtendimento() {
+        const m = document.getElementById('atendimentoModal');
+        if (m) m.remove();
+    }
 
     // ============================================================
     // COPIAR REGRAS
@@ -2167,8 +2219,12 @@
             '📞 *WhatsApp:* (31) 98483-4383\n\n' +
             '🏷️ *MC Embalagens BH - Área do Revendedor*';
         if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(texto).then(() => mostrarNotificacao('✅ Regras copiadas!', 'success')).catch(() => fallbackCopiar(texto));
-        } else { fallbackCopiar(texto); }
+            navigator.clipboard.writeText(texto)
+                .then(() => mostrarNotificacao('✅ Regras copiadas!', 'success'))
+                .catch(() => fallbackCopiar(texto));
+        } else {
+            fallbackCopiar(texto);
+        }
     }
     function fallbackCopiar(texto) {
         const t = document.createElement('textarea');
@@ -2182,7 +2238,9 @@
         mostrarNotificacao('✅ Copiado!', 'success');
     }
 
-    function abrirModalRegras() { document.getElementById('regrasModal').style.display = 'block'; }
+    function abrirModalRegras() {
+        document.getElementById('regrasModal').style.display = 'block';
+    }
 
     // ============================================================
     // NAVEGAÇÃO
@@ -2220,7 +2278,9 @@
     function encontrarProduto(id) {
         if (!PRODUCTS_DATA || !PRODUCTS_DATA.categories) return null;
         for (const cat of PRODUCTS_DATA.categories) {
-            for (const p of cat.products) { if (p.id === id) return p; }
+            for (const p of cat.products) {
+                if (p.id === id) return p;
+            }
         }
         return null;
     }
@@ -2235,18 +2295,28 @@
     // CARRINHO — PERSISTÊNCIA
     // ============================================================
     function salvarCarrinho() {
-        try { localStorage.setItem('carrinhoRevenda', JSON.stringify(carrinho)); } catch (e) {}
+        try {
+            localStorage.setItem('carrinhoRevenda', JSON.stringify(carrinho));
+        } catch (e) {}
     }
     function carregarCarrinho() {
         try {
             const data = localStorage.getItem('carrinhoRevenda');
-            if (data) { carrinho = JSON.parse(data); atualizarBadge(); }
-        } catch (e) { carrinho = []; }
+            if (data) {
+                carrinho = JSON.parse(data);
+                atualizarBadge();
+            }
+        } catch (e) {
+            carrinho = [];
+        }
     }
     function atualizarBadge() {
         const badge = document.getElementById('cartBadgeTop');
         const total = carrinho.reduce((s, i) => s + (i.quantity || 0), 0);
-        if (badge) { badge.textContent = total; badge.style.display = total > 0 ? 'block' : 'none'; }
+        if (badge) {
+            badge.textContent = total;
+            badge.style.display = total > 0 ? 'block' : 'none';
+        }
     }
 
     // ============================================================
@@ -2289,14 +2359,18 @@
         const isMobile = window.innerWidth <= 768;
         if (usuarioLogado && usuarioLogado.nome) {
             el.textContent = '👤 ' + usuarioLogado.nome;
-            if (isMobile) el.classList.remove('show'); else el.classList.add('show');
+            if (isMobile) el.classList.remove('show');
+            else el.classList.add('show');
         } else {
             el.classList.remove('show');
         }
     }
 
     function abrirLogin() {
-        if (usuarioLogado) { abrirMeusPedidos(); return; }
+        if (usuarioLogado) {
+            abrirMeusPedidos();
+            return;
+        }
         document.getElementById('loginModal').style.display = 'block';
         switchLoginTab('login');
         document.getElementById('loginMessage').className = 'login-message';
@@ -2339,8 +2413,13 @@
                 localStorage.removeItem('usuarioLogadoRevenda');
             }
         }
-        atualizarInterfaceUsuario();
+              atualizarInterfaceUsuario();
         atualizarNomeClienteHeader();
+        
+        // NOVO: Se recarregou a página e já está logado, liga o realtime
+        if (usuarioLogado && usuarioLogado.email) {
+            iniciarRealtimeAprovacao();
+        }
     }
 
     // ============================================================
@@ -2362,7 +2441,11 @@
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Entrando...';
         btn.disabled = true;
         try {
-            const { data: clientes, error } = await supabaseClient.from('clientes').select('*').eq('email', email).limit(1);
+            const { data: clientes, error } = await supabaseClient
+                .from('clientes')
+                .select('*')
+                .eq('email', email)
+                .limit(1);
             if (error) throw error;
             if (!clientes || clientes.length === 0) {
                 msgEl.className = 'login-message error';
@@ -2392,7 +2475,7 @@
                     return;
                 }
                 msgEl.className = 'login-message warning';
-                msgEl.innerHTML = '<strong>⚠️ Acesso restrito a revendedores.</strong><br>Para solicitar análise, clique abaixo:<br><br><button onclick="solicitarAnaliseRevenda(\'' + cliente.email + '\', \'' + String(cliente.cpf || '').replace(/[^\d]/g,'') + '\')" style="background:#f39c12;color:white;border:none;padding:10px 25px;border-radius:8px;cursor:pointer;font-weight:600;">Solicitar Análise</button>';
+                msgEl.innerHTML = '<strong>⚠️ Acesso restrito a revendedores.</strong><br>Para solicitar análise, clique abaixo:<br><br><button onclick="solicitarAnaliseRevenda(\'' + cliente.email + '\', \'' + String(cliente.cpf || '').replace(/[^\d]/g, '') + '\')" style="background:#f39c12;color:white;border:none;padding:10px 25px;border-radius:8px;cursor:pointer;font-weight:600;">Solicitar Análise</button>';
                 return;
             }
             usuarioLogado = {
@@ -2419,7 +2502,14 @@
             atualizarInterfaceUsuario();
             document.getElementById('bloqueioBanner').style.display = 'none';
             document.getElementById('aguardandoBanner').style.display = 'none';
-            if (currentProducts && currentProducts.length > 0) renderizarProdutos();
+                       if (currentProducts && currentProducts.length > 0) renderizarProdutos();
+            
+            // NOVO: Realtime e Aviso
+            iniciarRealtimeAprovacao();
+            if (cliente.aviso_aprovacao_pendente === true) {
+                setTimeout(() => { mostrarModalAprovacaoRevendedor(); }, 500);
+            }
+
             msgEl.className = 'login-message success';
             msgEl.innerHTML = '✅ Bem-vindo, <strong>' + cliente.nome + '</strong>!';
             setTimeout(() => {
@@ -2436,8 +2526,9 @@
         }
     }
 
-    function sairConta() {
+       function sairConta() {
         if (confirm('Tem certeza que deseja sair?')) {
+            pararRealtimeAprovacao(); // NOVO AQUI
             localStorage.removeItem('usuarioLogadoRevenda');
             sessionStorage.removeItem('tipoCliente');
             usuarioLogado = null;
@@ -2472,7 +2563,11 @@
         try {
             msgEl.className = 'login-message';
             msgEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando documento...';
-            const { data: clientes, error } = await supabaseClient.from('clientes').select('*').eq('cpf', docLimpo).limit(1);
+            const { data: clientes, error } = await supabaseClient
+                .from('clientes')
+                .select('*')
+                .eq('cpf', docLimpo)
+                .limit(1);
             if (error) throw error;
             if (clientes && clientes.length > 0) {
                 const cliente = clientes[0];
@@ -2507,15 +2602,25 @@
     }
 
     function bloquearCamposCadastro(bloquear) {
-        const ids = ['cadastroNome','cadastroEmail','cadastroTelefone','cadastroSenha','cadastroCep','cadastroEndereco','cadastroNumero','cadastroComplemento','cadastroBairro','cadastroCidade','cadastroUf','cadastroTipoPessoa','cadastroInscricaoEstadual','cadastroDocumento'];
+        const ids = ['cadastroNome', 'cadastroEmail', 'cadastroTelefone', 'cadastroSenha', 'cadastroCep', 'cadastroEndereco', 'cadastroNumero', 'cadastroComplemento', 'cadastroBairro', 'cadastroCidade', 'cadastroUf', 'cadastroTipoPessoa', 'cadastroInscricaoEstadual', 'cadastroDocumento'];
         ids.forEach(id => {
             const el = document.getElementById(id);
-            if (el) { el.disabled = bloquear; el.style.display = bloquear ? 'none' : ''; }
+            if (el) {
+                el.disabled = bloquear;
+                el.style.display = bloquear ? 'none' : '';
+            }
         });
         const btn = document.querySelector('#panelCadastro .btn-login-action');
-        if (btn) { btn.disabled = bloquear; btn.style.display = bloquear ? 'none' : ''; }
-        document.querySelectorAll('#panelCadastro .form-group label, #panelCadastro .form-row label').forEach(l => l.style.display = bloquear ? 'none' : '');
-        document.querySelectorAll('#panelCadastro .form-group, #panelCadastro .form-row').forEach(g => g.style.display = bloquear ? 'none' : '');
+        if (btn) {
+            btn.disabled = bloquear;
+            btn.style.display = bloquear ? 'none' : '';
+        }
+        document.querySelectorAll('#panelCadastro .form-group label, #panelCadastro .form-row label').forEach(l => {
+            l.style.display = bloquear ? 'none' : '';
+        });
+        document.querySelectorAll('#panelCadastro .form-group, #panelCadastro .form-row').forEach(g => {
+            g.style.display = bloquear ? 'none' : '';
+        });
         const h4 = document.querySelector('#panelCadastro h4');
         if (h4) h4.style.display = bloquear ? 'none' : '';
     }
@@ -2523,7 +2628,11 @@
     function limparCadastro() {
         document.getElementById('cadastroDocumento').value = '';
         const msgEl = document.getElementById('cadastroMessage');
-        if (msgEl) { msgEl.className = 'login-message'; msgEl.textContent = ''; msgEl.style.display = 'none'; }
+        if (msgEl) {
+            msgEl.className = 'login-message';
+            msgEl.textContent = '';
+            msgEl.style.display = 'none';
+        }
         bloquearCamposCadastro(false);
         setTimeout(() => document.getElementById('cadastroDocumento').focus(), 100);
     }
@@ -2565,7 +2674,10 @@
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cadastrando...';
         btn.disabled = true;
         try {
-            const { data: existe, error: erroBusca } = await supabaseClient.from('clientes').select('email, cpf, observacoes').or('email.eq.' + email + ',cpf.eq.' + docValidado.documento);
+            const { data: existe, error: erroBusca } = await supabaseClient
+                .from('clientes')
+                .select('email, cpf, observacoes')
+                .or('email.eq.' + email + ',cpf.eq.' + docValidado.documento);
             if (erroBusca) throw erroBusca;
             if (existe && existe.length > 0) {
                 const mesmoEmail = existe.find(c => String(c.email).toLowerCase() === email.toLowerCase());
@@ -2595,19 +2707,35 @@
                 }
             }
             const enderecoEntrega = endereco + ', ' + numero + (complemento ? ', ' + complemento : '') + ' - ' + bairro + ', ' + cidade + ' - ' + uf + ', ' + cep;
-            const { error } = await supabaseClient.from('clientes').insert([{
-                nome: nome, email: email, telefone: telefone,
-                cpf: docValidado.documento, tipo_pessoa: tipoPessoa,
-                inscricao_estadual: ie, senha: senha,
-                endereco: endereco, numero: numero, complemento: complemento,
-                bairro: bairro, cidade: cidade, estado: uf, cep: cep,
-                endereco_entrega: enderecoEntrega, cep_entrega: cep,
-                data_cadastro: new Date().toISOString(), observacoes: 'REVENDA'
-            }]);
+            const { error } = await supabaseClient
+                .from('clientes')
+                .insert([{
+                    nome: nome,
+                    email: email,
+                    telefone: telefone,
+                    cpf: docValidado.documento,
+                    tipo_pessoa: tipoPessoa,
+                    inscricao_estadual: ie,
+                    senha: senha,
+                    endereco: endereco,
+                    numero: numero,
+                    complemento: complemento,
+                    bairro: bairro,
+                    cidade: cidade,
+                    estado: uf,
+                    cep: cep,
+                    endereco_entrega: enderecoEntrega,
+                    cep_entrega: cep,
+                                       data_cadastro: new Date().toISOString(),
+                    observacoes: 'REVENDA',
+                    aviso_aprovacao_pendente: true // NOVO AQUI
+                }]);
             if (error) throw error;
             msgEl.className = 'login-message success';
             msgEl.innerHTML = '✅ <strong>Cadastro concluído!</strong><br>Seu acesso está liberado com preços exclusivos.<br><br><button onclick="switchLoginTab(\'login\')" style="padding:10px 25px;background:var(--primary-blue);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;">Fazer Login</button>';
-            setTimeout(() => { document.getElementById('loginEmailLogin').value = email; }, 500);
+            setTimeout(() => {
+                document.getElementById('loginEmailLogin').value = email;
+            }, 500);
         } catch (error) {
             console.error('Erro cadastro:', error);
             msgEl.className = 'login-message error';
@@ -2621,7 +2749,10 @@
     async function solicitarAnaliseRevenda(email, documento) {
         if (!confirm('Deseja solicitar análise para se tornar revendedor?')) return;
         try {
-            const { error } = await supabaseClient.from('clientes').update({ observacoes: 'REVENDA' }).eq('email', email);
+            const { error } = await supabaseClient
+                .from('clientes')
+                .update({ observacoes: 'REVENDA' })
+                .eq('email', email);
             if (error) throw error;
             mostrarNotificacao('✅ Solicitação enviada! Aguarde 24h úteis.', 'success');
             fecharModal('loginModal');
@@ -2635,13 +2766,23 @@
     // DADOS PESSOAIS
     // ============================================================
     async function abrirDadosPessoais() {
-        if (!usuarioLogado) { abrirLogin(); return; }
+        if (!usuarioLogado) {
+            abrirLogin();
+            return;
+        }
         const modal = document.getElementById('dadosPessoaisModal');
         const msgEl = document.getElementById('dadosPessoaisMessage');
-        if (msgEl) { msgEl.className = 'login-message'; msgEl.textContent = ''; }
+        if (msgEl) {
+            msgEl.className = 'login-message';
+            msgEl.textContent = '';
+        }
         modal.style.display = 'block';
         try {
-            const { data: clientes, error } = await supabaseClient.from('clientes').select('*').eq('email', usuarioLogado.email).limit(1);
+            const { data: clientes, error } = await supabaseClient
+                .from('clientes')
+                .select('*')
+                .eq('email', usuarioLogado.email)
+                .limit(1);
             if (error) throw error;
             if (!clientes || clientes.length === 0) throw new Error('Cliente não encontrado');
             const c = clientes[0];
@@ -2665,7 +2806,10 @@
             }
         } catch (error) {
             console.error('Erro:', error);
-            if (msgEl) { msgEl.className = 'login-message error'; msgEl.textContent = '❌ Erro ao carregar dados.'; }
+            if (msgEl) {
+                msgEl.className = 'login-message error';
+                msgEl.textContent = '❌ Erro ao carregar dados.';
+            }
         }
     }
 
@@ -2694,9 +2838,22 @@
         msgEl.className = 'login-message';
         msgEl.textContent = '🔄 Salvando...';
         try {
-            const dados = { nome: nome, telefone: telefone, endereco: endereco, numero: numero, complemento: complemento, bairro: bairro, cidade: cidade, estado: uf, cep: cep };
+            const dados = {
+                nome: nome,
+                telefone: telefone,
+                endereco: endereco,
+                numero: numero,
+                complemento: complemento,
+                bairro: bairro,
+                cidade: cidade,
+                estado: uf,
+                cep: cep
+            };
             if (novaSenha) dados.senha = novaSenha;
-            const { error } = await supabaseClient.from('clientes').update(dados).eq('email', usuarioLogado.email);
+            const { error } = await supabaseClient
+                .from('clientes')
+                .update(dados)
+                .eq('email', usuarioLogado.email);
             if (error) throw error;
             usuarioLogado.nome = nome;
             usuarioLogado.telefone = telefone;
@@ -2724,7 +2881,10 @@
     // MEUS PEDIDOS
     // ============================================================
     async function abrirMeusPedidos() {
-        if (!usuarioLogado) { abrirLogin(); return; }
+        if (!usuarioLogado) {
+            abrirLogin();
+            return;
+        }
         const modal = document.createElement('div');
         modal.id = 'meusPedidosModal';
         modal.className = 'modal';
@@ -2742,7 +2902,11 @@
 
     async function carregarPedidosCliente(email) {
         try {
-            const { data: pedidos, error } = await supabaseClient.from('pedidos').select('*').eq('cliente_email', email).order('id_pedido', { ascending: false });
+            const { data: pedidos, error } = await supabaseClient
+                .from('pedidos')
+                .select('*')
+                .eq('cliente_email', email)
+                .order('id_pedido', { ascending: false });
             if (error) throw error;
             const container = document.getElementById('meusPedidosLista');
             if (!container) return;
@@ -2756,10 +2920,14 @@
                     if (p.data_pedido.indexOf('/') !== -1) {
                         const partes = p.data_pedido.split(',')[0].trim().split('/');
                         if (partes.length === 3) data = new Date(parseInt(partes[2]), parseInt(partes[1]) - 1, parseInt(partes[0]));
-                    } else data = new Date(p.data_pedido);
+                    } else {
+                        data = new Date(p.data_pedido);
+                    }
                     if (isNaN(data.getTime())) return true;
                     return data >= sessentaAtras;
-                } catch (e) { return true; }
+                } catch (e) {
+                    return true;
+                }
             });
             if (filtrados.length === 0) {
                 container.innerHTML = '<div class="login-pedido-vazio"><i class="fas fa-box-open" style="font-size:32px;color:#ddd;display:block;margin-bottom:10px;"></i><p>Você ainda não tem pedidos.</p></div>';
@@ -2789,7 +2957,11 @@
 
     async function verDetalhesPedido(pedidoId) {
         try {
-            const { data: pedido, error } = await supabaseClient.from('pedidos').select('*').eq('id_pedido', pedidoId).single();
+            const { data: pedido, error } = await supabaseClient
+                .from('pedidos')
+                .select('*')
+                .eq('id_pedido', pedidoId)
+                .single();
             if (error || !pedido) throw error || new Error('Pedido não encontrado');
             mostrarDetalhesPedido(pedido);
         } catch (error) {
@@ -2815,7 +2987,7 @@
         let itensHtml = '';
         if (itensTxt.indexOf(' | ') !== -1) {
             itensTxt.split(' | ').forEach((part, i) => {
-                itensHtml += '<div style="padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:13px;">' + (i+1) + '. ' + part + '</div>';
+                itensHtml += '<div style="padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:13px;">' + (i + 1) + '. ' + part + '</div>';
             });
         } else {
             itensHtml = '<div style="padding:6px 0;font-size:13px;">' + (itensTxt || 'Itens não disponíveis') + '</div>';
@@ -2826,7 +2998,7 @@
         if (!isCancelado && isPendente) {
             const metodo = pagamento.toUpperCase();
             if (metodo.indexOf('PIX') !== -1) {
-                botaoPag = '<button onclick="fecharDetalhesPedido();setTimeout(function(){irParaPagamentoPix(\'' + p.id_pedido + '\', ' + (parseFloat(p.total)||0) + ')},300)" style="background:#25D366;color:white;border:none;padding:12px;border-radius:8px;cursor:pointer;font-weight:600;width:100%;margin-top:12px;"><i class="fas fa-qrcode"></i> Pagar com PIX</button>';
+                botaoPag = '<button onclick="fecharDetalhesPedido();setTimeout(function(){irParaPagamentoPix(\'' + p.id_pedido + '\', ' + (parseFloat(p.total) || 0) + ')},300)" style="background:#25D366;color:white;border:none;padding:12px;border-radius:8px;cursor:pointer;font-weight:600;width:100%;margin-top:12px;"><i class="fas fa-qrcode"></i> Pagar com PIX</button>';
             } else {
                 botaoPag = '<button onclick="recriarLinkPagamento(' + p.id_pedido + ')" style="background:var(--primary-blue);color:white;border:none;padding:12px;border-radius:8px;cursor:pointer;font-weight:600;width:100%;margin-top:12px;"><i class="fas fa-credit-card"></i> Pagar</button>';
             }
@@ -2842,21 +3014,24 @@
             '<h2 style="color:var(--primary-dark);margin:0;font-size:20px;">📦 Pedido #' + p.id_pedido + '</h2>' +
             '<span style="background:' + statusColor + ';color:white;padding:4px 14px;border-radius:20px;font-size:13px;font-weight:600;">' + statusTxt + '</span></div>' +
             '<div style="background:#f8f9fa;border-radius:8px;padding:12px;margin-bottom:15px;font-size:14px;">' +
-            '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #eee;"><span style="color:#555;">Data</span><span style="font-weight:600;">' + (p.data_pedido||'').replace('T',' ').substring(0,16) + '</span></div>' +
+            '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #eee;"><span style="color:#555;">Data</span><span style="font-weight:600;">' + (p.data_pedido || '').replace('T', ' ').substring(0, 16) + '</span></div>' +
             '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #eee;"><span style="color:#555;">Frete</span><span style="font-weight:600;">' + freteNome + ' (R$ ' + freteValor.toFixed(2) + ')</span></div>' +
             '<div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:#555;">Pagamento</span><span style="font-weight:600;">' + pagamento + '</span></div></div>' +
             '<h4 style="margin-bottom:8px;color:var(--primary-dark);">🛒 Produtos</h4>' +
             '<div style="max-height:250px;overflow-y:auto;border:1px solid #eee;border-radius:8px;padding:4px 12px;background:white;">' + itensHtml + '</div>' +
             '<div style="margin-top:15px;display:flex;justify-content:space-between;font-size:18px;font-weight:700;color:var(--primary-blue);border-top:2px solid #eee;padding-top:10px;">' +
-            '<span>TOTAL</span><span>R$ ' + parseFloat(p.total||0).toFixed(2) + '</span></div>' +
+            '<span>TOTAL</span><span>R$ ' + parseFloat(p.total || 0).toFixed(2) + '</span></div>' +
             botaoPag +
             '<button onclick="fecharDetalhesPedido()" style="background:#6c757d;color:white;border:none;padding:12px;border-radius:8px;cursor:pointer;font-weight:600;width:100%;margin-top:10px;">Fechar</button>' +
             '</div>';
         document.body.appendChild(modal);
     }
 
-    function fecharDetalhesPedido() { const m = document.getElementById('detalhesPedidoModal'); if (m) m.remove(); }
-      
+    function fecharDetalhesPedido() {
+        const m = document.getElementById('detalhesPedidoModal');
+        if (m) m.remove();
+    }
+
     // ============================================================
     // BANNER CARROSSEL
     // ============================================================
@@ -2870,11 +3045,11 @@
         let html = '';
         ativos.forEach((b, i) => {
             const src = isMobile && b.imagem_mobile ? b.imagem_mobile : b.imagem_pc;
-            html += '<div class="slide ' + (i===0?'active':'') + '"><img src="' + src + '" loading="lazy"></div>';
+            html += '<div class="slide ' + (i === 0 ? 'active' : '') + '"><img src="' + src + '" loading="lazy"></div>';
         });
         wrapper.innerHTML = html;
         if (dots) {
-            dots.innerHTML = ativos.map((_, i) => '<span class="dot ' + (i===0?'active':'') + '" onclick="irParaBanner(' + i + ')"></span>').join('');
+            dots.innerHTML = ativos.map((_, i) => '<span class="dot ' + (i === 0 ? 'active' : '') + '" onclick="irParaBanner(' + i + ')"></span>').join('');
         }
         iniciarAutoplay();
     }
@@ -2950,8 +3125,13 @@
                                         const qtd = parseInt(parts[0]);
                                         const dados = parts[1] || '';
                                         const pesoDims = dados.split('-');
-                                        if (pesoDims.length === 2) { pesoMap[qtd] = pesoDims[0] || ''; dimsMap[qtd] = pesoDims[1] || ''; }
-                                        else { pesoMap[qtd] = dados; dimsMap[qtd] = ''; }
+                                        if (pesoDims.length === 2) {
+                                            pesoMap[qtd] = pesoDims[0] || '';
+                                            dimsMap[qtd] = pesoDims[1] || '';
+                                        } else {
+                                            pesoMap[qtd] = dados;
+                                            dimsMap[qtd] = '';
+                                        }
                                     }
                                 });
                             }
@@ -3008,10 +3188,14 @@
                 div.innerHTML = '<div class="spinner"></div><p>🔄 Carregando produtos...</p>';
                 grid.innerHTML = '';
                 grid.appendChild(div);
-            } else loading.style.display = 'flex';
-        } else if (loading) loading.style.display = 'none';
+            } else {
+                loading.style.display = 'flex';
+            }
+        } else if (loading) {
+            loading.style.display = 'none';
+        }
     }
-
+      
     // ============================================================
     // RENDERIZAR CATEGORIAS
     // ============================================================
@@ -3047,7 +3231,7 @@
     }
 
     // ============================================================
-    // RENDERIZAR PRODUTOS
+    // RENDERIZAR PRODUTOS (COM DESCONTO REVENDEDOR 10%)
     // ============================================================
     function renderizarProdutos() {
         const grid = document.getElementById('productsGrid');
@@ -3086,9 +3270,9 @@
                 quantityHTML += '<div class="quantity-option">' +
                     '<label>+' + q.qty + '</label>' +
                     '<div class="quantity-control">' +
-                    '<button onclick="alterarQuantidade(' + product.id + ', ' + q.qty + ', -1)"' + (estaEsgotado?' disabled':'') + '>−</button>' +
+                    '<button onclick="alterarQuantidade(' + product.id + ', ' + q.qty + ', -1)"' + (estaEsgotado ? ' disabled' : '') + '>−</button>' +
                     '<span id="qty-' + product.id + '-' + q.qty + '">0</span>' +
-                    '<button onclick="alterarQuantidade(' + product.id + ', ' + q.qty + ', 1)"' + (estaEsgotado?' disabled':'') + '>+</button>' +
+                    '<button onclick="alterarQuantidade(' + product.id + ', ' + q.qty + ', 1)"' + (estaEsgotado ? ' disabled' : '') + '>+</button>' +
                     '</div>' +
                     '<div class="price-info-revenda">' +
                     '<span class="price-old">R$ ' + precoOriginal.toFixed(2) + '</span>' +
@@ -3109,8 +3293,8 @@
                 '<div class="product-actions">' +
                 '<div class="quantity-selector">' + quantityHTML + '</div>' +
                 '<div class="price-display" id="priceDisplay-' + product.id + '">Selecione uma quantidade</div>' +
-                '<button class="btn-add-product" onclick="adicionarProduto(' + product.id + ')"' + (!podeVender?' disabled':'') + '>' +
-                '<i class="fas fa-cart-plus"></i> ' + (estaEsgotado?'Esgotado':'Adicionar') +
+                '<button class="btn-add-product" onclick="adicionarProduto(' + product.id + ')"' + (!podeVender ? ' disabled' : '') + '>' +
+                '<i class="fas fa-cart-plus"></i> ' + (estaEsgotado ? 'Esgotado' : 'Adicionar') +
                 '</button>' + stockInfo + '</div>';
 
             card.appendChild(imgDiv);
@@ -3159,7 +3343,7 @@
     }
 
     // ============================================================
-    // ADICIONAR AO CARRINHO
+    // ADICIONAR AO CARRINHO (COM DESCONTO REVENDEDOR 10%)
     // ============================================================
     function adicionarProduto(productId) {
         const product = encontrarProduto(productId);
@@ -3180,17 +3364,23 @@
                     const precoBase = (unidades * q.price) / q.qty;
                     const precoRevenda = precoBase * (1 - DESCONTO_REVENDEDOR);
                     pacotes.push({
-                        step: q.qty, qty: qtd, totalUnits: unidades,
+                        step: q.qty,
+                        qty: qtd,
+                        totalUnits: unidades,
                         price: precoRevenda,
                         unitPrice: (q.price / q.qty) * (1 - DESCONTO_REVENDEDOR),
-                        weight: q.weight, dimensions: q.dimensions
+                        weight: q.weight,
+                        dimensions: q.dimensions
                     });
                     totalUnidades += unidades;
                     totalPreco += precoRevenda;
                 }
             }
         });
-        if (pacotes.length === 0) { alert('⚠️ Selecione pelo menos uma quantidade!'); return; }
+        if (pacotes.length === 0) {
+            alert('⚠️ Selecione pelo menos uma quantidade!');
+            return;
+        }
 
         if (!podeVenderZerado) {
             let solicitado = 0;
@@ -3200,17 +3390,29 @@
                 let ajustado = 0;
                 for (let i = pacotes.length - 1; i >= 0; i--) {
                     const p = pacotes[i];
-                    if (ajustado + p.totalUnits <= product.stock) ajustado += p.totalUnits;
-                    else {
+                    if (ajustado + p.totalUnits <= product.stock) {
+                        ajustado += p.totalUnits;
+                    } else {
                         const restante = product.stock - ajustado;
                         if (restante > 0) {
                             const possiveis = Math.floor(restante / p.step);
-                            if (possiveis > 0) { p.qty = possiveis; p.totalUnits = possiveis * p.step; p.price = p.totalUnits * p.unitPrice; ajustado += p.totalUnits; }
-                            else pacotes.splice(i, 1);
-                        } else pacotes.splice(i, 1);
+                            if (possiveis > 0) {
+                                p.qty = possiveis;
+                                p.totalUnits = possiveis * p.step;
+                                p.price = p.totalUnits * p.unitPrice;
+                                ajustado += p.totalUnits;
+                            } else {
+                                pacotes.splice(i, 1);
+                            }
+                        } else {
+                            pacotes.splice(i, 1);
+                        }
                     }
                 }
-                if (pacotes.length === 0) { alert('⚠️ Não foi possível adicionar.'); return; }
+                if (pacotes.length === 0) {
+                    alert('⚠️ Não foi possível adicionar.');
+                    return;
+                }
             }
         }
 
@@ -3251,7 +3453,7 @@
     }
 
     // ============================================================
-    // MODAL PRODUTO
+    // MODAL PRODUTO (COM PREÇO REVENDA + SUGESTÃO VAREJO)
     // ============================================================
     function abrirModalProduto(id) {
         const product = encontrarProduto(id);
@@ -3267,12 +3469,19 @@
         if (product.images && product.images.length > 0) {
             product.images.forEach(img => {
                 let src = img;
-                if (src.indexOf('http') !== 0) { if (src.indexOf('//') === 0) src = 'https:' + src; }
+                if (src.indexOf('http') !== 0) {
+                    if (src.indexOf('//') === 0) src = 'https:' + src;
+                }
                 const el = document.createElement('img');
                 el.src = src;
                 el.alt = product.name;
-                el.onclick = function(e) { e.stopPropagation(); abrirZoom(this.src); };
-                el.onerror = function() { this.style.display = 'none'; };
+                el.onclick = function(e) {
+                    e.stopPropagation();
+                    abrirZoom(this.src);
+                };
+                el.onerror = function() {
+                    this.style.display = 'none';
+                };
                 container.appendChild(el);
             });
         } else {
@@ -3337,7 +3546,10 @@
         product.quantities.forEach(q => {
             const precoRevenda = q.price * (1 - DESCONTO_REVENDEDOR);
             const unitario = precoRevenda / q.qty;
-            if (unitario < menorPrecoRevenda) { menorPrecoRevenda = unitario; maiorQtd = q.qty; }
+            if (unitario < menorPrecoRevenda) {
+                menorPrecoRevenda = unitario;
+                maiorQtd = q.qty;
+            }
         });
         if (menorPrecoRevenda === Infinity) return null;
         let precoVarejo = menorPrecoRevenda / 0.55;
@@ -3358,7 +3570,9 @@
         const resultados = [];
         for (const cat of PRODUCTS_DATA.categories) {
             for (const p of cat.products) {
-                if (p.name.toLowerCase().indexOf(q) !== -1 || p.description.toLowerCase().indexOf(q) !== -1 || (p.codigo && p.codigo.toLowerCase().indexOf(q) !== -1)) {
+                if (p.name.toLowerCase().indexOf(q) !== -1 ||
+                    p.description.toLowerCase().indexOf(q) !== -1 ||
+                    (p.codigo && p.codigo.toLowerCase().indexOf(q) !== -1)) {
                     const copia = Object.assign({}, p);
                     copia.categoria = cat.name;
                     copia.categoriaId = cat.id;
@@ -3366,8 +3580,17 @@
                 }
             }
         }
-        if (resultados.length === 0) { alert('🔍 Nenhum produto encontrado.'); return; }
-        currentCategory = { id: -1, name: '🔍 Resultados para "' + termo.trim() + '" (' + resultados.length + ')', description: '', image: '', products: resultados };
+        if (resultados.length === 0) {
+            alert('🔍 Nenhum produto encontrado.');
+            return;
+        }
+        currentCategory = {
+            id: -1,
+            name: '🔍 Resultados para "' + termo.trim() + '" (' + resultados.length + ')',
+            description: '',
+            image: '',
+            products: resultados
+        };
         currentProducts = resultados;
         document.getElementById('categoriesSection').style.display = 'none';
         document.getElementById('productsSection').style.display = 'block';
@@ -3379,7 +3602,7 @@
     }
 
     // ============================================================
-    // CARRINHO — MODAL
+    // CARRINHO — MODAL (COM AVISO PEDIDO MÍNIMO)
     // ============================================================
     function abrirCarrinho() {
         const modal = document.getElementById('cartModal');
@@ -3393,7 +3616,10 @@
             container.innerHTML = '<div class="carrinho-vazio"><i class="fas fa-shopping-cart"></i><p>Seu carrinho está vazio</p></div>';
             totalEl.textContent = 'R$ 0,00';
             totalUnEl.textContent = '0 un';
-            if (btnFinalizar) { btnFinalizar.disabled = true; btnFinalizar.style.opacity = '0.5'; }
+            if (btnFinalizar) {
+                btnFinalizar.disabled = true;
+                btnFinalizar.style.opacity = '0.5';
+            }
             return;
         }
 
@@ -3427,7 +3653,7 @@
                 '</div>' +
                 '</div></div>' +
                 '<div class="cart-item-right-moderno">' +
-                '<div class="cart-item-subtotal">R$ ' + (item.price||0).toFixed(2) + '</div>' +
+                '<div class="cart-item-subtotal">R$ ' + (item.price || 0).toFixed(2) + '</div>' +
                 '<button class="btn-remover-item" onclick="removerItemCarrinho(' + index + ')"><i class="fas fa-trash-alt"></i></button>' +
                 '</div></div>';
             container.appendChild(div);
@@ -3442,9 +3668,15 @@
             aviso.style.cssText = 'background:#fff3cd;padding:10px 15px;border-radius:8px;border-left:4px solid #f39c12;color:#856404;font-size:13px;margin:10px 0;';
             aviso.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Pedido mínimo <strong>R$ ' + PEDIDO_MINIMO_REVENDEDOR.toFixed(2) + '</strong>. Faltam R$ ' + (PEDIDO_MINIMO_REVENDEDOR - total).toFixed(2) + '.';
             container.insertBefore(aviso, container.firstChild);
-            if (btnFinalizar) { btnFinalizar.disabled = true; btnFinalizar.style.opacity = '0.5'; }
+            if (btnFinalizar) {
+                btnFinalizar.disabled = true;
+                btnFinalizar.style.opacity = '0.5';
+            }
         } else {
-            if (btnFinalizar) { btnFinalizar.disabled = false; btnFinalizar.style.opacity = '1'; }
+            if (btnFinalizar) {
+                btnFinalizar.disabled = false;
+                btnFinalizar.style.opacity = '1';
+            }
         }
     }
 
@@ -3456,7 +3688,9 @@
         if (novaQtd === 0) {
             if (confirm('Remover "' + item.name + '"?')) {
                 carrinho.splice(index, 1);
-                salvarCarrinho(); atualizarBadge(); abrirCarrinho();
+                salvarCarrinho();
+                atualizarBadge();
+                abrirCarrinho();
             }
             return;
         }
@@ -3465,7 +3699,9 @@
         const estoque = product ? product.stock : item.stock;
         const totalUnits = novaQtd * item.step;
         let reservado = 0;
-        carrinho.forEach(i => { if (i.productId === item.productId && i !== item) reservado += i.totalUnits || 0; });
+        carrinho.forEach(i => {
+            if (i.productId === item.productId && i !== item) reservado += i.totalUnits || 0;
+        });
         const disponivel = estoque - reservado;
         if (!podeZerado && totalUnits > disponivel) {
             alert('⚠️ Estoque insuficiente!\nDisponível: ' + disponivel + '\nSolicitado: ' + totalUnits);
@@ -3475,7 +3711,9 @@
         item.totalUnits = totalUnits;
         item.price = totalUnits * item.unitPrice;
         item.quantity = totalUnits;
-        salvarCarrinho(); atualizarBadge(); abrirCarrinho();
+        salvarCarrinho();
+        atualizarBadge();
+        abrirCarrinho();
     }
 
     function removerItemCarrinho(index) {
@@ -3483,7 +3721,9 @@
         if (!item) return;
         if (confirm('Remover "' + item.name + '"?')) {
             carrinho.splice(index, 1);
-            salvarCarrinho(); atualizarBadge(); abrirCarrinho();
+            salvarCarrinho();
+            atualizarBadge();
+            abrirCarrinho();
         }
     }
 
@@ -3493,9 +3733,15 @@
     function obterCidadePorCep(cep) {
         if (!cep) return null;
         const c = String(cep).replace(/\D/g, '');
-        const mapa = { '30': 'Belo Horizonte', '31': 'Belo Horizonte', '32': 'Belo Horizonte', '326': 'Betim', '325': 'Contagem', '345': 'Sabará', '348': 'Nova Lima', '324': 'Ibirité', '333': 'Ribeirão das Neves', '332': 'Santa Luzia', '347': 'Lagoa Santa' };
+        const mapa = {
+            '30': 'Belo Horizonte', '31': 'Belo Horizonte', '32': 'Belo Horizonte',
+            '326': 'Betim', '325': 'Contagem', '345': 'Sabará', '348': 'Nova Lima',
+            '324': 'Ibirité', '333': 'Ribeirão das Neves', '332': 'Santa Luzia', '347': 'Lagoa Santa'
+        };
         const prefixos = Object.keys(mapa).sort((a, b) => b.length - a.length);
-        for (const p of prefixos) if (c.indexOf(p) === 0) return mapa[p];
+        for (const p of prefixos) {
+            if (c.indexOf(p) === 0) return mapa[p];
+        }
         return null;
     }
 
@@ -3506,7 +3752,9 @@
             const kn = key.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
             if (kn === norm) {
                 for (const f of TABELA_FRETE_ENTREGA_PROPRIA[key]) {
-                    if (total >= f.min && total <= f.max) return { encontrado: true, cost: f.cost, cidade: key };
+                    if (total >= f.min && total <= f.max) {
+                        return { encontrado: true, cost: f.cost, cidade: key };
+                    }
                 }
             }
         }
@@ -3523,7 +3771,11 @@
                 const q = p.quantities.find(x => x.qty === item.step);
                 if (q && q.weight) {
                     const n = parseFloat(String(q.weight).replace(/[^0-9.,]/g, '').replace(',', '.'));
-                    if (!isNaN(n) && n > 0) { peso += n * (item.qty || 1); tem = true; enc = true; }
+                    if (!isNaN(n) && n > 0) {
+                        peso += n * (item.qty || 1);
+                        tem = true;
+                        enc = true;
+                    }
                 }
             }
             if (!enc && p.weight > 0) {
@@ -3539,7 +3791,9 @@
         return Math.max(peso, 0.1);
     }
 
-    function calcularDimensoes() { return { altura: 16, largura: 16, comprimento: 16 }; }
+    function calcularDimensoes() {
+        return { altura: 16, largura: 16, comprimento: 16 };
+    }
 
     function calcularPrazoProducao() {
         let maior = 0;
@@ -3555,9 +3809,14 @@
         const out = [];
         const prod = checkoutState.producaoDias || calcularPrazoProducao();
         out.push({
-            nome: 'Retirada na Loja', valor: 0,
-            prazoEnvio: 1, prazoProducao: prod, prazoTotal: 1 + prod,
-            codigo: 'RETIRADA', freteGratis: true, isEntregaPropria: false
+            nome: 'Retirada na Loja',
+            valor: 0,
+            prazoEnvio: 1,
+            prazoProducao: prod,
+            prazoTotal: 1 + prod,
+            codigo: 'RETIRADA',
+            freteGratis: true,
+            isEntregaPropria: false
         });
         for (const op of opcoes) {
             const isEP = op.is_entrega_propria === true || op.id === 'ENTREGA_PROPRIA' || (op.nome && op.nome.toLowerCase().indexOf('entrega própria') !== -1);
@@ -3573,10 +3832,14 @@
             else if (nome.indexOf('Jadlog') !== -1) nome = 'Jadlog';
             else if (nome.indexOf('Loggi') !== -1) nome = 'Loggi';
             out.push({
-                nome: nome, valor: valorFinal, prazoEnvio: prazoEnvio,
-                prazoProducao: prod, prazoTotal: prazoTotal,
+                nome: nome,
+                valor: valorFinal,
+                prazoEnvio: prazoEnvio,
+                prazoProducao: prod,
+                prazoTotal: prazoTotal,
                 codigo: op.id || op.codigo || nome,
-                freteGratis: valorFinal === 0, isEntregaPropria: isEP
+                freteGratis: valorFinal === 0,
+                isEntregaPropria: isEP
             });
         }
         out.sort((a, b) => a.valor - b.valor);
@@ -3607,23 +3870,33 @@
             if (!s) return false;
             const estado = JSON.parse(s);
             if (Date.now() - estado.timestamp > 3600000) return false;
-            if (estado.pagina === 'home') { showHome(); return true; }
+            if (estado.pagina === 'home') {
+                showHome();
+                return true;
+            }
             if (estado.pagina === 'categoria' && estado.currentCategoryId) {
                 const cat = PRODUCTS_DATA.categories.find(c => c.id === estado.currentCategoryId);
-                if (!cat) { showHome(); return false; }
+                if (!cat) {
+                    showHome();
+                    return false;
+                }
                 abrirCategoria(cat.id);
                 return true;
             }
             return false;
-        } catch (e) { return false; }
+        } catch (e) {
+            return false;
+        }
     }
 
     function controlarHistoricoNavegacao() {
-        window.addEventListener('popstate', function() { showHome(); });
+        window.addEventListener('popstate', function() {
+            showHome();
+        });
     }
-      
+
     // ============================================================
-    // CHECKOUT — ABRIR
+    // CHECKOUT — ABRIR (COM VALIDAÇÃO PEDIDO MÍNIMO)
     // ============================================================
     function abrirCheckout() {
         if (!usuarioLogado || !usuarioLogado.isRevendedor) {
@@ -3645,9 +3918,15 @@
         document.getElementById('checkoutLoading').style.display = 'none';
 
         checkoutState = {
-            passo: 1, enderecoSelecionado: null, freteSelecionado: null,
-            pagamentoSelecionado: null, clienteEncontrado: false, clienteData: null,
-            emailBuscado: '', dadosConfirmados: false, opcoesFrete: [],
+            passo: 1,
+            enderecoSelecionado: null,
+            freteSelecionado: null,
+            pagamentoSelecionado: null,
+            clienteEncontrado: false,
+            clienteData: null,
+            emailBuscado: '',
+            dadosConfirmados: false,
+            opcoesFrete: [],
             producaoDias: calcularPrazoProducao(),
             boletoFaturadoSelecionado: null,
             opcoesBoleto: usuarioLogado.opcoesBoleto || []
@@ -3709,7 +3988,7 @@
     }
 
     // ============================================================
-    // RESUMO DO CHECKOUT (preenche logo ao abrir)
+    // RESUMO DO CHECKOUT
     // ============================================================
     function atualizarResumoCheckout() {
         const container = document.getElementById('checkoutResumoProdutos');
@@ -3734,7 +4013,7 @@
             html += '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:13px;">' +
                 '<div><span style="font-weight:500;">' + item.name + '</span>' +
                 '<span style="color:#888;font-size:11px;display:block;">' + qtdExibicao + '</span></div>' +
-                '<span style="font-weight:600;color:#1a3a5c;font-size:14px;">R$ ' + preco.toFixed(2) + '</span>' +
+                '<span style="font-weight:600;color:#c2410c;font-size:14px;">R$ ' + preco.toFixed(2) + '</span>' +
                 '</div>';
         });
         container.innerHTML = html;
@@ -3752,7 +4031,11 @@
         const areaNovo = document.getElementById('areaNovoCadastro');
         const dadosDiv = document.getElementById('dadosClienteEncontrado');
 
-        if (!email) { erroEl.textContent = '⚠️ Digite um email.'; erroEl.style.display = 'block'; return; }
+        if (!email) {
+            erroEl.textContent = '⚠️ Digite um email.';
+            erroEl.style.display = 'block';
+            return;
+        }
 
         erroEl.style.display = 'none';
         loadingEl.style.display = 'block';
@@ -3762,7 +4045,11 @@
         dadosDiv.style.display = 'none';
 
         try {
-            const { data: clientes, error } = await supabaseClient.from('clientes').select('*').eq('email', email).limit(1);
+            const { data: clientes, error } = await supabaseClient
+                .from('clientes')
+                .select('*')
+                .eq('email', email)
+                .limit(1);
             if (error) throw error;
 
             if (clientes && clientes.length > 0) {
@@ -3843,14 +4130,20 @@
         container.innerHTML = '<div style="text-align:center;padding:30px;color:#666;"><i class="fas fa-spinner fa-spin" style="font-size:24px;display:block;margin-bottom:10px;"></i> Carregando fretes...</div>';
 
         try {
-            const cep = checkoutState.enderecoSelecionado?.cep || '00000-000';
+            const cep = checkoutState.enderecoSelecionado ? checkoutState.enderecoSelecionado.cep : '00000-000';
             document.getElementById('checkoutCepDisplay').textContent = cep;
             checkoutState.producaoDias = calcularPrazoProducao();
             const peso = calcularPesoTotal();
             const dims = calcularDimensoes();
 
             const { data, error } = await supabaseClient.functions.invoke('calcular-frete', {
-                body: { cepDestino: cep, peso: peso, altura: dims.altura, largura: dims.largura, comprimento: dims.comprimento }
+                body: {
+                    cepDestino: cep,
+                    peso: peso,
+                    altura: dims.altura,
+                    largura: dims.largura,
+                    comprimento: dims.comprimento
+                }
             });
             if (error) throw error;
 
@@ -3875,7 +4168,9 @@
                     opcoes.push({
                         id: 'ENTREGA_PROPRIA',
                         nome: ep.cost === 0 ? 'Entrega Própria (Grátis)' : 'Entrega Própria',
-                        price: ep.cost, delivery_time: 1, is_entrega_propria: true
+                        price: ep.cost,
+                        delivery_time: 1,
+                        is_entrega_propria: true
                     });
                 }
             }
@@ -3927,7 +4222,10 @@
         if (boletoDiv && checkoutState.opcoesBoleto.length > 0) {
             boletoDiv.style.opacity = '1';
             boletoDiv.style.pointerEvents = 'auto';
-            document.querySelectorAll('.opcao-boleto-faturado').forEach(el => { el.style.opacity = '1'; el.style.pointerEvents = 'auto'; });
+            document.querySelectorAll('.opcao-boleto-faturado').forEach(el => {
+                el.style.opacity = '1';
+                el.style.pointerEvents = 'auto';
+            });
         }
         document.getElementById('stepIndicator3').style.color = 'var(--primary-blue)';
         document.getElementById('stepIndicator3').style.fontWeight = '600';
@@ -3939,19 +4237,28 @@
     // PAGAMENTO
     // ============================================================
     function selecionarPagamentoCheckout(elemento, metodo) {
-        if (!checkoutState.enderecoSelecionado) { mostrarNotificacao('⚠️ Confirme o endereço primeiro!', 'warning'); return; }
-        if (!checkoutState.freteSelecionado) { mostrarNotificacao('⚠️ Selecione um frete primeiro!', 'warning'); return; }
+        if (!checkoutState.enderecoSelecionado) {
+            mostrarNotificacao('⚠️ Confirme o endereço primeiro!', 'warning');
+            return;
+        }
+        if (!checkoutState.freteSelecionado) {
+            mostrarNotificacao('⚠️ Selecione um frete primeiro!', 'warning');
+            return;
+        }
 
         document.querySelectorAll('.pagamento-opcao-checkout').forEach(el => {
-            el.style.borderColor = '#ddd'; el.style.background = 'white';
+            el.style.borderColor = '#ddd';
+            el.style.background = 'white';
         });
         document.querySelectorAll('.opcao-boleto-faturado').forEach(el => {
-            el.classList.remove('selecionado'); el.style.borderColor = '#ddd'; el.style.background = 'white';
+            el.classList.remove('selecionado');
+            el.style.borderColor = '#ddd';
+            el.style.background = 'white';
         });
         checkoutState.boletoFaturadoSelecionado = null;
 
-        elemento.style.borderColor = '#1a3a5c';
-        elemento.style.background = '#f0f8ff';
+        elemento.style.borderColor = '#c2410c';
+        elemento.style.background = '#ffedd5';
         checkoutState.pagamentoSelecionado = metodo;
 
         let totalProdutos = 0;
@@ -3977,8 +4284,15 @@
     }
 
     function selecionarBoletoFaturado(elemento, index) {
-        if (!checkoutState.freteSelecionado) { mostrarNotificacao('⚠️ Selecione o frete primeiro!', 'warning'); return; }
-        document.querySelectorAll('.opcao-boleto-faturado').forEach(el => { el.classList.remove('selecionado'); el.style.borderColor = '#ddd'; el.style.background = 'white'; });
+        if (!checkoutState.freteSelecionado) {
+            mostrarNotificacao('⚠️ Selecione o frete primeiro!', 'warning');
+            return;
+        }
+        document.querySelectorAll('.opcao-boleto-faturado').forEach(el => {
+            el.classList.remove('selecionado');
+            el.style.borderColor = '#ddd';
+            el.style.background = 'white';
+        });
         elemento.classList.add('selecionado');
         elemento.style.borderColor = '#f39c12';
         elemento.style.background = '#fff3cd';
@@ -4066,7 +4380,14 @@
         qr.innerHTML = '';
         try {
             if (typeof QRCode !== 'undefined') {
-                new QRCode(qr, { text: codigo, width: 200, height: 200, colorDark: '#1a3a5c', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.H });
+                new QRCode(qr, {
+                    text: codigo,
+                    width: 200,
+                    height: 200,
+                    colorDark: '#c2410c',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.H
+                });
             } else {
                 qr.innerHTML = '<img src="https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=' + encodeURIComponent(codigo) + '" width="200" height="200">';
             }
@@ -4078,20 +4399,29 @@
 
     function copiarPixManual() {
         const t = document.getElementById('pixManualCopiaCola').textContent;
-        if (!t) { mostrarNotificacao('⚠️ Código não disponível.', 'warning'); return; }
+        if (!t) {
+            mostrarNotificacao('⚠️ Código não disponível.', 'warning');
+            return;
+        }
         if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(t).then(() => mostrarNotificacao('✅ PIX copiado!', 'success')).catch(() => fallbackCopiar(t));
-        } else fallbackCopiar(t);
+            navigator.clipboard.writeText(t)
+                .then(() => mostrarNotificacao('✅ PIX copiado!', 'success'))
+                .catch(() => fallbackCopiar(t));
+        } else {
+            fallbackCopiar(t);
+        }
     }
 
-    function irParaPagamentoPix(pedidoId, total) { mostrarPixManual(pedidoId, total); }
+    function irParaPagamentoPix(pedidoId, total) {
+        mostrarPixManual(pedidoId, total);
+    }
 
     async function recriarLinkPagamento(pedidoId) {
         mostrarNotificacao('⚠️ Entre em contato para novo link.', 'warning');
     }
 
     // ============================================================
-    // FINALIZAR PEDIDO — SUPABASE
+    // FINALIZAR PEDIDO — SUPABASE (COM BOLETO FATURADO)
     // ============================================================
     async function finalizarPedidoCheckout() {
         const btn = document.getElementById('btnFinalizarPedido');
@@ -4100,13 +4430,24 @@
         btn.disabled = true;
 
         try {
-            if (carrinho.length === 0) { alert('Carrinho vazio!'); btn.innerHTML = txtOrig; btn.disabled = false; return; }
+            if (carrinho.length === 0) {
+                alert('Carrinho vazio!');
+                btn.innerHTML = txtOrig;
+                btn.disabled = false;
+                return;
+            }
             let totalProdutos = 0;
             carrinho.forEach(i => totalProdutos += i.price || 0);
-            if (totalProdutos < PEDIDO_MINIMO_REVENDEDOR) { alert('Pedido mínimo R$ 400,00'); btn.innerHTML = txtOrig; btn.disabled = false; return; }
+            if (totalProdutos < PEDIDO_MINIMO_REVENDEDOR) {
+                alert('Pedido mínimo R$ 400,00');
+                btn.innerHTML = txtOrig;
+                btn.disabled = false;
+                return;
+            }
             if (!checkoutState.enderecoSelecionado || !checkoutState.freteSelecionado || !checkoutState.pagamentoSelecionado) {
                 alert('⚠️ Preencha endereço, frete e pagamento.');
-                btn.innerHTML = txtOrig; btn.disabled = false;
+                btn.innerHTML = txtOrig;
+                btn.disabled = false;
                 return;
             }
 
@@ -4114,10 +4455,10 @@
             document.getElementById('checkoutContent').style.display = 'none';
 
             const c = checkoutState.clienteData;
-            const nome = c?.nome || usuarioLogado.nome;
-            const email = c?.email || usuarioLogado.email;
-            const tel = c?.telefone || usuarioLogado.telefone || '';
-            const doc = c?.cpf || usuarioLogado.documento || '';
+            const nome = (c && c.nome) || usuarioLogado.nome;
+            const email = (c && c.email) || usuarioLogado.email;
+            const tel = (c && c.telefone) || usuarioLogado.telefone || '';
+            const doc = (c && c.cpf) || usuarioLogado.documento || '';
 
             const end = checkoutState.enderecoSelecionado;
             const freteValor = checkoutState.freteSelecionado.valor;
@@ -4126,7 +4467,9 @@
             const prodDias = checkoutState.producaoDias || 0;
 
             let desconto = 0;
-            if (checkoutState.pagamentoSelecionado === 'PIX') desconto = totalProdutos * DESCONTO_PIX;
+            if (checkoutState.pagamentoSelecionado === 'PIX') {
+                desconto = totalProdutos * DESCONTO_PIX;
+            }
             const total = (totalProdutos - desconto) + freteValor;
 
             let obs = 'Frete: ' + freteNome + ' (R$ ' + freteValor.toFixed(2) + ') | Pagamento: ' + checkoutState.pagamentoSelecionado;
@@ -4134,7 +4477,7 @@
             if (checkoutState.boletoFaturadoSelecionado) obs += ' | ' + checkoutState.boletoFaturadoSelecionado.label;
             obs += ' | Prazo: ' + (prazoEnvio + prodDias) + ' dias';
 
-            const itensTexto = carrinho.map(item => item.name + ' (' + item.qty + 'x ' + item.step + ' un) - R$ ' + (item.price||0).toFixed(2)).join(' | ');
+            const itensTexto = carrinho.map(item => item.name + ' (' + item.qty + 'x ' + item.step + ' un) - R$ ' + (item.price || 0).toFixed(2)).join(' | ');
 
             const { data: pedidoSalvo, error } = await supabaseClient
                 .from('pedidos')
@@ -4171,13 +4514,17 @@
                 const estoqueAtual = parseInt(p.stock) || 0;
                 const qtd = parseInt(item.totalUnits);
                 if (qtd <= estoqueAtual) {
-                    await supabaseClient.from('produtos').update({ estoque: Math.max(0, estoqueAtual - qtd) }).eq('id', item.productId);
+                    await supabaseClient
+                        .from('produtos')
+                        .update({ estoque: Math.max(0, estoqueAtual - qtd) })
+                        .eq('id', item.productId);
                 }
             }
 
             if (checkoutState.pagamentoSelecionado === 'Boleto Faturado') {
                 carrinho = [];
-                salvarCarrinho(); atualizarBadge();
+                salvarCarrinho();
+                atualizarBadge();
                 if (currentProducts && currentProducts.length > 0) renderizarProdutos();
                 document.getElementById('confirmacaoNumeroPedido').textContent = '#' + novoId;
                 document.getElementById('confirmacaoMensagem').innerHTML = '✅ Pedido confirmado!<br><span style="font-size:13px;color:#666;">Opção: <strong>' + checkoutState.boletoFaturadoSelecionado.label + '</strong><br>Nossa equipe entrará em contato para o faturamento.</span>';
@@ -4191,7 +4538,8 @@
             if (checkoutState.pagamentoSelecionado === 'PIX') {
                 mostrarPixManual(novoId, total);
                 carrinho = [];
-                salvarCarrinho(); atualizarBadge();
+                salvarCarrinho();
+                atualizarBadge();
                 if (currentProducts && currentProducts.length > 0) renderizarProdutos();
                 fecharCheckout();
                 mostrarNotificacao('✅ Pedido #' + novoId + ' criado! Pague o PIX.', 'success');
@@ -4199,11 +4547,19 @@
             }
 
             try {
-                const itensPag = carrinho.map(item => ({ nome: item.name, price: item.price, quantity: item.totalUnits || item.quantity }));
-                if (freteValor > 0) itensPag.push({ nome: 'Frete (' + freteNome + ')', price: freteValor, quantity: 1 });
+                const itensPag = carrinho.map(item => ({
+                    nome: item.name,
+                    price: item.price,
+                    quantity: item.totalUnits || item.quantity
+                }));
+                if (freteValor > 0) {
+                    itensPag.push({ nome: 'Frete (' + freteNome + ')', price: freteValor, quantity: 1 });
+                }
 
                 let metodo = 'credit_card';
-                if (checkoutState.pagamentoSelecionado === 'Boleto') metodo = 'boleto';
+                if (checkoutState.pagamentoSelecionado === 'Boleto') {
+                    metodo = 'boleto';
+                }
 
                 const { data: pagamento, error: errPag } = await supabaseClient.functions.invoke('criar-link-pagamento', {
                     body: {
@@ -4220,21 +4576,24 @@
 
                 if (errPag) throw errPag;
 
-                const link = pagamento?.paymentLink || pagamento?.url;
+                const link = (pagamento && pagamento.paymentLink) || (pagamento && pagamento.url);
                 if (link) {
                     document.getElementById('confirmacaoNumeroPedido').textContent = '#' + novoId;
                     document.getElementById('confirmacaoMensagem').textContent = 'Clique abaixo para pagar com segurança.';
                     const btnPag = document.getElementById('btnFinalizarPagamento');
                     btnPag.style.display = 'block';
                     btnPag.innerHTML = '<i class="fas fa-credit-card"></i> Ir para Pagamento';
-                    btnPag.onclick = () => window.open(link, '_blank');
+                    btnPag.onclick = function() {
+                        window.open(link, '_blank');
+                    };
                     document.getElementById('confirmacaoModal').style.display = 'block';
                 } else {
                     alert('⚠️ Pedido salvo, mas não foi possível gerar link de pagamento.');
                 }
 
                 carrinho = [];
-                salvarCarrinho(); atualizarBadge();
+                salvarCarrinho();
+                atualizarBadge();
                 if (currentProducts && currentProducts.length > 0) renderizarProdutos();
                 fecharCheckout();
             } catch (errPag) {
@@ -4242,6 +4601,20 @@
                 alert('❌ Erro no pagamento. Pedido salvo: #' + novoId);
                 fecharCheckout();
             }
+
+            try {
+                if (typeof fbq !== 'undefined') fbq('track', 'Purchase', { value: total, currency: 'BRL' });
+            } catch (e) {}
+            try {
+                const itensTracking = carrinho.map(item => ({
+                    nome: item.name,
+                    price: item.price,
+                    quantidade: item.totalUnits || item.quantity
+                }));
+                if (typeof enviarCompraGA4 === 'function') enviarCompraGA4(itensTracking, total, novoId);
+                if (typeof enviarConversaoGoogleAds === 'function') enviarConversaoGoogleAds(total, novoId);
+            } catch (e) {}
+
         } catch (error) {
             console.error('Erro finalizar:', error);
             alert('❌ Erro ao processar pedido: ' + (error.message || ''));
@@ -4262,6 +4635,75 @@
             if (email) document.getElementById('cadastroEmail').value = email;
         }, 300);
     }
+    // ============================================================
+    // APROVAÇÃO REVENDEDOR — MODAL E REALTIME
+    // ============================================================
+    let realtimeAprovacaoCanal = null;
+
+    function mostrarModalAprovacaoRevendedor() {
+        if (window._modalAprovacaoMostrado) return;
+        window._modalAprovacaoMostrado = true;
+
+        document.getElementById('modalAprovacaoRevendedor').style.display = 'block';
+        
+        if (usuarioLogado && usuarioLogado.email) {
+            supabaseClient.from('clientes')
+                .update({ aviso_aprovacao_pendente: false })
+                .eq('email', usuarioLogado.email)
+                .then(({error}) => {
+                    if(!error) console.log('✅ Aviso consumido no banco.');
+                });
+        }
+    }
+
+    function fecharModalAprovacaoRevendedor() {
+        document.getElementById('modalAprovacaoRevendedor').style.display = 'none';
+        if (currentProducts && currentProducts.length > 0) {
+            renderizarProdutos();
+        }
+        atualizarInterfaceUsuario();
+    }
+
+    function iniciarRealtimeAprovacao() {
+        if (!usuarioLogado || !usuarioLogado.email) return;
+        if (realtimeAprovacaoCanal) return;
+
+        console.log('📡 Iniciando Realtime de aprovação para:', usuarioLogado.email);
+
+        realtimeAprovacaoCanal = supabaseClient
+            .channel('aprovacao-' + usuarioLogado.email)
+            .on(
+                'postgres_changes',
+                { 
+                    event: 'UPDATE', 
+                    schema: 'public', 
+                    table: 'clientes',
+                    filter: `email=eq.${usuarioLogado.email}`
+                },
+                (payload) => {
+                    const novoCliente = payload.new;
+                    if (novoCliente.aviso_aprovacao_pendente === true) {
+                        usuarioLogado.isRevendedor = true;
+                        usuarioLogado.observacao = novoCliente.observacoes;
+                        usuarioLogado.parcelasConfig = novoCliente.parcelas_config;
+                        localStorage.setItem('usuarioLogadoRevenda', JSON.stringify(usuarioLogado));
+                        
+                        mostrarModalAprovacaoRevendedor();
+                        document.getElementById('bloqueioBanner').style.display = 'none';
+                    }
+                }
+            )
+            .subscribe((status) => {
+                if (status === 'SUBSCRIBED') console.log('✅ Realtime conectado!');
+            });
+    }
+
+    function pararRealtimeAprovacao() {
+        if (realtimeAprovacaoCanal) {
+            supabaseClient.removeChannel(realtimeAprovacaoCanal);
+            realtimeAprovacaoCanal = null;
+        }
+    }
 
     // ============================================================
     // INIT
@@ -4269,7 +4711,9 @@
     function init() {
         if (!PRODUCTS_DATA.categories || PRODUCTS_DATA.categories.length === 0) {
             const grid = document.getElementById('categoriesGrid');
-            if (grid) grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#999;"><i class="fas fa-database" style="font-size:48px;display:block;margin-bottom:10px;"></i><p>Nenhum produto encontrado</p></div>';
+            if (grid) {
+                grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#999;"><i class="fas fa-database" style="font-size:48px;display:block;margin-bottom:10px;"></i><p>Nenhum produto encontrado</p></div>';
+            }
             carregarCarrinho();
             atualizarBadge();
             verificarSessao();
@@ -4302,7 +4746,9 @@
                     if (document.getElementById('cartModal').style.display === 'block') abrirCarrinho();
                 })
                 .subscribe();
-        } catch (e) { console.error('Realtime:', e); }
+        } catch (e) {
+            console.error('Realtime:', e);
+        }
     }
 
     function mostrarBloqueio() {
@@ -4325,15 +4771,22 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         const sel = document.getElementById('cadastroTipoPessoa');
-        if (sel) sel.addEventListener('change', function() {
-            document.getElementById('grupoInscricaoEstadual').style.display = this.value === 'JURIDICA' ? 'block' : 'none';
-        });
+        if (sel) {
+            sel.addEventListener('change', function() {
+                document.getElementById('grupoInscricaoEstadual').style.display = this.value === 'JURIDICA' ? 'block' : 'none';
+            });
+        }
     });
 
     console.log('🚀 MC Embalagens BH — Área do Revendedor (Supabase)');
     console.log('📦 Desconto revendedor: 10%');
     console.log('💳 Desconto PIX: 3%');
     console.log('💰 Pedido mínimo: R$ 400,00');
+    console.log('🎨 Tema: Laranja escuro');
+
+    // ============================================================
+    // PARTE 4/4 CONCLUÍDA — ARQUIVO COMPLETO
+    // ============================================================
     </script>
 </body>
 </html>
