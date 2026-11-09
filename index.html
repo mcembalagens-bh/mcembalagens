@@ -5196,6 +5196,741 @@ async function finalizarPedidoCheckout() {
 
 console.log('✅ PARTE 6/7 carregada — Checkout, Frete, PIX e Pagamento prontos');  
 
+// ============================================================
+// PARTE 7/7 — LOGIN, CADASTRO, SESSÃO E MEUS PEDIDOS
+// ============================================================
+
+// ============================================================
+// CONTROLE DE INTERFACE DO USUÁRIO
+// ============================================================
+function atualizarInterfaceUsuario() {
+    const dropdown = document.getElementById('userDropdown');
+    if (!dropdown) return;
+    
+    const loginItem = dropdown.querySelector('.login-item');
+    const dadosItem = dropdown.querySelector('[data-item="dados"]');
+    const pedidosItem = dropdown.querySelector('[data-item="pedidos"]');
+    const sairItem = dropdown.querySelector('[data-item="sair"]');
+    const btnUser = document.getElementById('btnUserMenu');
+    const badge = document.getElementById('revendedorBadge');
+    
+    if (usuarioLogado) {
+        if (loginItem) loginItem.style.display = 'none';
+        if (dadosItem) dadosItem.style.display = 'flex';
+        if (pedidosItem) pedidosItem.style.display = 'flex';
+        if (sairItem) sairItem.style.display = 'flex';
+        if (btnUser) btnUser.innerHTML = '<i class="fas fa-user-check" style="color:#27ae60;"></i>';
+        
+        if (usuarioLogado.isRevendedor) {
+            if (badge) badge.classList.add('show');
+            document.getElementById('topBarRevenda').classList.add('show');
+            document.body.classList.add('revendedor-logado');
+        } else {
+            if (badge) badge.classList.remove('show');
+            document.getElementById('topBarRevenda').classList.remove('show');
+            document.body.classList.remove('revendedor-logado');
+        }
+    } else {
+        if (loginItem) loginItem.style.display = 'flex';
+        if (dadosItem) dadosItem.style.display = 'none';
+        if (pedidosItem) pedidosItem.style.display = 'none';
+        if (sairItem) sairItem.style.display = 'none';
+        if (btnUser) btnUser.innerHTML = '<i class="fas fa-user"></i>';
+        
+        if (badge) badge.classList.remove('show');
+        document.getElementById('topBarRevenda').classList.remove('show');
+        document.body.classList.remove('revendedor-logado');
+    }
+    
+    atualizarNomeClienteHeader();
+}
+
+function atualizarNomeClienteHeader() {
+    const el = document.getElementById('clienteNomeHeader');
+    const isMobile = window.innerWidth <= 768;
+    if (usuarioLogado && usuarioLogado.nome) {
+        el.textContent = '👤 ' + usuarioLogado.nome.split(' ')[0]; // Só o primeiro nome
+        if (isMobile) el.classList.remove('show');
+        else el.classList.add('show');
+    } else {
+        el.classList.remove('show');
+    }
+}
+
+function mostrarBloqueio() {
+    const bloqueio = document.getElementById('bloqueioBanner');
+    const aguardando = document.getElementById('aguardandoBanner');
+    if (!bloqueio || !aguardando) return;
+    
+    if (usuarioLogado && usuarioLogado.isRevendedor) {
+        bloqueio.style.display = 'none';
+        aguardando.style.display = 'none';
+    } else if (usuarioLogado && usuarioLogado.isAnalise) {
+        bloqueio.style.display = 'none';
+        aguardando.style.display = 'block';
+    } else {
+        bloqueio.style.display = 'block';
+        aguardando.style.display = 'none';
+    }
+}
+
+// ============================================================
+// VERIFICA SESSÃO (AO CARREGAR O SITE)
+// ============================================================
+function verificarSessao() {
+    const sessao = localStorage.getItem('usuarioLogadoRevenda');
+    if (sessao) {
+        try {
+            usuarioLogado = JSON.parse(sessao);
+            iniciarRealtimeAprovacao();
+        } catch (e) {
+            usuarioLogado = null;
+            localStorage.removeItem('usuarioLogadoRevenda');
+        }
+    }
+    atualizarInterfaceUsuario();
+    mostrarBloqueio();
+    
+    // Se logado como revendedor, renderiza os produtos de novo para aplicar os descontos
+    if (usuarioLogado && usuarioLogado.isRevendedor && currentProducts.length > 0) {
+        renderizarProdutos();
+    }
+}
+
+function sairConta() {
+    if (confirm('Tem certeza que deseja sair?')) {
+        pararRealtimeAprovacao();
+        localStorage.removeItem('usuarioLogadoRevenda');
+        usuarioLogado = null;
+        atualizarInterfaceUsuario();
+        mostrarBloqueio();
+        document.getElementById('userDropdown').classList.remove('show');
+        if (currentProducts.length > 0) renderizarProdutos();
+        mostrarNotificacao('✅ Você saiu!', 'success');
+        showHome();
+    }
+}
+
+// ============================================================
+// MODAL DE LOGIN E ABAS
+// ============================================================
+function abrirLogin() {
+    if (usuarioLogado) return abrirMeusPedidos();
+    document.getElementById('loginModal').style.display = 'block';
+    switchLoginTab('login');
+    document.getElementById('loginMessage').className = 'login-message';
+    document.getElementById('loginMessage').textContent = '';
+}
+
+function abrirCadastro() {
+    document.getElementById('loginModal').style.display = 'block';
+    switchLoginTab('cadastro');
+}
+
+function switchLoginTab(tab) {
+    document.querySelectorAll('.login-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+    document.getElementById('panelLogin').classList.toggle('active', tab === 'login');
+    document.getElementById('panelCadastro').classList.toggle('active', tab === 'cadastro');
+}
+
+function toggleUserMenu() {
+    const dropdown = document.getElementById('userDropdown');
+    if (dropdown) dropdown.classList.toggle('show');
+}
+
+document.addEventListener('click', function(e) {
+    const dd = document.getElementById('userDropdown');
+    const btn = document.getElementById('btnUserMenu');
+    if (dd && btn && !dd.contains(e.target) && !btn.contains(e.target)) dd.classList.remove('show');
+});
+
+// ============================================================
+// FAZER LOGIN
+// ============================================================
+async function fazerLogin() {
+    const email = document.getElementById('loginEmailLogin').value.trim();
+    const senha = document.getElementById('loginSenhaLogin').value;
+    const msgEl = document.getElementById('loginMessage');
+    
+    if (!email || !senha) {
+        msgEl.className = 'login-message error';
+        msgEl.textContent = '⚠️ Preencha email e senha.';
+        return;
+    }
+    
+    msgEl.className = 'login-message';
+    msgEl.textContent = '🔄 Verificando credenciais...';
+    const btn = document.querySelector('#panelLogin .btn-login-action');
+    const textoOriginal = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Entrando...';
+    btn.disabled = true;
+    
+    try {
+        const { data: clientes, error } = await supabaseClient.from('clientes').select('*').eq('email', email).limit(1);
+        if (error) throw error;
+        
+        if (!clientes || clientes.length === 0) {
+            msgEl.className = 'login-message error';
+            msgEl.innerHTML = '❌ Email não encontrado.<br><br><button onclick="switchLoginTab(\'cadastro\')" style="padding:8px 20px;background:var(--primary-blue);color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;">Cadastrar</button>';
+            btn.innerHTML = textoOriginal; btn.disabled = false;
+            return;
+        }
+        
+        const cliente = clientes[0];
+        if (String(cliente.senha || '').trim() !== senha) {
+            msgEl.className = 'login-message error';
+            msgEl.innerHTML = '❌ Senha incorreta.<br><br><a href="#" onclick="abrirWhatsAppAtendente();return false;" style="color:#25D366;font-weight:600;">Esqueci minha senha</a>';
+            btn.innerHTML = textoOriginal; btn.disabled = false;
+            return;
+        }
+        
+        const obs = String(cliente.observacoes || '').toUpperCase();
+        const temPendencia = obs.indexOf('PENDENCIA') !== -1 || obs.indexOf('PENDÊNCIA') !== -1;
+        
+        if (temPendencia) {
+            msgEl.className = 'login-message error';
+            msgEl.innerHTML = '<strong>⚠️ Acesso bloqueado!</strong><br>Seu cadastro está com pendências.<br><br><a href="#" onclick="abrirWhatsAppAtendente();return false;" style="display:inline-block;background:#25D366;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Falar com Atendente</a>';
+            btn.innerHTML = textoOriginal; btn.disabled = false;
+            return;
+        }
+        
+        const resultado = parseObservacaoRevendedor(cliente.observacoes || '');
+        const ehRevendedor = resultado.isRevendedor;
+        const estaEmAnalise = obs.indexOf('ANALISE') !== -1;
+        
+        // Salva o usuário (seja revendedor ou não)
+        usuarioLogado = {
+            email: cliente.email,
+            nome: cliente.nome || 'Usuário',
+            telefone: cliente.telefone || '',
+            documento: cliente.cpf || '',
+            cep: cliente.cep || '',
+            endereco: cliente.endereco || '',
+            numero: cliente.numero || '',
+            complemento: cliente.complemento || '',
+            bairro: cliente.bairro || '',
+            cidade: cliente.cidade || '',
+            uf: cliente.estado || '',
+            isRevendedor: ehRevendedor,
+            isAnalise: estaEmAnalise && !ehRevendedor,
+            opcoesBoleto: resultado.opcoes,
+            obsInterna: resultado.obsInterna,
+            observacao: cliente.observacoes || '',
+            tipoPessoa: cliente.tipo_pessoa || 'FISICA',
+            senha: cliente.senha || ''
+        };
+        
+        localStorage.setItem('usuarioLogadoRevenda', JSON.stringify(usuarioLogado));
+        
+        atualizarInterfaceUsuario();
+        mostrarBloqueio();
+        iniciarRealtimeAprovacao();
+        
+        // Se for revendedor, atualiza os preços na hora
+        if (ehRevendedor && currentProducts.length > 0) renderizarProdutos();
+        
+        // Se tem aviso de aprovação pendente no banco, mostra o modal de boas vindas
+        if (cliente.aviso_aprovacao_pendente === true) {
+            setTimeout(() => { mostrarModalAprovacaoRevendedor(); }, 500);
+        }
+
+        msgEl.className = 'login-message success';
+        msgEl.innerHTML = '✅ Bem-vindo, <strong>' + cliente.nome + '</strong>!';
+        
+        setTimeout(() => {
+            fecharModal('loginModal');
+            document.getElementById('userDropdown').classList.remove('show');
+        }, 1500);
+        
+    } catch (error) {
+        console.error('Erro no login:', error);
+        msgEl.className = 'login-message error';
+        msgEl.textContent = '❌ Erro ao conectar. Tente novamente.';
+        btn.innerHTML = textoOriginal; btn.disabled = false;
+    }
+}
+
+// ============================================================
+// VALIDAÇÃO DE DOCUMENTO EM TEMPO REAL
+// ============================================================
+async function validarDocumentoEmTempoReal(documento) {
+    const msgEl = document.getElementById('cadastroMessage');
+    if (!documento || documento.length < 3) {
+        msgEl.className = 'login-message';
+        msgEl.textContent = '';
+        return;
+    }
+    
+    const docLimpo = documento.replace(/\D/g, '');
+    if (docLimpo.length !== 11 && docLimpo.length !== 14) {
+        msgEl.className = 'login-message warning';
+        msgEl.innerHTML = '⚠️ Digite <strong>11 números</strong> (CPF) ou <strong>14 números</strong> (CNPJ).';
+        return;
+    }
+    
+    try {
+        msgEl.className = 'login-message';
+        msgEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando documento...';
+        
+        const { data: clientes, error } = await supabaseClient.from('clientes').select('*').eq('cpf', docLimpo).limit(1);
+        if (error) throw error;
+        
+        if (clientes && clientes.length > 0) {
+            const cliente = clientes[0];
+            const obs = String(cliente.observacoes || '').toUpperCase();
+            const ehRevendedor = obs.indexOf('REVENDA') !== -1;
+            const temPendencia = obs.indexOf('PENDENCIA') !== -1;
+            const emAnalise = obs.indexOf('ANALISE') !== -1;
+            
+            if (temPendencia) {
+                msgEl.className = 'login-message error';
+                msgEl.innerHTML = '<strong>🚫 Cadastro bloqueado!</strong><br>Este CPF/CNPJ possui pendências.<br><br><a href="#" onclick="abrirWhatsAppAtendente();return false;" style="display:inline-block;background:#25D366;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Falar com Atendente</a>';
+            } else if (ehRevendedor) {
+                msgEl.className = 'login-message success';
+                msgEl.innerHTML = '<strong>✅ Já é Revendedor!</strong><br>Faça login.<br><br><button onclick="switchLoginTab(\'login\')" style="background:var(--primary-blue);color:white;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-weight:600;">Ir para Login</button>';
+            } else if (emAnalise) {
+                msgEl.className = 'login-message warning';
+                msgEl.innerHTML = '<strong>⏳ Em análise!</strong><br>Aguarde 24h úteis.';
+            } else {
+                // Cliente comum querendo ser revendedor
+                msgEl.className = 'login-message warning';
+                msgEl.innerHTML = `
+                    <strong>👋 Você já tem cadastro como cliente comum!</strong><br><br>
+                    Solicite a ativação agora e compre com <strong>descontos exclusivos para revenda</strong>.
+                    <br><br>
+                    <button onclick="solicitarAnaliseRevenda('${cliente.email}', '${docLimpo}')" style="background:#f39c12;color:white;border:none;padding:12px 25px;border-radius:8px;cursor:pointer;font-weight:600;width:100%;">
+                        <i class="fas fa-crown"></i> Ativar Meu Acesso Agora
+                    </button>
+                `;
+            }
+            return;
+        }
+        
+        msgEl.className = 'login-message success';
+        msgEl.innerHTML = '✅ <strong>Documento disponível!</strong> Preencha os dados.';
+    } catch (error) {
+        console.error('Erro ao validar:', error);
+        msgEl.className = 'login-message warning';
+        msgEl.innerHTML = '⚠️ Não foi possível verificar.';
+    }
+}
+
+// ============================================================
+// FAZER CADASTRO (REGRA: CNPJ LIBERA, CPF VAI PRA ANÁLISE)
+// ============================================================
+async function fazerCadastro() {
+    const nome = document.getElementById('cadastroNome').value.trim();
+    const email = document.getElementById('cadastroEmail').value.trim();
+    const telefone = document.getElementById('cadastroTelefone').value.trim();
+    const senha = document.getElementById('cadastroSenha').value;
+    const docInput = document.getElementById('cadastroDocumento').value.trim();
+    const tipoPessoa = document.getElementById('cadastroTipoPessoa').value;
+    const ie = document.getElementById('cadastroInscricaoEstadual').value.trim();
+    const cep = document.getElementById('cadastroCep').value.trim();
+    const endereco = document.getElementById('cadastroEndereco').value.trim();
+    const numero = document.getElementById('cadastroNumero').value.trim();
+    const complemento = document.getElementById('cadastroComplemento').value.trim();
+    const bairro = document.getElementById('cadastroBairro').value.trim();
+    const cidade = document.getElementById('cadastroCidade').value.trim();
+    const uf = document.getElementById('cadastroUf').value;
+    const msgEl = document.getElementById('cadastroMessage');
+    
+    if (!nome || !email || !docInput || senha.length < 6 || !telefone || !cep || !endereco || !numero || !bairro || !cidade || !uf) {
+        msgEl.className = 'login-message error';
+        msgEl.textContent = '⚠️ Preencha todos os campos obrigatórios.';
+        return;
+    }
+    
+    const docValidado = validarDocumento(docInput);
+    if (!docValidado.valido) {
+        msgEl.className = 'login-message error';
+        msgEl.textContent = '⚠️ CPF/CNPJ inválido.';
+        return;
+    }
+    
+    // REGRA DE OURO: CNPJ libera, CPF vai pra análise
+    const isCNPJ = docValidado.tipo === 'CNPJ';
+    const novaObservacao = isCNPJ ? 'REVENDA' : 'ANALISE';
+    
+    msgEl.className = 'login-message';
+    msgEl.textContent = '🔄 Cadastrando...';
+    const btn = document.querySelector('#panelCadastro .btn-login-action');
+    const textoOriginal = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cadastrando...';
+    btn.disabled = true;
+    
+    try {
+        // Verifica se já existe email ou documento
+        const { data: existe, error: erroBusca } = await supabaseClient.from('clientes').select('email, cpf').or('email.eq.' + email + ',cpf.eq.' + docValidado.documento);
+        if (erroBusca) throw erroBusca;
+        
+        if (existe && existe.length > 0) {
+            const mesmoEmail = existe.find(c => String(c.email).toLowerCase() === email.toLowerCase());
+            const mesmoDoc = existe.find(c => String(c.cpf || '') === docValidado.documento);
+            
+            if (mesmoEmail) {
+                msgEl.className = 'login-message error';
+                msgEl.innerHTML = '❌ <strong>Email já cadastrado!</strong><br>Faça login.';
+                btn.innerHTML = textoOriginal; btn.disabled = false;
+                return;
+            }
+            if (mesmoDoc) {
+                msgEl.className = 'login-message error';
+                msgEl.innerHTML = '❌ <strong>CPF/CNPJ já cadastrado!</strong><br>Faça login ou solicite análise.';
+                btn.innerHTML = textoOriginal; btn.disabled = false;
+                return;
+            }
+        }
+        
+        const enderecoEntrega = endereco + ', ' + numero + (complemento ? ', ' + complemento : '') + ' - ' + bairro + ', ' + cidade + ' - ' + uf + ', ' + cep;
+        
+        const { error } = await supabaseClient.from('clientes').insert([{
+            nome: nome,
+            email: email,
+            telefone: telefone,
+            cpf: docValidado.documento,
+            tipo_pessoa: tipoPessoa,
+            inscricao_estadual: ie,
+            senha: senha,
+            endereco: endereco,
+            numero: numero,
+            complemento: complemento,
+            bairro: bairro,
+            cidade: cidade,
+            estado: uf,
+            cep: cep,
+            endereco_entrega: enderecoEntrega,
+            cep_entrega: cep,
+            data_cadastro: new Date().toISOString(),
+            observacoes: novaObservacao,
+            aviso_aprovacao_pendente: isCNPJ // Se for CNPJ, já avisa que foi aprovado na hora
+        }]);
+        
+        if (error) throw error;
+        
+        if (isCNPJ) {
+            msgEl.className = 'login-message success';
+            msgEl.innerHTML = '✅ <strong>Cadastro concluído!</strong><br>Como você é CNPJ, seu acesso foi <strong>liberado na hora</strong>!<br><br><button onclick="switchLoginTab(\'login\')" style="padding:10px 25px;background:var(--primary-blue);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;">Fazer Login</button>';
+        } else {
+            msgEl.className = 'login-message success';
+            msgEl.innerHTML = '✅ <strong>Cadastro enviado!</strong><br>Seu CPF foi para <strong>análise</strong> e será liberado em até 24h.<br><br><button onclick="switchLoginTab(\'login\')" style="padding:10px 25px;background:var(--primary-blue);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;">Fazer Login</button>';
+        }
+        
+        setTimeout(() => {
+            document.getElementById('loginEmailLogin').value = email;
+        }, 500);
+        
+    } catch (error) {
+        console.error('Erro cadastro:', error);
+        msgEl.className = 'login-message error';
+        msgEl.textContent = '❌ Erro ao cadastrar: ' + (error.message || 'Tente novamente.');
+    } finally {
+        btn.innerHTML = textoOriginal; btn.disabled = false;
+    }
+}
+
+// ============================================================
+// ATIVAÇÃO DE CLIENTE COMUM PARA REVENDEDOR
+// ============================================================
+async function solicitarAnaliseRevenda(email, documento) {
+    if (!confirm('Deseja ativar seu acesso como revendedor agora?')) return;
+    
+    const isCNPJ = documento.length === 14;
+    const novaObs = isCNPJ ? 'REVENDA' : 'ANALISE';
+    
+    try {
+        const { error } = await supabaseClient.from('clientes').update({ 
+            observacoes: novaObs,
+            aviso_aprovacao_pendente: isCNPJ
+        }).eq('email', email);
+        
+        if (error) throw error;
+        
+        if (isCNPJ) {
+            mostrarNotificacao('✅ Acesso liberado! Você já é um revendedor.', 'success');
+            fecharModal('loginModal');
+            setTimeout(() => window.location.reload(), 1500);
+        } else {
+            mostrarNotificacao('⏳ Solicitação enviada! Aguarde a análise.', 'warning');
+            fecharModal('loginModal');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        mostrarNotificacao('❌ Erro ao ativar.', 'error');
+    }
+}
+
+// ============================================================
+// REALTIME: APROVAÇÃO DO GESTOR
+// ============================================================
+function iniciarRealtimeAprovacao() {
+    if (!usuarioLogado || !usuarioLogado.email) return;
+    if (realtimeAprovacaoCanal) return;
+
+    console.log('📡 Iniciando Realtime de aprovação para:', usuarioLogado.email);
+    realtimeAprovacaoCanal = supabaseClient
+        .channel('aprovacao-' + usuarioLogado.email)
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'clientes', filter: `email=eq.${usuarioLogado.email}` }, (payload) => {
+            const novoCliente = payload.new;
+            // Se o gestor mudou para REVENDA e ativou o aviso
+            if (novoCliente.aviso_aprovacao_pendente === true || String(novoCliente.observacoes).toUpperCase().indexOf('REVENDA') !== -1) {
+                
+                // Atualiza o estado local
+                usuarioLogado.isRevendedor = true;
+                usuarioLogado.isAnalise = false;
+                localStorage.setItem('usuarioLogadoRevenda', JSON.stringify(usuarioLogado));
+                
+                atualizarInterfaceUsuario();
+                mostrarBloqueio();
+                if (currentProducts.length > 0) renderizarProdutos();
+                
+                // Mostra o modal de boas-vindas
+                mostrarModalAprovacaoRevendedor();
+                
+                // Limpa o aviso no banco
+                supabaseClient.from('clientes').update({ aviso_aprovacao_pendente: false }).eq('email', usuarioLogado.email);
+            }
+        })
+        .subscribe((status) => {
+            if (status === 'SUBSCRIBED') console.log('✅ Realtime conectado!');
+        });
+}
+
+function pararRealtimeAprovacao() {
+    if (realtimeAprovacaoCanal) {
+        supabaseClient.removeChannel(realtimeAprovacaoCanal);
+        realtimeAprovacaoCanal = null;
+    }
+}
+
+function mostrarModalAprovacaoRevendedor() {
+    document.getElementById('modalAprovacaoRevendedor').style.display = 'block';
+}
+
+function fecharModalAprovacaoRevendedor() {
+    document.getElementById('modalAprovacaoRevendedor').style.display = 'none';
+    if (currentProducts.length > 0) renderizarProdutos();
+    atualizarInterfaceUsuario();
+}
+
+// ============================================================
+// DADOS PESSOAIS E MEUS PEDIDOS
+// ============================================================
+function abrirDadosPessoais() {
+    if (!usuarioLogado) return abrirLogin();
+    document.getElementById('dadosNome').value = usuarioLogado.nome || '';
+    document.getElementById('dadosEmail').value = usuarioLogado.email || '';
+    document.getElementById('dadosDocumento').value = usuarioLogado.documento || '';
+    document.getElementById('dadosTelefone').value = usuarioLogado.telefone || '';
+    document.getElementById('dadosCep').value = usuarioLogado.cep || '';
+    document.getElementById('dadosEndereco').value = usuarioLogado.endereco || '';
+    document.getElementById('dadosNumero').value = usuarioLogado.numero || '';
+    document.getElementById('dadosComplemento').value = usuarioLogado.complemento || '';
+    document.getElementById('dadosBairro').value = usuarioLogado.bairro || '';
+    document.getElementById('dadosCidade').value = usuarioLogado.cidade || '';
+    document.getElementById('dadosUf').value = usuarioLogado.uf || '';
+    
+    const grupoIE = document.getElementById('dadosGrupoInscricaoEstadual');
+    if (usuarioLogado.tipoPessoa === 'JURIDICA') grupoIE.style.display = 'block';
+    else grupoIE.style.display = 'none';
+    
+    document.getElementById('dadosPessoaisMessage').className = 'login-message';
+    document.getElementById('dadosPessoaisModal').style.display = 'block';
+    document.getElementById('userDropdown').classList.remove('show');
+}
+
+async function salvarDadosPessoais() {
+    const msgEl = document.getElementById('dadosPessoaisMessage');
+    const nome = document.getElementById('dadosNome').value.trim();
+    const telefone = document.getElementById('dadosTelefone').value.trim();
+    const novaSenha = document.getElementById('dadosNovaSenha').value;
+    const cep = document.getElementById('dadosCep').value.trim();
+    const endereco = document.getElementById('dadosEndereco').value.trim();
+    const numero = document.getElementById('dadosNumero').value.trim();
+    const complemento = document.getElementById('dadosComplemento').value.trim();
+    const bairro = document.getElementById('dadosBairro').value.trim();
+    const cidade = document.getElementById('dadosCidade').value.trim();
+    const uf = document.getElementById('dadosUf').value;
+    
+    if (!nome || !telefone || !cep || !endereco || !numero || !bairro || !cidade || !uf) {
+        msgEl.className = 'login-message error';
+        msgEl.textContent = '⚠️ Preencha todos os campos obrigatórios.';
+        return;
+    }
+    
+    msgEl.className = 'login-message';
+    msgEl.textContent = '🔄 Salvando...';
+    
+    try {
+        const dados = { nome, telefone, endereco, numero, complemento, bairro, cidade, estado: uf, cep };
+        if (novaSenha) dados.senha = novaSenha;
+        
+        const { error } = await supabaseClient.from('clientes').update(dados).eq('email', usuarioLogado.email);
+        if (error) throw error;
+        
+        usuarioLogado.nome = nome;
+        usuarioLogado.telefone = telefone;
+        usuarioLogado.cep = cep;
+        usuarioLogado.endereco = endereco;
+        usuarioLogado.numero = numero;
+        usuarioLogado.complemento = complemento;
+        usuarioLogado.bairro = bairro;
+        usuarioLogado.cidade = cidade;
+        usuarioLogado.uf = uf;
+        if (novaSenha) usuarioLogado.senha = novaSenha;
+        
+        localStorage.setItem('usuarioLogadoRevenda', JSON.stringify(usuarioLogado));
+        atualizarNomeClienteHeader();
+        
+        msgEl.className = 'login-message success';
+        msgEl.textContent = '✅ Dados atualizados!';
+        setTimeout(() => fecharModal('dadosPessoaisModal'), 1500);
+    } catch (error) {
+        console.error('Erro:', error);
+        msgEl.className = 'login-message error';
+        msgEl.textContent = '❌ Erro ao salvar.';
+    }
+}
+
+async function abrirMeusPedidos() {
+    if (!usuarioLogado) return abrirLogin();
+    document.getElementById('userDropdown').classList.remove('show');
+    
+    const modal = document.createElement('div');
+    modal.id = 'meusPedidosModal';
+    modal.className = 'modal';
+    modal.style.display = 'block';
+    modal.style.zIndex = '3000';
+    modal.innerHTML = '<div class="modal-content" style="max-width:600px;max-height:90vh;overflow-y:auto;">' +
+        '<span class="modal-close" onclick="document.getElementById(\'meusPedidosModal\').remove()">&times;</span>' +
+        '<h2 style="margin-bottom:20px;color:var(--primary-dark);">📦 Meus Pedidos</h2>' +
+        '<div id="meusPedidosLista"><div style="text-align:center;padding:30px;color:#999;"><i class="fas fa-spinner fa-spin"></i> Carregando...</div></div>' +
+        '<button onclick="document.getElementById(\'meusPedidosModal\').remove()" style="margin-top:15px;width:100%;padding:12px;background:var(--primary-blue);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;">Fechar</button>' +
+        '</div>';
+    document.body.appendChild(modal);
+    
+    try {
+        const { data: pedidos, error } = await supabaseClient.from('pedidos').select('*').eq('cliente_email', usuarioLogado.email).order('id_pedido', { ascending: false });
+        if (error) throw error;
+        
+        const container = document.getElementById('meusPedidosLista');
+        if (!pedidos || pedidos.length === 0) {
+            container.innerHTML = '<div class="login-pedido-vazio"><i class="fas fa-box-open" style="font-size:32px;color:#ddd;display:block;margin-bottom:10px;"></i><p>Você ainda não tem pedidos.</p></div>';
+            return;
+        }
+        
+        container.innerHTML = pedidos.map(p => {
+            const statusColor = { 'pendente': '#27ae60', 'pago': '#27ae60', 'em andamento': '#3498db', 'enviado': '#2ecc71', 'entregue': '#27ae60', 'cancelado': '#e74c3c' }[String(p.status || '').toLowerCase()] || '#888';
+            let status = p.status || 'Pendente';
+            if (String(status).toLowerCase() === 'pendente') status = '✅ Pedido efetuado';
+            const data = (p.data_pedido || '').replace('T', ' ').substring(0, 16);
+            
+            return '<div onclick="verDetalhesPedido(' + p.id_pedido + ')" style="cursor:pointer;padding:12px 14px;border:1px solid #f0f0f0;margin-bottom:8px;border-radius:8px;">' +
+                '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">' +
+                '<div><span style="font-weight:600;color:var(--primary-dark);font-size:15px;">#' + p.id_pedido + '</span><span style="font-size:12px;color:#888;margin-left:8px;">' + data + '</span></div>' +
+                '<span style="background:' + statusColor + ';color:white;padding:2px 12px;border-radius:12px;font-size:11px;font-weight:600;">' + status + '</span>' +
+                '</div>' +
+                '<div style="display:flex;justify-content:space-between;margin-top:4px;">' +
+                '<span style="font-size:13px;color:#888;">' + (p.itens || '').split(' | ').length + ' itens</span>' +
+                '<span style="font-weight:700;color:var(--primary-blue);font-size:15px;">R$ ' + parseFloat(p.total || 0).toFixed(2) + '</span>' +
+                '</div></div>';
+        }).join('');
+        
+    } catch (error) {
+        console.error('Erro:', error);
+        document.getElementById('meusPedidosLista').innerHTML = '<p style="text-align:center;color:#e74c3c;">Erro ao carregar pedidos.</p>';
+    }
+}
+
+async function verDetalhesPedido(pedidoId) {
+    // Função simplificada para o usuário apenas ver os itens
+    try {
+        const { data: pedido, error } = await supabaseClient.from('pedidos').select('*').eq('id_pedido', pedidoId).single();
+        if (error || !pedido) throw error || new Error('Pedido não encontrado');
+        
+        const itens = (pedido.itens || '').split(' | ').map((i, idx) => '<div style="padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:13px;">' + (idx+1) + '. ' + i + '</div>').join('');
+        
+        const modal = document.createElement('div');
+        modal.id = 'detalhesPedidoModal';
+        modal.className = 'modal';
+        modal.style.display = 'block';
+        modal.style.zIndex = '3000';
+        modal.innerHTML = '<div class="modal-content" style="max-width:650px;">' +
+            '<span class="modal-close" onclick="document.getElementById(\'detalhesPedidoModal\').remove()">&times;</span>' +
+            '<h2 style="color:var(--primary-dark);margin-bottom:15px;">📦 Pedido #' + pedido.id_pedido + '</h2>' +
+            '<div style="background:#f8f9fa;border-radius:8px;padding:12px;margin-bottom:15px;font-size:14px;">' +
+            '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #eee;"><span style="color:#555;">Data</span><span style="font-weight:600;">' + (pedido.data_pedido || '') + '</span></div>' +
+            '<div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:#555;">Pagamento</span><span style="font-weight:600;">' + (pedido.pagamento || '') + '</span></div></div>' +
+            '<h4 style="margin-bottom:8px;color:var(--primary-dark);">🛒 Produtos</h4>' +
+            '<div style="max-height:250px;overflow-y:auto;border:1px solid #eee;border-radius:8px;padding:4px 12px;background:white;">' + itens + '</div>' +
+            '<div style="margin-top:15px;display:flex;justify-content:space-between;font-size:18px;font-weight:700;color:var(--primary-blue);border-top:2px solid #eee;padding-top:10px;">' +
+            '<span>TOTAL</span><span>R$ ' + parseFloat(pedido.total || 0).toFixed(2) + '</span></div>' +
+            '<button onclick="document.getElementById(\'detalhesPedidoModal\').remove()" style="background:#6c757d;color:white;border:none;padding:12px;border-radius:8px;cursor:pointer;font-weight:600;width:100%;margin-top:10px;">Fechar</button>' +
+            '</div>';
+        document.body.appendChild(modal);
+    } catch (e) {
+        mostrarNotificacao('❌ Erro ao abrir detalhes.', 'error');
+    }
+}
+
+// ============================================================
+// BUSCA NO TOPO (Desktop e Mobile)
+// ============================================================
+function buscarProdutoTopo() {
+    let termo = '';
+    if (window.innerWidth > 768) {
+        termo = document.getElementById('buscaTopo').value.trim();
+    } else {
+        termo = prompt('🔍 Buscar produtos:');
+    }
+    
+    if (!termo) return;
+    
+    const q = termo.toLowerCase();
+    const resultados = [];
+    for (const cat of PRODUCTS_DATA.categories) {
+        for (const p of cat.products) {
+            if (p.name.toLowerCase().indexOf(q) !== -1 || p.description.toLowerCase().indexOf(q) !== -1 || (p.codigo && p.codigo.toLowerCase().indexOf(q) !== -1)) {
+                resultados.push(p);
+            }
+        }
+    }
+    
+    if (resultados.length === 0) return alert('🔍 Nenhum produto encontrado.');
+    
+    currentCategory = { id: -1, name: '🔍 Resultados para "' + termo + '"', products: resultados };
+    currentProducts = resultados;
+    document.getElementById('categoriesSection').style.display = 'none';
+    document.getElementById('productsSection').style.display = 'block';
+    document.getElementById('videosSection').style.display = 'none';
+    document.getElementById('categoryTitle').textContent = currentCategory.name;
+    document.getElementById('productCount').textContent = resultados.length + ' produtos';
+    renderizarProdutos();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    atualizarFooterVisibilidade();
+}
+
+// ============================================================
+// INICIALIZAÇÃO FINAL
+// ============================================================
+// Verifica se o cara já estava logado (recarregou a página)
+verificarSessao();
+
+// Configura a abertura direta via link compartilhado (?produto=123)
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const prodId = urlParams.get('produto');
+        if (prodId) {
+            const prod = encontrarProduto(parseInt(prodId));
+            if (prod) abrirModalProduto(parseInt(prodId));
+        }
+    }, 2000);
+});
+
+console.log('✅ PARTE 7/7 carregada — Login, Cadastro, Sessão e Realtime prontos!');
+console.log('🎉 SITE COMPLETO! Versão final unificada.');
+    
 </script>
 
 </body>
