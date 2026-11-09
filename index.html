@@ -3190,6 +3190,324 @@
 
 console.log('✅ PARTE 1/7 carregada — Head + CSS base + Tracking + Supabase OK');
 console.log('📌 Próximo passo: aguardando Parte 2/7 (CSS de produtos, carrinho, checkout, footer)');
+// ============================================================
+// PARTE 4/7 — CONFIGURAÇÕES, ESTADO, NAVEGAÇÃO E HELPERS
+// ============================================================
+
+const WHATSAPP_NUMBER = '5531984834383';
+const PIX_KEY = 'mcembalagensbh@gmail.com';
+const PEDIDO_MINIMO_REVENDEDOR = 400.00;
+const DESCONTO_REVENDEDOR = 0.10;
+const DESCONTO_PIX = 0.03;
+
+// Estado Global
+let PRODUCTS_DATA = { categories: [] };
+let dadosCarregados = false;
+let carregando = false;
+let currentCategory = null;
+let currentProducts = [];
+let carrinho = [];
+let usuarioLogado = null;
+let bannerAtual = 0;
+let intervalBanner = null;
+let modalProductId = null;
+let carouselIndex = 0;
+let historicoNavegacao = ['home'];
+let inicializando = true;
+let vendaSemDescontoAtiva = false;
+let realtimeAprovacaoCanal = null;
+
+// Estado do Checkout
+let checkoutState = {
+    passo: 1,
+    enderecoSelecionado: null,
+    freteSelecionado: null,
+    pagamentoSelecionado: null,
+    clienteEncontrado: false,
+    clienteData: null,
+    emailBuscado: '',
+    dadosConfirmados: false,
+    opcoesFrete: [],
+    producaoDias: 0,
+    boletoFaturadoSelecionado: null,
+    opcoesBoleto: []
+};
+
+// Configuração dos Banners
+const BANNERS_CONFIG = [
+    { id: 1, imagem_pc: 'https://cdn.awsli.com.br/1608/1608652/arquivos/bannr-fabrica-mc-embalagens-pc.png', imagem_mobile: 'https://cdn.awsli.com.br/1608/1608652/arquivos/banner-da-fabrica-mc-embalagens.png', ativo: true },
+    { id: 2, imagem_pc: 'https://cdn.awsli.com.br/1608/1608652/arquivos/banner-caixa-kraft-com-visor.png', imagem_mobile: 'https://cdn.awsli.com.br/1608/1608652/arquivos/banner-caixas-com-visor-mobile.png', ativo: true },
+    { id: 3, imagem_pc: 'https://cdn.awsli.com.br/1608/1608652/arquivos/banner-caixas-kraft.png', imagem_mobile: 'https://cdn.awsli.com.br/1608/1608652/arquivos/banner-caixas-com-visor-fechadas.png', ativo: true }
+];
+
+// ============================================================
+// NOTIFICAÇÕES
+// ============================================================
+function mostrarNotificacao(mensagem, tipo) {
+    if (tipo === undefined) tipo = 'info';
+    const anterior = document.querySelector('.notification-floating');
+    if (anterior) {
+        anterior.classList.add('removing');
+        setTimeout(() => anterior.remove(), 400);
+    }
+    const cores = { success: '#27ae60', error: '#e74c3c', warning: '#f39c12', info: '#1a3a5c' };
+    const notif = document.createElement('div');
+    notif.className = 'notification-floating';
+    notif.style.background = cores[tipo] || cores.info;
+    notif.style.color = 'white';
+    notif.textContent = mensagem;
+    document.body.appendChild(notif);
+    setTimeout(() => {
+        notif.classList.add('removing');
+        setTimeout(() => notif.remove(), 400);
+    }, 4000);
+}
+
+function fecharModal(id) {
+    const m = document.getElementById(id);
+    if (m) m.style.display = 'none';
+}
+
+// ============================================================
+// NAVEGAÇÃO E FOOTER
+// ============================================================
+function atualizarFooterVisibilidade() {
+    const footer = document.getElementById('footerProfissional');
+    const catSection = document.getElementById('categoriesSection');
+    const prodSection = document.getElementById('productsSection');
+    if (!footer || !catSection || !prodSection) return;
+    
+    // Footer só aparece se a sessão de categorias (Home) estiver visível
+    const isHome = catSection.style.display !== 'none' && prodSection.style.display === 'none';
+    footer.classList.toggle('show', isHome);
+}
+
+function showHome() {
+    document.getElementById('categoriesSection').style.display = 'block';
+    document.getElementById('productsSection').style.display = 'none';
+    document.getElementById('videosSection').style.display = 'block';
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    const nav = document.querySelectorAll('.nav-item');
+    if (nav[0]) nav[0].classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    atualizarFooterVisibilidade();
+}
+
+function voltarCategorias() {
+    document.getElementById('categoriesSection').style.display = 'block';
+    document.getElementById('productsSection').style.display = 'none';
+    document.getElementById('videosSection').style.display = 'block';
+    atualizarFooterVisibilidade();
+}
+
+function abrirMenu() {
+    document.getElementById('sideMenu').classList.add('open');
+    document.getElementById('sideMenuOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function fecharMenu() {
+    document.getElementById('sideMenu').classList.remove('open');
+    document.getElementById('sideMenuOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+// ============================================================
+// WHATSAPP
+// ============================================================
+let urlWhatsApp = '';
+function abrirWhatsApp() {
+    urlWhatsApp = 'https://wa.me/' + WHATSAPP_NUMBER + '?text=Olá!%20Gostaria%20de%20informações%20sobre%20embalagens.';
+    document.getElementById('whatsappModal').classList.add('open');
+}
+function fecharWhatsAppModal() {
+    document.getElementById('whatsappModal').classList.remove('open');
+}
+function irParaWhatsApp() {
+    fecharWhatsAppModal();
+    setTimeout(() => window.open(urlWhatsApp, '_blank'), 300);
+}
+function abrirWhatsAppAtendente() {
+    const msg = encodeURIComponent('Olá! Gostaria de ajuda sobre o acesso de revendedor.\n\nAguardo retorno. Obrigado!');
+    window.open('https://wa.me/' + WHATSAPP_NUMBER + '?text=' + msg, '_blank');
+}
+
+// ============================================================
+// BANNER CARROSSEL
+// ============================================================
+function initBannerCarousel() {
+    const wrapper = document.getElementById('bannerSlides');
+    const dots = document.getElementById('bannerDots');
+    if (!wrapper) return;
+    const ativos = BANNERS_CONFIG.filter(b => b.ativo !== false);
+    if (ativos.length === 0) return;
+    const isMobile = window.innerWidth <= 768;
+    let html = '';
+    ativos.forEach((b, i) => {
+        const src = isMobile && b.imagem_mobile ? b.imagem_mobile : b.imagem_pc;
+        html += '<div class="slide ' + (i === 0 ? 'active' : '') + '"><img src="' + src + '" loading="lazy"></div>';
+    });
+    wrapper.innerHTML = html;
+    if (dots) {
+        dots.innerHTML = ativos.map((_, i) => '<span class="dot ' + (i === 0 ? 'active' : '') + '" onclick="irParaBanner(' + i + ')"></span>').join('');
+    }
+    iniciarAutoplay();
+}
+
+function mudarBanner(dir) {
+    const slides = document.querySelectorAll('#bannerSlides .slide');
+    const dots = document.querySelectorAll('#bannerDots .dot');
+    const total = slides.length;
+    if (total === 0) return;
+    slides[bannerAtual].classList.remove('active');
+    if (dots[bannerAtual]) dots[bannerAtual].classList.remove('active');
+    bannerAtual = (bannerAtual + dir + total) % total;
+    slides[bannerAtual].classList.add('active');
+    if (dots[bannerAtual]) dots[bannerAtual].classList.add('active');
+}
+
+function irParaBanner(i) {
+    const slides = document.querySelectorAll('#bannerSlides .slide');
+    const dots = document.querySelectorAll('#bannerDots .dot');
+    if (slides.length === 0 || i === bannerAtual) return;
+    slides[bannerAtual].classList.remove('active');
+    if (dots[bannerAtual]) dots[bannerAtual].classList.remove('active');
+    bannerAtual = i;
+    slides[bannerAtual].classList.add('active');
+    if (dots[bannerAtual]) dots[bannerAtual].classList.add('active');
+}
+
+function iniciarAutoplay() {
+    if (intervalBanner) clearInterval(intervalBanner);
+    const slides = document.querySelectorAll('#bannerSlides .slide');
+    if (slides.length > 1) intervalBanner = setInterval(() => mudarBanner(1), 5000);
+}
+
+// ============================================================
+// HELPERS E PARSERS (Lógica de Revendedor)
+// ============================================================
+function encontrarProduto(id) {
+    if (!PRODUCTS_DATA || !PRODUCTS_DATA.categories) return null;
+    for (const cat of PRODUCTS_DATA.categories) {
+        for (const p of cat.products) {
+            if (p.id === id) return p;
+        }
+    }
+    return null;
+}
+
+function validarDocumento(doc) {
+    const n = doc.replace(/\D/g, '');
+    if (n.length === 11) return { valido: true, documento: n, tipo: 'CPF' };
+    if (n.length === 14) return { valido: true, documento: n, tipo: 'CNPJ' };
+    return { valido: false, documento: n, tipo: 'DESCONHECIDO' };
+}
+
+// Lê a string de observação do banco e extrai se é revendedor e quais as opções de boleto
+function parseObservacaoRevendedor(observacao) {
+    if (!observacao) return { isRevendedor: false, opcoes: [], obsInterna: '' };
+    const obs = String(observacao).trim();
+    if (!obs.toUpperCase().startsWith('REVENDA')) {
+        return { isRevendedor: false, opcoes: [], obsInterna: obs };
+    }
+    let parteRevenda = obs;
+    let obsInterna = '';
+    const virgulaIndex = obs.indexOf(',');
+    if (virgulaIndex !== -1) {
+        parteRevenda = obs.substring(0, virgulaIndex).trim();
+        obsInterna = obs.substring(virgulaIndex + 1).trim().replace(/^[,;\s]+/, '');
+    } else {
+        const partes = obs.split(' ');
+        for (let i = 1; i < partes.length; i++) {
+            const parte = partes[i].trim();
+            if (/[a-zA-Z]/.test(parte)) {
+                const posicao = obs.indexOf(parte);
+                parteRevenda = obs.substring(0, posicao - 1).trim();
+                obsInterna = obs.substring(posicao).trim();
+                break;
+            }
+        }
+    }
+    const partes = parteRevenda.split('-');
+    const opcoes = [];
+    for (let i = 1; i < partes.length; i++) {
+        const parte = partes[i].trim();
+        if (!parte) continue;
+        if (parte.includes('/')) {
+            const dias = parte.split('/').map(d => parseInt(d.trim()));
+            if (dias.every(d => !isNaN(d) && d > 0)) {
+                opcoes.push({
+                    tipo: 'parcelado',
+                    parcelas: dias.length,
+                    dias: dias,
+                    label: `50% sinal e 50% faturado ${dias.join(' e ')} dias`
+                });
+            }
+        } else {
+            const dia = parseInt(parte);
+            if (!isNaN(dia) && dia > 0) {
+                opcoes.push({
+                    tipo: 'simples',
+                    dias: dia,
+                    label: `50% sinal e 50% faturado ${dia} dias`
+                });
+            }
+        }
+    }
+    return { isRevendedor: true, opcoes: opcoes, obsInterna: obsInterna };
+}
+
+// ============================================================
+// CARRINHO BASE (Badge e LocalStorage)
+// ============================================================
+function salvarCarrinho() {
+    try { localStorage.setItem('carrinhoRevenda', JSON.stringify(carrinho)); } catch (e) {}
+}
+function carregarCarrinho() {
+    try {
+        const data = localStorage.getItem('carrinhoRevenda');
+        if (data) {
+            carrinho = JSON.parse(data);
+            atualizarBadge();
+        }
+    } catch (e) { carrinho = []; }
+}
+function atualizarBadge() {
+    const badge = document.getElementById('cartBadgeTop');
+    const total = carrinho.reduce((s, i) => s + (i.quantity || 0), 0);
+    if (badge) {
+        badge.textContent = total;
+        badge.style.display = total > 0 ? 'block' : 'none';
+    }
+}
+
+// ============================================================
+// INICIALIZAÇÃO PARCIAL DA PARTE 4
+// ============================================================
+document.addEventListener('DOMContentLoaded', function() {
+    // Preenche ano do footer
+    const anoEl = document.getElementById('footerAno');
+    if (anoEl) anoEl.textContent = new Date().getFullYear();
+    
+    // Esconde o botão de busca do desktop e mostra o mobile se for tela pequena
+    if (window.innerWidth <= 768) {
+        const searchDesc = document.querySelector('.search-container');
+        const btnMobile = document.getElementById('btnBuscaMobile');
+        if (searchDesc) searchDesc.style.display = 'none';
+        if (btnMobile) btnMobile.style.display = 'flex';
+    }
+
+    // Inicializa carrinho
+    carregarCarrinho();
+    
+    // Configura o Banner
+    initBannerCarousel();
+    
+    // Mostra o footer no início
+    setTimeout(atualizarFooterVisibilidade, 100);
+    
+    console.log('✅ PARTE 4/7 carregada — Navegação, Banner e Helpers prontos');
+});
 </script>
 
 </body>
