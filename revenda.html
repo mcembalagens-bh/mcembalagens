@@ -108,6 +108,11 @@
 
         body.checkout-ativo .top-bar { display: none !important; }
         body.checkout-ativo { padding-top: 0 !important; }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
 
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
@@ -1898,6 +1903,51 @@
             </div>
         </div>
     </div>
+
+    
+    <!-- ============================================================ -->
+    <!-- MODAL DE APROVAÇÃO REVENDEDOR (BOAS-VINDAS) -->
+    <!-- ============================================================ -->
+    <div class="modal" id="modalAprovacaoRevendedor">
+        <div class="modal-content" style="max-width:500px;text-align:center;border-top:6px solid #27ae60;">
+            <span class="modal-close" onclick="fecharModalAprovacaoRevendedor()">&times;</span>
+            
+            <div style="font-size:72px;color:#27ae60;margin:10px 0 15px;animation:pulse 1.5s infinite;">
+                🎉
+            </div>
+            
+            <h2 style="color:var(--primary-dark);margin-bottom:10px;font-size:24px;">
+                Parabéns!
+            </h2>
+            <p style="font-size:16px;color:#333;font-weight:600;margin-bottom:20px;">
+                Você agora é um <span style="color:#27ae60;">Revendedor MC Embalagens</span>
+            </p>
+            
+            <div style="background:#e8f5e9;border-radius:8px;padding:20px;text-align:left;margin-bottom:20px;">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:14px;color:#155724;font-weight:600;">
+                    <i class="fas fa-check-circle" style="color:#27ae60;font-size:18px;"></i> Desconto de 10% em todos os produtos
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:14px;color:#155724;font-weight:600;">
+                    <i class="fas fa-check-circle" style="color:#27ae60;font-size:18px;"></i> Desconto extra de 3% no PIX
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:14px;color:#155724;font-weight:600;">
+                    <i class="fas fa-check-circle" style="color:#27ae60;font-size:18px;"></i> Boleto faturado exclusivo
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;font-size:14px;color:#155724;font-weight:600;">
+                    <i class="fas fa-check-circle" style="color:#27ae60;font-size:18px;"></i> Frete para todo o Brasil
+                </div>
+            </div>
+            
+            <p style="font-size:14px;color:#666;margin-bottom:20px;">
+                Seu acesso já está liberado.<br>Você já pode comprar com preços exclusivos!
+            </p>
+            
+            <button onclick="fecharModalAprovacaoRevendedor()" 
+                    style="background:#27ae60;color:white;border:none;padding:16px 20px;border-radius:10px;cursor:pointer;font-weight:700;font-size:18px;width:100%;transition:all 0.3s;box-shadow:0 4px 15px rgba(39,174,96,0.3);">
+                <i class="fas fa-shopping-cart"></i> Começar a Comprar
+            </button>
+        </div>
+    </div>
         <!-- ============================================================ -->
     <!-- SCRIPT PRINCIPAL — PARTE 3/4 -->
     <!-- ============================================================ -->
@@ -2363,8 +2413,13 @@
                 localStorage.removeItem('usuarioLogadoRevenda');
             }
         }
-        atualizarInterfaceUsuario();
+              atualizarInterfaceUsuario();
         atualizarNomeClienteHeader();
+        
+        // NOVO: Se recarregou a página e já está logado, liga o realtime
+        if (usuarioLogado && usuarioLogado.email) {
+            iniciarRealtimeAprovacao();
+        }
     }
 
     // ============================================================
@@ -2447,7 +2502,14 @@
             atualizarInterfaceUsuario();
             document.getElementById('bloqueioBanner').style.display = 'none';
             document.getElementById('aguardandoBanner').style.display = 'none';
-            if (currentProducts && currentProducts.length > 0) renderizarProdutos();
+                       if (currentProducts && currentProducts.length > 0) renderizarProdutos();
+            
+            // NOVO: Realtime e Aviso
+            iniciarRealtimeAprovacao();
+            if (cliente.aviso_aprovacao_pendente === true) {
+                setTimeout(() => { mostrarModalAprovacaoRevendedor(); }, 500);
+            }
+
             msgEl.className = 'login-message success';
             msgEl.innerHTML = '✅ Bem-vindo, <strong>' + cliente.nome + '</strong>!';
             setTimeout(() => {
@@ -2464,8 +2526,9 @@
         }
     }
 
-    function sairConta() {
+       function sairConta() {
         if (confirm('Tem certeza que deseja sair?')) {
+            pararRealtimeAprovacao(); // NOVO AQUI
             localStorage.removeItem('usuarioLogadoRevenda');
             sessionStorage.removeItem('tipoCliente');
             usuarioLogado = null;
@@ -2663,8 +2726,9 @@
                     cep: cep,
                     endereco_entrega: enderecoEntrega,
                     cep_entrega: cep,
-                    data_cadastro: new Date().toISOString(),
-                    observacoes: 'REVENDA'
+                                       data_cadastro: new Date().toISOString(),
+                    observacoes: 'REVENDA',
+                    aviso_aprovacao_pendente: true // NOVO AQUI
                 }]);
             if (error) throw error;
             msgEl.className = 'login-message success';
@@ -4570,6 +4634,75 @@
             switchLoginTab('cadastro');
             if (email) document.getElementById('cadastroEmail').value = email;
         }, 300);
+    }
+    // ============================================================
+    // APROVAÇÃO REVENDEDOR — MODAL E REALTIME
+    // ============================================================
+    let realtimeAprovacaoCanal = null;
+
+    function mostrarModalAprovacaoRevendedor() {
+        if (window._modalAprovacaoMostrado) return;
+        window._modalAprovacaoMostrado = true;
+
+        document.getElementById('modalAprovacaoRevendedor').style.display = 'block';
+        
+        if (usuarioLogado && usuarioLogado.email) {
+            supabaseClient.from('clientes')
+                .update({ aviso_aprovacao_pendente: false })
+                .eq('email', usuarioLogado.email)
+                .then(({error}) => {
+                    if(!error) console.log('✅ Aviso consumido no banco.');
+                });
+        }
+    }
+
+    function fecharModalAprovacaoRevendedor() {
+        document.getElementById('modalAprovacaoRevendedor').style.display = 'none';
+        if (currentProducts && currentProducts.length > 0) {
+            renderizarProdutos();
+        }
+        atualizarInterfaceUsuario();
+    }
+
+    function iniciarRealtimeAprovacao() {
+        if (!usuarioLogado || !usuarioLogado.email) return;
+        if (realtimeAprovacaoCanal) return;
+
+        console.log('📡 Iniciando Realtime de aprovação para:', usuarioLogado.email);
+
+        realtimeAprovacaoCanal = supabaseClient
+            .channel('aprovacao-' + usuarioLogado.email)
+            .on(
+                'postgres_changes',
+                { 
+                    event: 'UPDATE', 
+                    schema: 'public', 
+                    table: 'clientes',
+                    filter: `email=eq.${usuarioLogado.email}`
+                },
+                (payload) => {
+                    const novoCliente = payload.new;
+                    if (novoCliente.aviso_aprovacao_pendente === true) {
+                        usuarioLogado.isRevendedor = true;
+                        usuarioLogado.observacao = novoCliente.observacoes;
+                        usuarioLogado.parcelasConfig = novoCliente.parcelas_config;
+                        localStorage.setItem('usuarioLogadoRevenda', JSON.stringify(usuarioLogado));
+                        
+                        mostrarModalAprovacaoRevendedor();
+                        document.getElementById('bloqueioBanner').style.display = 'none';
+                    }
+                }
+            )
+            .subscribe((status) => {
+                if (status === 'SUBSCRIBED') console.log('✅ Realtime conectado!');
+            });
+    }
+
+    function pararRealtimeAprovacao() {
+        if (realtimeAprovacaoCanal) {
+            supabaseClient.removeChannel(realtimeAprovacaoCanal);
+            realtimeAprovacaoCanal = null;
+        }
     }
 
     // ============================================================
