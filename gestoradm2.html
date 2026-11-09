@@ -4178,6 +4178,62 @@ async function finalizarPedidoCheckout() {
 }
 
 // ============================================================
+// FUNÇÃO PARSER DE OBSERVAÇÃO (NECESSÁRIA PARA O MODAL)
+// ============================================================
+function parseObservacaoRevendedor(observacao) {
+    if (!observacao) return { isRevendedor: false, opcoes: [], obsInterna: '' };
+    const obs = String(observacao).trim();
+    if (!obs.toUpperCase().startsWith('REVENDA')) {
+        return { isRevendedor: false, opcoes: [], obsInterna: obs };
+    }
+    let parteRevenda = obs;
+    let obsInterna = '';
+    const virgulaIndex = obs.indexOf(',');
+    if (virgulaIndex !== -1) {
+        parteRevenda = obs.substring(0, virgulaIndex).trim();
+        obsInterna = obs.substring(virgulaIndex + 1).trim().replace(/^[,;\s]+/, '');
+    } else {
+        const partes = obs.split(' ');
+        for (let i = 1; i < partes.length; i++) {
+            const parte = partes[i].trim();
+            if (/[a-zA-Z]/.test(parte)) {
+                const posicao = obs.indexOf(parte);
+                parteRevenda = obs.substring(0, posicao - 1).trim();
+                obsInterna = obs.substring(posicao).trim();
+                break;
+            }
+        }
+    }
+    const partes = parteRevenda.split('-');
+    const opcoes = [];
+    for (let i = 1; i < partes.length; i++) {
+        const parte = partes[i].trim();
+        if (!parte) continue;
+        if (parte.includes('/')) {
+            const dias = parte.split('/').map(d => parseInt(d.trim()));
+            if (dias.every(d => !isNaN(d) && d > 0)) {
+                opcoes.push({
+                    tipo: 'parcelado',
+                    parcelas: dias.length,
+                    dias: dias,
+                    label: `50% sinal e 50% faturado ${dias.join(' e ')} dias`
+                });
+            }
+        } else {
+            const dia = parseInt(parte);
+            if (!isNaN(dia) && dia > 0) {
+                opcoes.push({
+                    tipo: 'simples',
+                    dias: dia,
+                    label: `50% sinal e 50% faturado ${dia} dias`
+                });
+            }
+        }
+    }
+    return { isRevendedor: true, opcoes: opcoes, obsInterna: obsInterna };
+}
+    
+// ============================================================
 // GERENCIAR CLIENTE — MODAL AVANÇADO
 // ============================================================
 let gcParcelasTemporarias = [];
