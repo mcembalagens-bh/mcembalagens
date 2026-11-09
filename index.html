@@ -2190,40 +2190,41 @@
     .bloqueio-banner .btn-group button { width: 100%; justify-content: center; }
 }
  /* ===== BOTÃO REVENDEDOR DISCRETO ===== */
+/* ===== BOTÃO REVENDEDOR DISCRETO E MODERNO ===== */
 .btn-revendedor-header {
-    background: var(--orange-accent);
+    background: #f39c12;
     color: white;
     border: none;
     border-radius: 20px;
-    padding: 8px 14px;
+    padding: 0 16px;
+    height: 38px;
     font-weight: 700;
     font-size: 13px;
     cursor: pointer;
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 6px;
+    justify-content: center;
+    gap: 8px;
     transition: all 0.3s ease;
     white-space: nowrap;
-    margin-right: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    flex-shrink: 0;
 }
 .btn-revendedor-header:hover {
-    background: var(--orange-top);
-    transform: scale(1.05);
+    background: #f57c00;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
 .btn-revendedor-header i {
-    font-size: 14px;
+    font-size: 15px;
+    margin: 0;
 }
 
-/* Ajuste para evitar que o cabeçalho quebre no PC */
-.header-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
+/* Ajuste para o botão não montar no carrinho no PC */
 .header-actions {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px; /* Espaçamento igual entre todos os botões */
 }
 
 @media (max-width: 768px) {
@@ -2232,11 +2233,16 @@
         width: 36px;
         height: 36px;
         border-radius: 50%;
-        justify-content: center;
-        margin-right: 0;
     }
-    .btn-revendedor-header span { display: none; }
-    .btn-revendedor-header i { font-size: 16px; margin: 0; }
+    .btn-revendedor-header span {
+        display: none;
+    }
+    .btn-revendedor-header i {
+        font-size: 16px;
+    }
+    .header-actions {
+        gap: 6px;
+    }
 }
     </style>
 </head>
@@ -2273,24 +2279,26 @@
                 <i class="fas fa-search search-icon" onclick="buscarProdutoTopo()"></i>
             </div>
 
-          <div class="header-actions">
+         <div class="header-actions">
     <span class="cliente-nome" id="clienteNomeHeader"></span>
     
-    <!-- NOVO BOTÃO: Texto no PC, Ícone no Celular -->
+    <!-- Botão Revendedor -->
     <button class="btn-revendedor-header" onclick="abrirBannerRevendedor()" title="Seja um Revendedor">
         <i class="fas fa-store"></i> <span>Seja Revendedor</span>
     </button>
 
-    <!-- Botão de busca mobile (aparece no celular) -->
+    <!-- Busca mobile -->
     <button class="btn-search-mobile" onclick="buscarProdutoTopo()" aria-label="Buscar" style="display:none;" id="btnBuscaMobile">
         <i class="fas fa-search"></i>
     </button>
     
+    <!-- Carrinho -->
     <button class="btn-cart" onclick="abrirCarrinho()" aria-label="Carrinho">
         <i class="fas fa-shopping-cart"></i>
         <span class="badge" id="cartBadgeTop">0</span>
     </button>
     
+    <!-- Usuário -->
     <div class="user-dropdown">
         <button class="btn-login" onclick="toggleUserMenu()" aria-label="Login" id="btnUserMenu">
             <i class="fas fa-user"></i>
@@ -6081,30 +6089,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
 console.log('✅ PARTE 7/7 carregada — Login, Cadastro, Sessão e Realtime prontos!');
 console.log('🎉 SITE COMPLETO! Versão final unificada.');
-   // ============================================================
-// CONTROLE DO BANNER E REGRAS DO REVENDEDOR
+// ============================================================
+// CONTROLE DO BANNER E REGRAS DO REVENDEDOR (DEFINITIVO)
 // ============================================================
 function abrirBannerRevendedor() {
     const banner = document.getElementById('bloqueioBanner');
-    banner.classList.remove('hidden');
-    banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (banner) {
+        banner.classList.remove('hidden');
+        banner.style.display = 'block';
+        banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
 }
 
-// Essa função será chamada pelo botão "Cadastrar" e "Regras" do banner
 function abrirRegrasParaCadastro() {
-    // Abre o modal de regras
     document.getElementById('regrasModal').style.display = 'block';
-    // Esconde o botão de fechar padrão para forçar a leitura (opcional)
-    // Mas vamos manter para não travar o usuário.
 }
 
-// Função chamada quando o usuário clica em "Estou Ciente" no final das regras
 function confirmarRegrasECadastrar() {
     fecharModal('regrasModal');
     setTimeout(() => {
-        abrirCadastro(); // Abre a tela de cadastro
+        abrirCadastro();
     }, 300);
-} 
+}
 </script>
 
 </body>
