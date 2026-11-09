@@ -209,153 +209,226 @@
             .top-bar-revenda .destaque { font-size: 8px; padding: 1px 6px; }
         }
 
-        /* ===== HEADER ===== */
-        .header {
-            background: var(--primary-blue);
-            padding: 12px 20px;
-            box-shadow: var(--shadow);
-            position: sticky;
-            top: 0;
-            z-index: 999;
-        }
-        .header-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 15px;
-        }
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            max-width: 200px;
-            width: 100%;
-            flex-shrink: 0;
-        }
-        .logo img {
-            width: 100%;
-            height: auto;
-            max-width: 300px;
-            display: block;
-            height: 50px;
-            width: auto;
-            object-fit: contain;
-        }
-        .logo a {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-            cursor: pointer;
-        }
+     /* ===== HEADER ===== */
+.header {
+    background: var(--primary-blue);
+    padding: 12px 20px;
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 0;
+    z-index: 999;
+}
 
-        .revendedor-badge {
-            background: var(--orange-accent);
-            color: #fff;
-            padding: 4px 14px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-left: 10px;
-            display: none;
-            white-space: nowrap;
-            animation: pulseBadgeRevenda 2s infinite;
-        }
-        .revendedor-badge.show { display: inline-block; }
-        @keyframes pulseBadgeRevenda {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-        @media (max-width: 768px) { .revendedor-badge { display: none !important; } }
+.header-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+}
 
-        .header-actions {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            flex-shrink: 0;
-        }
-        .header-actions button {
-            background: transparent;
-            border: none;
-            color: white;
-            font-size: 20px;
-            cursor: pointer;
-            padding: 8px;
-            border-radius: 50%;
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 40px;
-            height: 40px;
-            position: relative;
-        }
-        .header-actions button:hover {
-            background: rgba(255,255,255,0.15);
-            transform: scale(1.1);
-        }
-        .header-actions .btn-cart .badge {
-            position: absolute;
-            top: -4px;
-            right: -8px;
-            background: #e74c3c;
-            color: white;
-            border-radius: 50%;
-            padding: 2px 6px;
-            font-size: 10px;
-            font-weight: bold;
-            min-width: 18px;
-            text-align: center;
-            display: none;
-        }
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: 200px;
+    width: 100%;
+    flex-shrink: 0;
+}
 
-        .cliente-nome {
-            color: white;
-            font-size: 14px;
-            font-weight: 600;
-            margin-right: 5px;
-            display: none;
-        }
-        .cliente-nome.show { display: inline-block; }
-        @media (max-width: 768px) { .cliente-nome { display: none !important; } }
+.logo img {
+    width: 100%;
+    height: auto;
+    max-width: 300px;
+    display: block;
+    height: 50px;
+    width: auto;
+    object-fit: contain;
+}
 
-        /* ===== BUSCA NO TOPO ===== */
-        .search-container {
-            flex: 1;
-            max-width: 400px;
-            position: relative;
-            display: none;
-        }
-        @media (min-width: 769px) { .search-container { display: block; } }
-        .search-container input {
-            width: 100%;
-            padding: 10px 40px 10px 15px;
-            border: none;
-            border-radius: 25px;
-            font-size: 14px;
-            background: rgba(255,255,255,0.95);
-            color: var(--text-dark);
-            transition: var(--transition);
-        }
-        .search-container input:focus {
-            outline: none;
-            background: #fff;
-            box-shadow: 0 0 0 3px rgba(243,156,18,0.3);
-        }
-        .search-container .search-icon {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--primary-blue);
-            font-size: 16px;
-            cursor: pointer;
-            pointer-events: none;
-        }
+.logo a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.revendedor-badge {
+    background: var(--orange-accent);
+    color: #fff;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-left: 10px;
+    display: none;
+    white-space: nowrap;
+    animation: pulseBadgeRevenda 2s infinite;
+}
+.revendedor-badge.show { display: inline-block; }
+
+@keyframes pulseBadgeRevenda {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+@media (max-width: 768px) { .revendedor-badge { display: none !important; } }
+
+/* ===== AÇÕES DO HEADER ===== */
+.header-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0; /* O espaçamento é controlado pelos botões abaixo */
+    flex-shrink: 0;
+}
+
+/* 1. Botão Seja Revendedor */
+.btn-revendedor-header {
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: none;
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: opacity 0.3s;
+    outline: none;
+}
+.btn-revendedor-header:hover { opacity: 0.8; }
+.btn-revendedor-header i { color: #f39c12; font-size: 18px; }
+
+/* 2. Carrinho e Usuário (Tamanho Fixo e Alinhado) */
+.btn-cart, .btn-login {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    position: relative;
+    padding: 0;
+    transition: transform 0.3s;
+    outline: none;
+}
+.btn-cart:hover, .btn-login:hover { transform: scale(1.1); }
+
+/* 3. Espaçamento Cirúrgico entre eles */
+.btn-cart { 
+    margin-left: 15px; /* Afasta o carrinho do texto revendedor */
+    margin-right: 10px; /* Afasta o carrinho do usuário */
+}
+
+/* Badge do Carrinho */
+.btn-cart .badge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    background: #e74c3c;
+    color: white;
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 10px;
+    font-weight: bold;
+    min-width: 18px;
+    text-align: center;
+    display: none;
+}
+
+.cliente-nome {
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    margin-right: 15px;
+    display: none;
+}
+.cliente-nome.show { display: inline-block; }
+
+@media (max-width: 768px) { .cliente-nome { display: none !important; } }
+
+/* ===== BUSCA NO TOPO ===== */
+.search-container {
+    flex: 1;
+    max-width: 400px;
+    position: relative;
+    display: none;
+}
+
+@media (min-width: 769px) { .search-container { display: block; } }
+
+.search-container input {
+    width: 100%;
+    padding: 10px 40px 10px 15px;
+    border: none;
+    border-radius: 25px;
+    font-size: 14px;
+    background: rgba(255,255,255,0.95);
+    color: var(--text-dark);
+    transition: var(--transition);
+}
+
+.search-container input:focus {
+    outline: none;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(243,156,18,0.3);
+}
+
+.search-container .search-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--primary-blue);
+    font-size: 16px;
+    cursor: pointer;
+    pointer-events: none;
+}
+
+/* ===== RESPONSIVO DO HEADER (CELULAR) ===== */
+@media (max-width: 768px) {
+    .header-container {
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 10px;
+    }
+    .logo { order: 1; }
+    .header-actions { order: 2; }
+    
+    .btn-revendedor-header span { display: none; } /* Esconde o texto no celular */
+    .btn-revendedor-header { width: 40px; justify-content: center; }
+    
+    .btn-cart { margin-left: 5px; margin-right: 5px; }
+    
+    .search-container {
+        order: 3;
+        width: 100%;
+        max-width: 100%;
+        margin-top: 10px;
+        display: block; /* Força aparecer no celular */
+    }
+}
+
+@media (max-width: 480px) {
+    .header { padding: 10px 15px; }
+    .logo { max-width: 140px; }
+    .logo img { max-width: 180px; height: 40px; }
+    .header-actions button { font-size: 18px; }
+    .btn-cart, .btn-login { width: 36px; height: 36px; }
+}
 
         /* ===== HEADER RESPONSIVO ===== */
         @media (max-width: 768px) {
@@ -2273,63 +2346,57 @@
     <!-- ============================================================ -->
     <!-- HEADER                                                       -->
     <!-- ============================================================ -->
-    <header class="header">
-       <div class="header-container" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-    <div class="logo">
-        <a href="#" onclick="showHome();return false;">
-            <img src="https://cdn.awsli.com.br/1608/1608652/arquivos/logo-mc-2026-branca.webp" alt="MC Embalagens BH" id="logo-img">
-        </a>
-        <span class="revendedor-badge" id="revendedorBadge">🏷️ Revendedor</span>
-    </div>
+   <header class="header">
+    <div class="header-container">
+        <!-- Logo -->
+        <div class="logo">
+            <a href="#" onclick="showHome();return false;">
+                <img src="https://cdn.awsli.com.br/1608/1608652/arquivos/logo-mc-2026-branca.webp" alt="MC Embalagens BH">
+            </a>
+            <span class="revendedor-badge" id="revendedorBadge" style="margin-left:10px;">🏷️ Revendedor</span>
+        </div>
 
-    <div class="search-container">
-        <input type="text" id="buscaTopo" placeholder="🔍 Buscar produtos..." onkeypress="if(event.key==='Enter'){buscarProdutoTopo()}">
-        <i class="fas fa-search search-icon" onclick="buscarProdutoTopo()"></i>
-    </div>
+        <!-- Busca -->
+        <div class="search-container">
+            <input type="text" id="buscaTopo" placeholder="🔍 Buscar produtos..." onkeypress="if(event.key==='Enter'){buscarProdutoTopo()}">
+            <i class="fas fa-search search-icon" onclick="buscarProdutoTopo()"></i>
+        </div>
 
-    <div class="header-actions">
-    <span class="cliente-nome" id="clienteNomeHeader"></span>
-    
-    <!-- BOTÃO SEJA REVENDEDOR (Antes do carrinho para não embolar) -->
-    <button class="btn-revendedor-header" onclick="abrirBannerRevendedor()" title="Seja um Revendedor">
-        <i class="fas fa-store"></i> <span>Seja Revendedor</span>
-    </button>
+        <!-- Botões da Direita -->
+        <div class="header-actions">
+            <span class="cliente-nome" id="clienteNomeHeader"></span>
 
-    <!-- Busca mobile -->
-    <button class="btn-search-mobile" onclick="buscarProdutoTopo()" aria-label="Buscar" style="display:none;" id="btnBuscaMobile">
-        <i class="fas fa-search"></i>
-    </button>
+            <button class="btn-revendedor-header" onclick="abrirBannerRevendedor()" title="Seja um Revendedor">
+                <i class="fas fa-store"></i> <span>Seja Revendedor</span>
+            </button>
 
-    <!-- Carrinho -->
-    <button class="btn-cart" onclick="abrirCarrinho()" aria-label="Carrinho">
-        <i class="fas fa-shopping-cart"></i>
-        <span class="badge" id="cartBadgeTop">0</span>
-    </button>
-    
-    <!-- Usuário -->
-    <div class="user-dropdown">
-        <button class="btn-login" onclick="toggleUserMenu()" aria-label="Login" id="btnUserMenu">
-            <i class="fas fa-user"></i>
-        </button>
-        <div class="user-dropdown-content" id="userDropdown">
-            <div class="dropdown-item login-item" onclick="abrirLogin()">
-                <i class="fas fa-sign-in-alt"></i> Entrar / Cadastrar
-            </div>
-            <div class="dropdown-item" onclick="abrirDadosPessoais()" style="display:none;" data-item="dados">
-                <i class="fas fa-user-circle"></i> Dados Pessoais
-            </div>
-            <div class="dropdown-item" onclick="abrirMeusPedidos()" style="display:none;" data-item="pedidos">
-                <i class="fas fa-box"></i> Meus Pedidos
-            </div>
-            <div class="dropdown-item sair" onclick="sairConta()" style="display:none;" data-item="sair">
-                <i class="fas fa-sign-out-alt"></i> Sair da Conta
+            <button class="btn-cart" onclick="abrirCarrinho()" aria-label="Carrinho">
+                <i class="fas fa-shopping-cart"></i>
+                <span class="badge" id="cartBadgeTop">0</span>
+            </button>
+
+            <div class="user-dropdown">
+                <button class="btn-login" onclick="toggleUserMenu()" aria-label="Login" id="btnUserMenu">
+                    <i class="fas fa-user"></i>
+                </button>
+                <div class="user-dropdown-content" id="userDropdown">
+                    <div class="dropdown-item login-item" onclick="abrirLogin()">
+                        <i class="fas fa-sign-in-alt"></i> Entrar / Cadastrar
+                    </div>
+                    <div class="dropdown-item" onclick="abrirDadosPessoais()" style="display:none;" data-item="dados">
+                        <i class="fas fa-user-circle"></i> Dados Pessoais
+                    </div>
+                    <div class="dropdown-item" onclick="abrirMeusPedidos()" style="display:none;" data-item="pedidos">
+                        <i class="fas fa-box"></i> Meus Pedidos
+                    </div>
+                    <div class="dropdown-item sair" onclick="sairConta()" style="display:none;" data-item="sair">
+                        <i class="fas fa-sign-out-alt"></i> Sair da Conta
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-</div>
-</div>
-       
-    </header>
+</header>
 
     <!-- ============================================================ -->
     <!-- MAIN CONTENT                                                 -->
