@@ -2122,7 +2122,73 @@
 .aviso-aprovacao h3 { margin-bottom: 8px; font-size: 18px; }
 
 /* ===== FIM DO CSS PARTE 2/7 ===== */
-        
+        /* ============================================================ */
+/* CORREÇÃO: BANNER DE BLOQUEIO REVENDEDOR                      */
+/* ============================================================ */
+.bloqueio-banner {
+    background: linear-gradient(135deg, #1a3a5c, #2a5a8c);
+    color: white;
+    padding: 30px 20px;
+    border-radius: var(--radius);
+    text-align: center;
+    margin: 20px 0 30px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+}
+.bloqueio-banner::before {
+    content: '🔐'; 
+    position: absolute; 
+    font-size: 120px;
+    opacity: 0.1; 
+    right: -20px; 
+    top: -30px; 
+    transform: rotate(15deg);
+}
+.bloqueio-banner h2 { 
+    font-size: 22px; 
+    margin-bottom: 10px; 
+    position: relative; 
+}
+.bloqueio-banner p {
+    font-size: 15px; 
+    opacity: 0.9; 
+    max-width: 600px;
+    margin: 0 auto 20px; 
+    position: relative;
+    line-height: 1.5;
+}
+.bloqueio-banner .btn-group {
+    display: flex; 
+    gap: 10px; 
+    justify-content: center;
+    flex-wrap: wrap; 
+    position: relative;
+}
+.bloqueio-banner .btn-group button {
+    padding: 10px 20px; 
+    border: none; 
+    border-radius: 8px;
+    font-weight: 600; 
+    font-size: 14px; 
+    cursor: pointer;
+    transition: all 0.3s; 
+    text-decoration: none;
+    display: inline-flex; 
+    align-items: center; 
+    gap: 8px;
+}
+.btn-entrar { background: white; color: #1a3a5c; }
+.btn-entrar:hover { transform: scale(1.05); box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+.btn-cadastrar { background: #25D366; color: white; }
+.btn-cadastrar:hover { transform: scale(1.05); background: #1da851; }
+.btn-regras { background: #f39c12; color: white; }
+.btn-regras:hover { transform: scale(1.05); background: #e67e22; }
+
+@media (max-width: 600px) {
+    .bloqueio-banner .btn-group { flex-direction: column; align-items: stretch; }
+    .bloqueio-banner .btn-group button { width: 100%; justify-content: center; }
+}
     </style>
 </head>
 <body>
@@ -3654,17 +3720,35 @@ function abrirCategoria(id) {
     if (!cat) return;
     currentCategory = cat;
     currentProducts = cat.products;
+    
     document.getElementById('categoriesSection').style.display = 'none';
     document.getElementById('productsSection').style.display = 'block';
     document.getElementById('videosSection').style.display = 'none';
+    
+    // 👇 ESCONDE O BANNER CARROSSEL E O BANNER DE BLOQUEIO AQUI 👇
+    document.getElementById('bannerCarousel').style.display = 'none';
+    const bloqueio = document.getElementById('bloqueioBanner');
+    if (bloqueio) bloqueio.style.display = 'none';
+    
     document.getElementById('categoryTitle').textContent = cat.name;
     document.getElementById('productCount').textContent = cat.products.length + ' produtos';
     
-    // Atualiza footer (esconde)
     atualizarFooterVisibilidade();
     
     renderizarProdutos();
     window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function voltarCategorias() {
+    document.getElementById('categoriesSection').style.display = 'block';
+    document.getElementById('productsSection').style.display = 'none';
+    document.getElementById('videosSection').style.display = 'block';
+    
+    // 👇 VOLTA A MOSTRAR O BANNER CARROSSEL E O BANNER DE BLOQUEIO AQUI 👇
+    document.getElementById('bannerCarousel').style.display = 'block';
+    if (typeof mostrarBloqueio === 'function') mostrarBloqueio();
+    
+    atualizarFooterVisibilidade();
 }
 
 function renderizarProdutos() {
