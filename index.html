@@ -2190,54 +2190,71 @@
     .bloqueio-banner .btn-group button { width: 100%; justify-content: center; }
 }
  /* ===== BOTÃO REVENDEDOR DISCRETO ===== */
-/* ===== BOTÃO REVENDEDOR DISCRETO (CORREÇÃO DEFINITIVA) ===== */
-.btn-revendedor-header {
-    background: var(--orange-accent);
-    color: white;
-    border: none;
-    border-radius: 6px;
-    padding: 8px 16px;
-    height: 38px;
-    font-weight: 700;
-    font-size: 13px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    transition: all 0.3s ease;
-    white-space: nowrap;
-    flex-shrink: 0;
-}
-.btn-revendedor-header:hover {
-    background: var(--orange-top);
-    transform: scale(1.02);
-}
-.btn-revendedor-header i {
-    font-size: 14px;
-}
-
-/* Ajuste do header para não esmagar os botões */
+/* ===== BOTÃO REVENDEDOR E ALINHAMENTO DO HEADER (DEFINITIVO) ===== */
 .header-actions {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-shrink: 0;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
 }
 
-/* No celular, vira um botão mais compacto sem virar círculo feio */
+.btn-revendedor-header {
+    background: transparent !important;
+    color: white !important;
+    border: 1px solid rgba(255,255,255,0.3) !important;
+    border-radius: 4px !important;
+    padding: 6px 12px !important;
+    height: 34px !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    white-space: nowrap !important;
+    box-shadow: none !important;
+    margin-right: 25px !important; /* Afasta o carrinho */
+    cursor: pointer !important;
+}
+
+.btn-revendedor-header:hover {
+    background: rgba(255,255,255,0.1) !important;
+    border-color: rgba(255,255,255,0.6) !important;
+}
+
+.btn-revendedor-header i {
+    font-size: 14px !important;
+    color: #f39c12 !important; /* Ícone laranja para destaque */
+}
+
+.btn-cart {
+    margin-right: 20px !important; /* Afasta o usuário */
+    width: 40px !important;
+    height: 40px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Ajuste no celular */
 @media (max-width: 768px) {
     .btn-revendedor-header {
-        padding: 8px 12px;
-        height: 36px;
-        font-size: 12px;
+        padding: 0 !important;
+        width: 34px !important;
+        height: 34px !important;
+        justify-content: center !important;
+        border: none !important;
+        margin-right: 10px !important;
     }
     .btn-revendedor-header span {
-        display: none; /* Esconde o texto e deixa só o ícone no celular */
+        display: none !important;
     }
     .btn-revendedor-header i {
-        margin: 0;
-        font-size: 16px;
+        font-size: 18px !important;
+        margin: 0 !important;
+    }
+    .btn-cart {
+        margin-right: 10px !important;
+        width: 36px !important;
+        height: 36px !important;
     }
 }
     </style>
