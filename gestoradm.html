@@ -4209,7 +4209,7 @@ async function finalizarPedidoCheckout() {
     }
 }
 
-        // ============================================================
+       // ============================================================
     // GERENCIAR CLIENTE — MODAL AVANÇADO
     // ============================================================
     let gcParcelasTemporarias = [];
@@ -4231,12 +4231,10 @@ async function finalizarPedidoCheckout() {
         document.getElementById('gcPendencia').checked = temPendencia;
         document.getElementById('gcAnalise').checked = emAnalise;
 
-        // Carrega parcelas (prioriza JSON, fallback para texto)
         let parcelas = [];
         if (cliente.parcelas_config && Array.isArray(cliente.parcelas_config) && cliente.parcelas_config.length > 0) {
             parcelas = cliente.parcelas_config.map(p => ({ dias: parseInt(p.dias) || 0, minimo: parseFloat(p.minimo) || 0 }));
         } else if (isRevendedor) {
-            // Fallback para clientes antigos
             const parser = parseObservacaoRevendedor(cliente.observacoes);
             if (parser.opcoes && parser.opcoes.length > 0) {
                 parser.opcoes.forEach(op => {
