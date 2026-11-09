@@ -2127,9 +2127,1053 @@
 </head>
 <body>
 
-<!-- ============================================================ -->
-<!-- CONTEÚDO DO BODY SERÁ ADICIONADO NA PARTE 3/7                -->
-<!-- ============================================================ -->
+    <!-- ============================================================ -->
+    <!-- TARJA SUPERIOR (só revendedor logado)                        -->
+    <!-- ============================================================ -->
+    <div class="top-bar-revenda" id="topBarRevenda">
+        <span><i class="fas fa-tag"></i> Área Revendedor</span>
+        <span class="destaque"><i class="fas fa-shopping-cart"></i> Pedido mínimo: R$ 400,00</span>
+        <span><i class="fas fa-truck"></i> Frete para todo o Brasil</span>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- HEADER                                                       -->
+    <!-- ============================================================ -->
+    <header class="header">
+        <div class="header-container">
+            <div class="logo">
+                <a href="#" onclick="showHome();return false;">
+                    <img src="https://cdn.awsli.com.br/1608/1608652/arquivos/logo-mc-2026-branca.webp"
+                         alt="MC Embalagens BH"
+                         id="logo-img">
+                </a>
+                <span class="revendedor-badge" id="revendedorBadge">🏷️ Revendedor</span>
+            </div>
+
+            <!-- Busca fixa no topo (desktop) -->
+            <div class="search-container">
+                <input type="text" id="buscaTopo"
+                       placeholder="🔍 Buscar produtos..."
+                       onkeypress="if(event.key==='Enter'){buscarProdutoTopo()}">
+                <i class="fas fa-search search-icon" onclick="buscarProdutoTopo()"></i>
+            </div>
+
+            <div class="header-actions">
+                <span class="cliente-nome" id="clienteNomeHeader"></span>
+                <!-- Busca mobile (só ícone) -->
+                <button class="btn-search-mobile" onclick="buscarProdutoTopo()" aria-label="Buscar"
+                        style="display:none;" id="btnBuscaMobile">
+                    <i class="fas fa-search"></i>
+                </button>
+                <button class="btn-cart" onclick="abrirCarrinho()" aria-label="Carrinho">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="badge" id="cartBadgeTop">0</span>
+                </button>
+                <div class="user-dropdown">
+                    <button class="btn-login" onclick="toggleUserMenu()" aria-label="Login" id="btnUserMenu">
+                        <i class="fas fa-user"></i>
+                    </button>
+                    <div class="user-dropdown-content" id="userDropdown">
+                        <div class="dropdown-item login-item" onclick="abrirLogin()">
+                            <i class="fas fa-sign-in-alt"></i> Entrar / Cadastrar
+                        </div>
+                        <div class="dropdown-item" onclick="abrirDadosPessoais()" style="display:none;" data-item="dados">
+                            <i class="fas fa-user-circle"></i> Dados Pessoais
+                        </div>
+                        <div class="dropdown-item" onclick="abrirMeusPedidos()" style="display:none;" data-item="pedidos">
+                            <i class="fas fa-box"></i> Meus Pedidos
+                        </div>
+                        <div class="dropdown-item sair" onclick="sairConta()" style="display:none;" data-item="sair">
+                            <i class="fas fa-sign-out-alt"></i> Sair da Conta
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ============================================================ -->
+    <!-- MAIN CONTENT                                                 -->
+    <!-- ============================================================ -->
+    <main class="main-content">
+
+        <!-- Banner de bloqueio (só cliente comum/deslogado) -->
+        <div id="bloqueioBanner" class="bloqueio-banner" style="display:none;">
+            <h2>🔐 Área Exclusiva para Revendedores</h2>
+            <p>
+                Faça login para visualizar os preços exclusivos e condições especiais
+                para revendedores. Cadastre-se agora e tenha acesso a descontos especiais!
+            </p>
+            <div class="btn-group">
+                <button class="btn-entrar" onclick="abrirLogin()">
+                    <i class="fas fa-sign-in-alt"></i> Entrar
+                </button>
+                <button class="btn-cadastrar" onclick="abrirCadastro()">
+                    <i class="fas fa-user-plus"></i> Cadastrar
+                </button>
+                <button class="btn-regras" onclick="abrirModalRegras()">
+                    <i class="fas fa-file-alt"></i> Veja como comprar com preço de Revenda
+                </button>
+            </div>
+        </div>
+
+        <!-- Banner aguardando aprovação (CPF em análise) -->
+        <div id="aguardandoBanner" class="aguardando-banner" style="display:none;">
+            <h2>⏳ Aguardando Liberação</h2>
+            <p>
+                Seu cadastro está em análise. Em até 24 horas úteis você receberá
+                a confirmação por e-mail.
+            </p>
+            <p style="font-size:13px; margin-top:5px;">
+                <i class="fas fa-envelope"></i> Fique atento à sua caixa de entrada!
+            </p>
+            <a href="#" class="whatsapp-link" onclick="abrirWhatsAppAtendente(); return false;">
+                <i class="fab fa-whatsapp"></i> Dúvidas? Fale com nossa equipe
+            </a>
+        </div>
+
+        <!-- ===== CARROSSEL DE BANNERS (só na home) ===== -->
+        <section class="banner-carousel" id="bannerCarousel">
+            <div class="slides-wrapper" id="bannerSlides"></div>
+            <button class="arrow prev" onclick="mudarBanner(-1)" aria-label="Anterior">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <button class="arrow next" onclick="mudarBanner(1)" aria-label="Próximo">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+            <div class="controls" id="bannerDots"></div>
+        </section>
+
+        <!-- ===== CATEGORIAS ===== -->
+        <section class="categories-section" id="categoriesSection">
+            <h2 class="section-title">Nossas Categorias</h2>
+            <div class="categories-grid" id="categoriesGrid">
+                <div class="loading-overlay" id="loadingIndicator">
+                    <div class="spinner"></div>
+                    <p>🔄 Carregando produtos...</p>
+                    <span class="loading-sub">Aguarde um momento, estamos preparando tudo para você</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== VÍDEOS ===== -->
+        <section class="videos-section" id="videosSection">
+            <h2 class="section-title">📹 Tutoriais e Apresentações</h2>
+            <div class="videos-grid" id="videosGrid">
+                <div class="video-wrapper">
+                    <iframe src="https://www.youtube-nocookie.com/embed/caJcK4Ja-po?rel=0&modestbranding=1&playsinline=1"
+                            allowfullscreen loading="lazy"></iframe>
+                </div>
+                <div class="video-wrapper">
+                    <iframe src="https://www.youtube-nocookie.com/embed/pnSuGJEEsSE?rel=0&modestbranding=1&playsinline=1"
+                            allowfullscreen loading="lazy"></iframe>
+                </div>
+                <div class="video-wrapper">
+                    <iframe src="https://www.youtube-nocookie.com/embed/GgmS3TYyjA0?rel=0&modestbranding=1&playsinline=1"
+                            allowfullscreen loading="lazy"></iframe>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== PRODUTOS ===== -->
+        <section class="products-section" id="productsSection" style="display: none;">
+            <div class="products-header">
+                <button class="btn-back" onclick="voltarCategorias()">
+                    <i class="fas fa-arrow-left"></i> Voltar
+                </button>
+                <h3 id="categoryTitle">Produtos</h3>
+                <span style="margin-left:auto;font-size:14px;color:#666;" id="productCount"></span>
+            </div>
+            <div class="products-grid" id="productsGrid"></div>
+        </section>
+
+        <!-- ===== FOOTER (só na home) ===== -->
+        <footer class="footer-profissional" id="footerProfissional">
+            <div class="footer-grid">
+                <div>
+                    <h4><i class="fas fa-store"></i> MC Embalagens BH</h4>
+                    <p>Praça Santuário São Geraldo, 46-B<br>
+                    Bairro São Geraldo<br>
+                    Belo Horizonte - MG<br>
+                    CEP: 31050-650</p>
+                    <p style="margin-top:10px;"><strong>CNPJ:</strong> <span id="footerCnpj">00.000.000/0001-00</span></p>
+                </div>
+                <div>
+                    <h4><i class="fas fa-headset"></i> Atendimento</h4>
+                    <p><i class="fab fa-whatsapp" style="color:#25D366;"></i> (31) 98483-4383</p>
+                    <p><i class="fas fa-phone" style="color:#f39c12;"></i> (31) 3487-5905</p>
+                    <p><i class="fas fa-envelope" style="color:#f39c12;"></i> mcembalagensbh@gmail.com</p>
+                    <p style="margin-top:10px;">
+                        <strong>Horário:</strong><br>
+                        Seg–Sex: 08:00 às 18:00<br>
+                        Sábado: 08:00 às 12:00<br>
+                        Dom/Feriados: Fechado
+                    </p>
+                </div>
+                <div>
+                    <h4><i class="fas fa-link"></i> Links Rápidos</h4>
+                    <ul>
+                        <li><a href="politica-privacidade.html" target="_blank">Política de Privacidade</a></li>
+                        <li><a href="politica-troca.html" target="_blank">Trocas e Devoluções</a></li>
+                        <li><a href="termos-envio.html" target="_blank">Termos de Envio</a></li>
+                        <li><a href="sobre-nos.html" target="_blank">Sobre Nós</a></li>
+                        <li><a href="sobre-prazos.html" target="_blank">Sobre os Prazos</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4><i class="fas fa-credit-card"></i> Formas de Pagamento</h4>
+                    <div class="footer-pagamentos">
+                        <span><i class="fas fa-qrcode"></i> PIX</span>
+                        <span><i class="fas fa-credit-card"></i> Cartão</span>
+                        <span><i class="fas fa-barcode"></i> Boleto</span>
+                    </div>
+                    <h4 style="margin-top:18px;"><i class="fas fa-shield-alt"></i> Site Seguro</h4>
+                    <p>Compra protegida · Dados criptografados</p>
+                    <h4 style="margin-top:18px;"><i class="fas fa-share-alt"></i> Redes Sociais</h4>
+                    <div class="footer-social">
+                        <a href="https://instagram.com/mcembalagens.bh" target="_blank" aria-label="Instagram">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="https://wa.me/5531984834383" target="_blank" aria-label="WhatsApp">
+                            <i class="fab fa-whatsapp"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                © <span id="footerAno"></span> MC Embalagens BH — Todos os direitos reservados.
+            </div>
+        </footer>
+
+    </main>
+
+    <!-- ============================================================ -->
+    <!-- BOTTOM NAVIGATION                                            -->
+    <!-- ============================================================ -->
+    <nav class="bottom-nav">
+        <button class="nav-menu-toggle" onclick="abrirMenu()">
+            <i class="fas fa-bars"></i><span>Menu</span>
+        </button>
+        <button class="nav-item active" onclick="showHome()">
+            <i class="fas fa-home"></i><span>Início</span>
+        </button>
+        <button class="nav-item" onclick="abrirMeusPedidos()">
+            <i class="fas fa-box"></i><span>Pedidos</span>
+        </button>
+        <button class="nav-item" onclick="abrirAtendimento()">
+            <i class="fas fa-headset"></i><span>Atendimento</span>
+        </button>
+        <button class="nav-item" onclick="abrirWhatsApp()">
+            <i class="fab fa-whatsapp"></i><span>WhatsApp</span>
+        </button>
+    </nav>
+
+    <!-- ============================================================ -->
+    <!-- MENU LATERAL                                                 -->
+    <!-- ============================================================ -->
+    <div class="side-menu-overlay" id="sideMenuOverlay" onclick="fecharMenu()"></div>
+    <div class="side-menu" id="sideMenu">
+        <div class="side-menu-header">
+            <h2><i class="fas fa-bars" style="margin-right:10px;"></i>Menu</h2>
+            <button class="side-menu-close" onclick="fecharMenu()">&times;</button>
+        </div>
+        <a class="side-menu-item" onclick="fecharMenu();showHome();"><i class="fas fa-home"></i> Início</a>
+        <a class="side-menu-item" onclick="fecharMenu();abrirCarrinho();"><i class="fas fa-shopping-cart"></i> Meu Carrinho</a>
+        <a class="side-menu-item" onclick="fecharMenu();abrirMeusPedidos();"><i class="fas fa-box"></i> Meus Pedidos</a>
+        <a class="side-menu-item" onclick="fecharMenu();abrirAtendimento();"><i class="fas fa-headset"></i> Central de Atendimento</a>
+        <a class="side-menu-item" onclick="fecharMenu();abrirWhatsApp();"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+        <a class="side-menu-item" onclick="fecharMenu();abrirModalRegras();"><i class="fas fa-file-alt"></i> Regras de Compra</a>
+        <a class="side-menu-item" href="politica-troca.html" target="_blank"><i class="fas fa-exchange-alt"></i> Política de Troca</a>
+        <a class="side-menu-item" href="politica-privacidade.html" target="_blank"><i class="fas fa-shield-alt"></i> Política de Privacidade</a>
+        <a class="side-menu-item" href="termos-envio.html" target="_blank"><i class="fas fa-truck"></i> Termos de Envio</a>
+        <a class="side-menu-item" href="sobre-nos.html" target="_blank"><i class="fas fa-info-circle"></i> Sobre Nós</a>
+        <a class="side-menu-item" href="sobre-prazos.html" target="_blank"><i class="fas fa-clock"></i> Sobre os Prazos</a>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- MODAL PRODUTO                                                -->
+    <!-- ============================================================ -->
+    <div class="modal" id="productModal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="fecharModal('productModal')">&times;</span>
+            <div class="modal-body">
+                <div class="modal-carousel">
+                    <div class="carousel-container" id="carouselContainer"></div>
+                    <button class="carousel-btn prev" onclick="moverCarousel(-1)">❮</button>
+                    <button class="carousel-btn next" onclick="moverCarousel(1)">❯</button>
+                </div>
+                <div class="modal-info">
+                    <h3 id="modalProductName">Nome do Produto</h3>
+                    <div class="modal-codigo" id="modalProductCodigo"><span>Código: ---</span></div>
+                    <p class="description" id="modalProductDescription">Descrição do produto</p>
+                    <div class="modal-prices" id="modalPrices"></div>
+                    <div class="modal-specs" id="modalSpecs"></div>
+                    <div class="modal-actions">
+                        <button class="btn-close-modal" onclick="fecharModal('productModal')">
+                            <i class="fas fa-times"></i> Fechar Detalhes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- ZOOM IMAGEM                                                  -->
+    <!-- ============================================================ -->
+    <div class="zoom-modal" id="zoomModal" onclick="fecharZoom()">
+        <button class="zoom-close" onclick="fecharZoom()">&times;</button>
+        <img id="zoomImage" src="" alt="Ampliar imagem">
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- MODAL CARRINHO                                               -->
+    <!-- ============================================================ -->
+    <div class="modal" id="cartModal">
+        <div class="modal-content cart-modal">
+            <span class="modal-close" onclick="fecharModal('cartModal')">&times;</span>
+            <h2>🛒 Meu Carrinho</h2>
+            <div id="cartItems">
+                <p style="text-align:center;padding:30px;color:#999;">Seu carrinho está vazio</p>
+            </div>
+
+            <div class="frete-carrinho-container" id="freteCarrinhoContainer" style="display:none;">
+                <div class="frete-row">
+                    <input type="text" id="cepCarrinho" placeholder="Digite seu CEP (ex: 31050650)" maxlength="8" oninput="this.value=this.value.replace(/\D/g,'')">
+                    <button class="btn-calcular-frete" id="btnCalcularFreteCarrinho" onclick="calcularFreteCarrinho()">
+                        <i class="fas fa-truck"></i> Calcular Frete
+                    </button>
+                </div>
+                <div class="frete-erro" id="freteErroCarrinho"></div>
+                <div class="frete-carrinho-resultado" id="freteResultadoCarrinho"></div>
+            </div>
+
+            <div class="cart-total">
+                <h3>Total: <span id="cartTotal">R$ 0,00</span></h3>
+                <span class="total-unidades" id="totalUnidades">0 un</span>
+            </div>
+
+            <button onclick="fecharModal('cartModal')"
+                    style="background:#e0e0e0;color:#333;border:none;padding:12px;border-radius:8px;cursor:pointer;font-size:16px;font-weight:600;width:100%;margin-top:10px;">
+                <i class="fas fa-arrow-left"></i> Continuar Comprando
+            </button>
+            <button class="btn-checkout" onclick="abrirCheckout()">Finalizar Pedido</button>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- MODAL WHATSAPP                                               -->
+    <!-- ============================================================ -->
+    <div class="whatsapp-modal" id="whatsappModal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="fecharWhatsAppModal()">&times;</span>
+            <div class="whatsapp-icon"><i class="fab fa-whatsapp"></i></div>
+            <h2 style="margin-bottom:10px;">📱 Atendimento WhatsApp</h2>
+            <p style="color:#666;font-size:14px;margin-bottom:15px;">Nossa equipe está pronta para atender você!</p>
+            <div class="horarios">
+                <div><span class="dia">Segunda a Sexta:</span> 08:00 às 18:00</div>
+                <div><span class="dia">Sábado:</span> 08:00 às 12:00</div>
+                <div><span class="dia">Domingo e Feriados:</span> Fechado</div>
+                <div style="margin-top:10px;padding-top:10px;border-top:1px solid #eee;color:#999;font-size:12px;">
+                    <i class="fas fa-clock"></i> Fora do horário, envie sua mensagem que responderemos assim que possível.
+                </div>
+            </div>
+            <button class="btn-whatsapp-go" onclick="irParaWhatsApp()">
+                <i class="fab fa-whatsapp"></i> Ir para WhatsApp
+            </button>
+            <button class="btn-fechar-whatsapp" onclick="fecharWhatsAppModal()">Fechar</button>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- MODAL LOGIN / CADASTRO                                       -->
+    <!-- ============================================================ -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="fecharModal('loginModal')">&times;</span>
+            <h2 style="margin-bottom:5px;">🔐 Área do Revendedor</h2>
+            <p style="color:#888;font-size:14px;margin-bottom:20px;">Acesse sua conta para finalizar pedidos</p>
+
+            <div class="login-tabs">
+                <div class="login-tab active" data-tab="login" onclick="switchLoginTab('login')">
+                    <i class="fas fa-sign-in-alt"></i> Entrar
+                </div>
+                <div class="login-tab" data-tab="cadastro" onclick="switchLoginTab('cadastro')">
+                    <i class="fas fa-user-plus"></i> Cadastrar
+                </div>
+            </div>
+
+            <!-- PAINEL LOGIN -->
+            <div class="login-panel active" id="panelLogin">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="loginEmailLogin" placeholder="seu@email.com">
+                </div>
+                <div class="form-group">
+                    <label>Senha</label>
+                    <input type="password" id="loginSenhaLogin" placeholder="••••••"
+                           onkeypress="if(event.key==='Enter'){fazerLogin()}">
+                </div>
+                <button class="btn-login-action" onclick="fazerLogin()">
+                    <i class="fas fa-sign-in-alt"></i> Entrar
+                </button>
+                <div id="loginMessage" class="login-message"></div>
+            </div>
+
+            <!-- PAINEL CADASTRO -->
+            <div class="login-panel" id="panelCadastro">
+                <div class="form-group">
+                    <label>Tipo de Pessoa</label>
+                    <select id="cadastroTipoPessoa">
+                        <option value="JURIDICA">Pessoa Jurídica (CNPJ)</option>
+                        <option value="FISICA">Pessoa Física (CPF)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Nome / Razão Social *</label>
+                    <input type="text" id="cadastroNome" placeholder="Nome completo ou Razão Social">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>CPF / CNPJ *</label>
+                        <input type="text" id="cadastroDocumento"
+                               placeholder="00000000000 (CPF) ou 00000000000000 (CNPJ)"
+                               oninput="this.value=this.value.replace(/\D/g,''); validarDocumentoEmTempoReal(this.value);">
+                    </div>
+                    <div class="form-group" id="grupoInscricaoEstadual" style="display:none;">
+                        <label>Inscrição Estadual</label>
+                        <input type="text" id="cadastroInscricaoEstadual" placeholder="IE">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Email *</label>
+                    <input type="email" id="cadastroEmail" placeholder="seu@email.com">
+                </div>
+                <div class="form-group">
+                    <label>Telefone *</label>
+                    <input type="text" id="cadastroTelefone" placeholder="31999999999"
+                           oninput="this.value=this.value.replace(/\D/g,'')">
+                </div>
+                <div class="form-group">
+                    <label>Senha (mínimo 6 caracteres) *</label>
+                    <input type="password" id="cadastroSenha" placeholder="••••••" minlength="6">
+                </div>
+
+                <div style="border-top:2px solid #eee;padding-top:15px;margin-top:10px;">
+                    <h4 style="margin-bottom:10px;color:var(--primary-dark);">📍 Endereço</h4>
+                    <div class="form-group">
+                        <label>CEP *</label>
+                        <input type="text" id="cadastroCep" placeholder="00000000"
+                               oninput="this.value=this.value.replace(/\D/g,'')">
+                    </div>
+                    <div class="form-group">
+                        <label>Endereço *</label>
+                        <input type="text" id="cadastroEndereco" placeholder="Rua, Av...">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Número *</label>
+                            <input type="text" id="cadastroNumero" placeholder="123">
+                        </div>
+                        <div class="form-group">
+                            <label>Complemento</label>
+                            <input type="text" id="cadastroComplemento" placeholder="Apto, Bloco...">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Bairro *</label>
+                            <input type="text" id="cadastroBairro" placeholder="Bairro">
+                        </div>
+                        <div class="form-group">
+                            <label>Cidade *</label>
+                            <input type="text" id="cadastroCidade" placeholder="Cidade">
+                        </div>
+                        <div class="form-group">
+                            <label>UF *</label>
+                            <select id="cadastroUf">
+                                <option value="">UF</option>
+                                <option value="AC">AC</option><option value="AL">AL</option><option value="AP">AP</option>
+                                <option value="AM">AM</option><option value="BA">BA</option><option value="CE">CE</option>
+                                <option value="DF">DF</option><option value="ES">ES</option><option value="GO">GO</option>
+                                <option value="MA">MA</option><option value="MT">MT</option><option value="MS">MS</option>
+                                <option value="MG">MG</option><option value="PA">PA</option><option value="PB">PB</option>
+                                <option value="PR">PR</option><option value="PE">PE</option><option value="PI">PI</option>
+                                <option value="RJ">RJ</option><option value="RN">RN</option><option value="RS">RS</option>
+                                <option value="RO">RO</option><option value="RR">RR</option><option value="SC">SC</option>
+                                <option value="SP">SP</option><option value="SE">SE</option><option value="TO">TO</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background:#ffedd5;padding:12px 15px;border-radius:8px;margin:10px 0;border-left:4px solid #c2410c;">
+                    <p style="font-size:13px;color:#7c2d12;margin:0;">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Como funciona o cadastro de revendedor?</strong><br>
+                        <strong>CNPJ:</strong> acesso liberado imediatamente com preços exclusivos.<br>
+                        <strong>CPF:</strong> solicitação vai para análise (até 24h úteis).
+                    </p>
+                </div>
+
+                <button class="btn-login-action" onclick="fazerCadastro()">
+                    <i class="fas fa-user-plus"></i> Cadastrar
+                </button>
+                <div id="cadastroMessage" class="login-message"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- MODAL DADOS PESSOAIS                                         -->
+    <!-- ============================================================ -->
+    <div class="modal" id="dadosPessoaisModal">
+        <div class="modal-content" style="max-width:600px;">
+            <span class="modal-close" onclick="fecharModal('dadosPessoaisModal')">&times;</span>
+            <h2 style="margin-bottom:20px;color:var(--primary-dark);">👤 Meus Dados</h2>
+            <div id="dadosPessoaisForm">
+                <div class="form-group">
+                    <label>Tipo de Pessoa</label>
+                    <select id="dadosTipoPessoa" disabled
+                            style="width:100%;padding:10px;border:2px solid #ddd;border-radius:8px;background:#f5f5f5;">
+                        <option value="FISICA">Pessoa Física</option>
+                        <option value="JURIDICA">Pessoa Jurídica</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Nome / Razão Social *</label>
+                    <input type="text" id="dadosNome"
+                           style="width:100%;padding:10px;border:2px solid #ddd;border-radius:8px;">
+                </div>
+                <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                    <div class="form-group">
+                        <label>CPF / CNPJ</label>
+                        <input type="text" id="dadosDocumento" disabled
+                               style="width:100%;padding:10px;border:2px solid #ddd;border-radius:8px;background:#f5f5f5;">
+                    </div>
+                    <div class="form-group" id="dadosGrupoInscricaoEstadual" style="display:none;">
+                        <label>Inscrição Estadual</label>
+                        <input type="text" id="dadosInscricaoEstadual"
+                               style="width:100%;padding:10px;border:2px solid #ddd;border-radius:8px;">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Email *</label>
+                    <input type="email" id="dadosEmail" disabled
+                           style="width:100%;padding:10px;border:2px solid #ddd;border-radius:8px;background:#f5f5f5;">
+                </div>
+                <div class="form-group">
+                    <label>Telefone *</label>
+                    <input type="text" id="dadosTelefone"
+                           style="width:100%;padding:10px;border:2px solid #ddd;border-radius:8px;"
+                           oninput="this.value=this.value.replace(/\D/g,'')">
+                </div>
+                <div class="form-group">
+                    <label>Nova Senha (deixe em branco para manter)</label>
+                    <input type="password" id="dadosNovaSenha" placeholder="••••••" minlength="6"
+                           style="width:100%;padding:10px;border:2px solid #ddd;border-radius:8px;">
+                </div>
+                <div style="border-top:2px solid #eee;padding-top:15px;margin-top:15px;">
+                    <h4 style="margin-bottom:10px;color:var(--primary-dark);">📍 Endereço</h4>
+                    <div class="form-group">
+                        <label>CEP *</label>
+                        <input type="text" id="dadosCep"
+                               style="width:100%;padding:10px;border:2px solid #ddd;border-radius:8px;"
+                               oninput="this.value=this.value.replace(/\D/g,'')">
+                    </div>
+                    <div class="form-group">
+                        <label>Endereço *</label>
+                        <input type="text" id="dadosEndereco"
+                               style="width:100%;padding:10px;border:2px solid #ddd;border-radius:8px;">
+                    </div>
+                    <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                        <div class="form-group">
+                            <label>Número *</label>
+                            <input type="text" id="dadosNumero"
+                                   style="width:100%;padding:10px;border:2px solid #ddd;border-radius:8px;">
+                        </div>
+                        <div class="form-group">
+                            <label>Complemento</label>
+                            <input type="text" id="dadosComplemento"
+                                   style="width:100%;padding:10px;border:2px solid #ddd;border-radius:8px;">
+                        </div>
+                    </div>
+                    <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+                        <div class="form-group">
+                            <label>Bairro *</label>
+                            <input type="text" id="dadosBairro"
+                                   style="width:100%;padding:10px;border:2px solid #ddd;border-radius:8px;">
+                        </div>
+                        <div class="form-group">
+                            <label>Cidade *</label>
+                            <input type="text" id="dadosCidade"
+                                   style="width:100%;padding:10px;border:2px solid #ddd;border-radius:8px;">
+                        </div>
+                        <div class="form-group">
+                            <label>UF *</label>
+                            <select id="dadosUf"
+                                    style="width:100%;padding:10px;border:2px solid #ddd;border-radius:8px;">
+                                <option value="">UF</option>
+                                <option value="AC">AC</option><option value="AL">AL</option><option value="AP">AP</option>
+                                <option value="AM">AM</option><option value="BA">BA</option><option value="CE">CE</option>
+                                <option value="DF">DF</option><option value="ES">ES</option><option value="GO">GO</option>
+                                <option value="MA">MA</option><option value="MT">MT</option><option value="MS">MS</option>
+                                <option value="MG">MG</option><option value="PA">PA</option><option value="PB">PB</option>
+                                <option value="PR">PR</option><option value="PE">PE</option><option value="PI">PI</option>
+                                <option value="RJ">RJ</option><option value="RN">RN</option><option value="RS">RS</option>
+                                <option value="RO">RO</option><option value="RR">RR</option><option value="SC">SC</option>
+                                <option value="SP">SP</option><option value="SE">SE</option><option value="TO">TO</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div style="display:flex;gap:10px;margin-top:20px;">
+                    <button onclick="salvarDadosPessoais()"
+                            style="flex:1;background:var(--success);color:white;border:none;padding:14px;border-radius:8px;cursor:pointer;font-weight:600;font-size:16px;">
+                        <i class="fas fa-save"></i> Salvar Alterações
+                    </button>
+                    <button onclick="fecharModal('dadosPessoaisModal')"
+                            style="flex:1;background:#e0e0e0;color:#333;border:none;padding:14px;border-radius:8px;cursor:pointer;font-weight:600;font-size:16px;">
+                        Cancelar
+                    </button>
+                </div>
+                <div id="dadosPessoaisMessage" class="login-message" style="margin-top:10px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- CHECKOUT - PÁGINA ÚNICA                                      -->
+    <!-- ============================================================ -->
+    <div id="checkoutPage">
+        <div style="background:white;padding:15px 25px;box-shadow:0 2px 10px rgba(0,0,0,0.08);position:sticky;top:0;z-index:10;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+            <div style="display:flex;align-items:center;gap:15px;">
+                <button onclick="fecharCheckout()"
+                        style="background:transparent;border:none;font-size:24px;cursor:pointer;color:#666;padding:5px 10px;">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h2 style="font-size:20px;color:var(--primary-dark);margin:0;">Finalizar Pedido</h2>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;font-size:13px;color:#888;">
+                <span id="stepIndicator1" style="color:var(--primary-blue);font-weight:600;">① Identificação</span>
+                <span style="color:#ccc;">→</span>
+                <span id="stepIndicator2" style="color:#ccc;">② Frete</span>
+                <span style="color:#ccc;">→</span>
+                <span id="stepIndicator3" style="color:#ccc;">③ Pagamento</span>
+            </div>
+        </div>
+
+        <div id="checkoutLoading" style="display:none;text-align:center;padding:80px 20px;">
+            <div style="width:50px;height:50px;border:4px solid #e0e0e0;border-top:4px solid var(--primary-blue);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px;"></div>
+            <p style="color:#666;font-size:16px;">Processando seu pedido...</p>
+            <p style="color:#999;font-size:13px;">Aguarde um momento</p>
+        </div>
+
+        <div id="checkoutContent" style="max-width:1200px;margin:0 auto;padding:20px;display:flex;flex-wrap:wrap;gap:30px;min-height:calc(100vh - 80px);">
+
+            <div style="flex:1.5;min-width:300px;">
+
+                <div style="background:white;border-radius:12px;padding:20px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:15px;">
+                        <span style="background:var(--primary-blue);color:white;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;">1</span>
+                        <h3 style="color:var(--primary-dark);font-size:17px;margin:0;">Identificação</h3>
+                        <span style="font-size:12px;color:#999;margin-left:auto;" id="step1Status">⏳ Pendente</span>
+                    </div>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                        <input type="email" id="emailBusca"
+                               placeholder="Digite seu email para prosseguir"
+                               style="flex:1;min-width:200px;padding:12px 14px;border:2px solid #ddd;border-radius:8px;font-size:15px;transition:all 0.3s;">
+                        <button id="btnBuscarCliente" onclick="buscarClientePorEmailCheckout()"
+                                style="background:var(--primary-blue);color:white;border:none;padding:12px 24px;border-radius:8px;cursor:pointer;font-weight:600;font-size:15px;white-space:nowrap;">
+                            <i class="fas fa-search"></i> Buscar
+                        </button>
+                    </div>
+                    <div id="erroBusca" style="color:#e74c3c;font-size:14px;margin-top:8px;display:none;"></div>
+                    <div id="loadingBusca" style="display:none;text-align:center;padding:10px;color:#666;">
+                        <i class="fas fa-spinner fa-spin"></i> Buscando dados...
+                    </div>
+
+                    <div id="dadosClienteEncontrado"
+                         style="display:none;background:#e8f5e9;border-radius:8px;padding:15px;margin-top:12px;border-left:4px solid #27ae60;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:4px;">
+                            <span style="font-weight:600;color:#27ae60;">
+                                <i class="fas fa-check-circle"></i> Cliente encontrado!
+                            </span>
+                            <span style="font-size:12px;color:#888;" id="emailConfirmado"></span>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 15px;font-size:14px;">
+                            <span style="color:#555;">Nome:</span>
+                            <span style="font-weight:600;color:#1a1a1a;" id="clienteNomeEncontrado">---</span>
+                            <span style="color:#555;">Telefone:</span>
+                            <span style="font-weight:600;color:var(--primary-blue);" id="clienteTelefoneEncontrado">---</span>
+                        </div>
+                        <div style="margin-top:12px;padding-top:12px;border-top:1px solid #c8e6c9;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:4px;">
+                                <span style="font-weight:600;color:var(--primary-dark);font-size:14px;">📍 Endereço de entrega:</span>
+                                <button onclick="fecharCheckout();setTimeout(abrirDadosPessoais,300);"
+                                        style="background:transparent;border:none;color:var(--primary-blue);cursor:pointer;font-size:12px;text-decoration:underline;">
+                                    <i class="fas fa-edit"></i> Editar
+                                </button>
+                            </div>
+                            <div id="enderecosLista"></div>
+                        </div>
+                    </div>
+
+                    <div id="areaNovoCadastro"
+                         style="display:none;background:#fff3cd;border-radius:8px;padding:15px;margin-top:12px;border-left:4px solid #f39c12;">
+                        <p style="font-weight:600;color:#856404;margin:0 0 8px 0;">
+                            <i class="fas fa-exclamation-triangle"></i> Email não cadastrado
+                        </p>
+                        <p style="font-size:14px;color:#856404;margin-bottom:10px;">
+                            Para finalizar o pedido, você precisa se cadastrar.
+                        </p>
+                        <button onclick="fecharCheckout();setTimeout(abrirCadastroDiretoCheckout,300);"
+                                style="background:var(--primary-blue);color:white;border:none;padding:12px;border-radius:8px;cursor:pointer;font-weight:600;width:100%;">
+                            <i class="fas fa-user-plus"></i> Fazer Cadastro
+                        </button>
+                    </div>
+                </div>
+
+                <div id="checkoutStep2"
+                     style="display:none;background:white;border-radius:12px;padding:20px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:15px;">
+                        <span style="background:var(--primary-blue);color:white;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;">2</span>
+                        <h3 style="color:var(--primary-dark);font-size:17px;margin:0;">Opções de Frete</h3>
+                        <span style="font-size:12px;color:#999;margin-left:auto;" id="step2Status">⏳ Aguardando</span>
+                    </div>
+                    <div style="font-size:13px;color:#888;margin-bottom:10px;">
+                        <i class="fas fa-map-pin"></i> CEP: <span id="checkoutCepDisplay">_____-___</span>
+                    </div>
+                    <div id="freteErroCheckout" style="color:#e74c3c;font-size:14px;display:none;margin-bottom:10px;"></div>
+                    <div id="freteOpcoesContainer">
+                        <div style="text-align:center;padding:20px;color:#999;">
+                            <i class="fas fa-spinner fa-spin"></i> Carregando opções de frete...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="flex:1;min-width:280px;">
+
+                <div style="background:white;border-radius:12px;padding:20px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+                    <h3 style="color:var(--primary-dark);font-size:16px;margin:0 0 12px 0;">📋 Resumo do Pedido</h3>
+                    <div id="checkoutResumoProdutos" style="font-size:13px;color:#666;max-height:180px;overflow-y:auto;"></div>
+                    <div style="border-top:1px solid #eee;padding-top:10px;margin-top:8px;">
+                        <div style="display:flex;justify-content:space-between;font-weight:600;font-size:14px;">
+                            <span>Subtotal</span>
+                            <span id="checkoutSubtotal">R$ 0,00</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;font-size:13px;color:#888;">
+                            <span>Frete</span>
+                            <span id="checkoutFreteResumo">--</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;font-size:13px;color:#888;border-bottom:1px solid #eee;padding-bottom:6px;margin-bottom:6px;">
+                            <span>Prazo de entrega</span>
+                            <span id="checkoutPrazoResumo">--</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;font-size:18px;font-weight:700;color:var(--primary-blue);">
+                            <span>TOTAL</span>
+                            <span id="checkoutTotalResumo">R$ 0,00</span>
+                        </div>
+                        <div style="font-size:11px;color:#999;text-align:right;" id="checkoutPrazoDetalhe"></div>
+                    </div>
+                </div>
+
+                <div id="checkoutStep3"
+                     style="background:white;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+                        <span style="background:var(--primary-blue);color:white;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;">3</span>
+                        <h3 style="color:var(--primary-dark);font-size:17px;margin:0;">Pagamento</h3>
+                        <span style="font-size:12px;color:#999;margin-left:auto;" id="step3Status">🔒 Bloqueado</span>
+                    </div>
+
+                    <div class="pagamento-opcao-checkout"
+                         onclick="selecionarPagamentoCheckout(this, 'PIX')"
+                         style="background:white;border:2px solid #ddd;border-radius:8px;padding:12px 15px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all 0.3s;opacity:0.5;pointer-events:none;">
+                        <div style="font-size:24px;color:var(--primary-blue);width:36px;text-align:center;">
+                            <i class="fas fa-qrcode"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight:600;font-size:14px;color:#0d1b2a;">PIX - 3% de DESCONTO</div>
+                            <div style="font-size:11px;color:#888;">Pagamento instantâneo com desconto</div>
+                        </div>
+                    </div>
+
+                    <div class="pagamento-opcao-checkout"
+                         onclick="selecionarPagamentoCheckout(this, 'Cartão')"
+                         style="background:white;border:2px solid #ddd;border-radius:8px;padding:12px 15px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all 0.3s;opacity:0.5;pointer-events:none;">
+                        <div style="font-size:24px;color:var(--primary-blue);width:36px;text-align:center;">
+                            <i class="fas fa-credit-card"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight:600;font-size:14px;color:#0d1b2a;">Cartão de Crédito</div>
+                            <div style="font-size:11px;color:#888;">Visa, Mastercard, Elo, Amex</div>
+                        </div>
+                    </div>
+
+                    <div class="pagamento-opcao-checkout"
+                         onclick="selecionarPagamentoCheckout(this, 'Boleto')"
+                         style="background:white;border:2px solid #ddd;border-radius:8px;padding:12px 15px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all 0.3s;opacity:0.5;pointer-events:none;">
+                        <div style="font-size:24px;color:var(--primary-blue);width:36px;text-align:center;">
+                            <i class="fas fa-barcode"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight:600;font-size:14px;color:#0d1b2a;">Boleto Pré-Pago</div>
+                            <div style="font-size:11px;color:#888;">Boleto bancário tradicional</div>
+                        </div>
+                    </div>
+
+                    <div id="opcoesBoletoFaturado"
+                         style="display:none;margin-top:15px;padding:15px;background:#f8f9fa;border-radius:8px;border:1px solid #e0e0e0;opacity:0.5;pointer-events:none;">
+                        <h4 style="color:var(--primary-dark);margin-bottom:10px;font-size:15px;">
+                            📋 Boleto Faturado (liberado pelo gestor)
+                        </h4>
+                        <div id="opcoesBoletoContainer"></div>
+                    </div>
+
+                    <div id="checkoutStep3Status"
+                         style="font-size:12px;color:#999;text-align:center;margin-top:10px;">
+                        🔒 Selecione o frete para liberar
+                    </div>
+
+                    <div id="pedidoMinimoAviso" class="pedido-minimo-aviso"></div>
+
+                    <button id="btnFinalizarPedido" onclick="finalizarPedidoCheckout()" disabled
+                            style="background:#27ae60;color:white;border:none;padding:14px;border-radius:8px;cursor:pointer;font-size:17px;font-weight:700;width:100%;margin-top:12px;transition:all 0.3s;opacity:0.5;">
+                        <i class="fas fa-check-circle"></i> Finalizar Pedido
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- MODAL CONFIRMAÇÃO DE PEDIDO                                  -->
+    <!-- ============================================================ -->
+    <div class="modal confirmacao-modal" id="confirmacaoModal">
+        <div class="modal-content" style="max-width:500px;">
+            <span class="modal-close" onclick="fecharModal('confirmacaoModal')">&times;</span>
+            <div class="icone-grande"><i class="fas fa-check-circle"></i></div>
+            <h2 style="color:var(--success);text-align:center;">✅ Pedido Realizado!</h2>
+            <p style="color:#666;margin:10px 0;text-align:center;" id="confirmacaoMensagem">
+                Clique no botão abaixo para pagar com segurança.
+            </p>
+            <div class="numero-pedido" id="confirmacaoNumeroPedido">#0000</div>
+            <div style="margin-top:20px;display:flex;flex-direction:column;gap:10px;">
+                <button id="btnFinalizarPagamento" class="btn-checkout"
+                        style="background:#25D366;display:none;border:none;padding:14px;border-radius:8px;cursor:pointer;font-weight:600;font-size:16px;color:white;">
+                    <i class="fas fa-credit-card"></i> Ir para o Pagamento
+                </button>
+                <button onclick="fecharModal('confirmacaoModal')"
+                        style="background:#e0e0e0;color:#333;border:none;padding:12px;border-radius:8px;cursor:pointer;font-weight:600;font-size:15px;">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- MODAL PIX MANUAL (QR CODE + COPIA E COLA)                    -->
+    <!-- ============================================================ -->
+    <div class="modal" id="pixManualModal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="fecharModal('pixManualModal')">&times;</span>
+            <div style="font-size:48px;color:#25D366;margin-bottom:10px;">
+                <i class="fas fa-qrcode"></i>
+            </div>
+            <h2 style="color:var(--primary-dark);margin-bottom:5px;">Pague com PIX</h2>
+            <p style="color:#888;font-size:14px;margin-bottom:15px;">
+                Escaneie o QR Code ou copie o código abaixo
+            </p>
+            <div style="font-size:24px;font-weight:700;color:var(--primary-blue);margin:10px 0;">
+                R$ <span id="pixManualTotal">0,00</span>
+            </div>
+            <div style="font-size:14px;color:#888;margin-bottom:15px;">
+                Pedido #<span id="pixManualPedido">---</span>
+            </div>
+            <div id="pixQrCodeContainer" style="text-align:center;margin:15px 0;">
+                <div id="pixQrCode"
+                     style="display:inline-block;background:white;padding:10px;border-radius:12px;border:2px solid #e8ecf0;min-width:200px;min-height:200px;">
+                    <div style="width:200px;height:200px;display:flex;align-items:center;justify-content:center;color:#999;font-size:13px;">
+                        Gerando QR Code...
+                    </div>
+                </div>
+            </div>
+            <div style="background:#f8f9fa;border-radius:10px;padding:10px;border:1px solid #e8ecf0;margin:10px 0;">
+                <div style="font-size:11px;color:#888;">Chave PIX</div>
+                <div id="pixManualChave"
+                     style="font-size:16px;font-weight:700;color:var(--primary-dark);font-family:monospace;">
+                    mcembalagensbh@gmail.com
+                </div>
+            </div>
+            <div style="background:#f8f9fa;border-radius:10px;padding:12px;margin:10px 0;border:1px solid #e8ecf0;text-align:left;">
+                <div style="font-size:12px;color:#888;margin-bottom:4px;">📋 Código Copia e Cola</div>
+                <div id="pixManualCopiaCola"
+                     style="word-break:break-all;font-size:11px;color:#333;font-family:monospace;max-height:80px;overflow-y:auto;background:white;padding:8px;border-radius:6px;"></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px;margin-top:15px;">
+                <button onclick="copiarPixManual()"
+                        style="background:#25D366;color:white;border:none;padding:16px 20px;border-radius:10px;cursor:pointer;font-weight:700;font-size:18px;width:100%;">
+                    📋 Copiar Código PIX
+                </button>
+                <button onclick="fecharModal('pixManualModal')"
+                        style="background:transparent;color:#888;border:none;padding:8px;cursor:pointer;font-size:13px;width:100%;">
+                    Fechar
+                </button>
+            </div>
+            <div style="margin-top:15px;padding:12px;background:#fff3cd;border-radius:8px;border-left:4px solid #f39c12;font-size:13px;color:#856404;text-align:left;">
+                ⏱️ O QR Code expira em 60 minutos.
+                <br>
+                💡 Após o pagamento, seu pedido será confirmado automaticamente em alguns minutos.
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- MODAL DE APROVAÇÃO REVENDEDOR (BOAS-VINDAS)                  -->
+    <!-- ============================================================ -->
+    <div class="modal" id="modalAprovacaoRevendedor">
+        <div class="modal-content">
+            <span class="modal-close" onclick="fecharModalAprovacaoRevendedor()">&times;</span>
+
+            <div style="font-size:72px;color:#27ae60;margin:10px 0 15px;animation:pulse 1.5s infinite;">
+                🎉
+            </div>
+
+            <h2 style="color:var(--primary-dark);margin-bottom:10px;font-size:24px;text-align:center;">
+                Parabéns!
+            </h2>
+            <p style="font-size:16px;color:#333;font-weight:600;margin-bottom:20px;text-align:center;">
+                Você agora é um <span style="color:#27ae60;">Revendedor MC Embalagens</span>
+            </p>
+
+            <div style="background:#e8f5e9;border-radius:8px;padding:20px;text-align:left;margin-bottom:20px;">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:14px;color:#155724;font-weight:600;">
+                    <i class="fas fa-check-circle" style="color:#27ae60;font-size:18px;"></i> Desconto de 10% em todos os produtos
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:14px;color:#155724;font-weight:600;">
+                    <i class="fas fa-check-circle" style="color:#27ae60;font-size:18px;"></i> Desconto extra de 3% no PIX
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:14px;color:#155724;font-weight:600;">
+                    <i class="fas fa-check-circle" style="color:#27ae60;font-size:18px;"></i> Boleto faturado exclusivo
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;font-size:14px;color:#155724;font-weight:600;">
+                    <i class="fas fa-check-circle" style="color:#27ae60;font-size:18px;"></i> Frete para todo o Brasil
+                </div>
+            </div>
+
+            <p style="font-size:14px;color:#666;margin-bottom:20px;text-align:center;">
+                Seu acesso já está liberado.<br>Você já pode comprar com preços exclusivos!
+            </p>
+
+            <button onclick="fecharModalAprovacaoRevendedor()"
+                    style="background:#27ae60;color:white;border:none;padding:16px 20px;border-radius:10px;cursor:pointer;font-weight:700;font-size:18px;width:100%;transition:all 0.3s;box-shadow:0 4px 15px rgba(39,174,96,0.3);">
+                <i class="fas fa-shopping-cart"></i> Começar a Comprar
+            </button>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- MODAL REGRAS DE COMPRA                                       -->
+    <!-- ============================================================ -->
+    <div class="modal regras-modal" id="regrasModal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="fecharModal('regrasModal')">&times;</span>
+            <h2><i class="fas fa-file-alt"></i> Regras para Compras - Revendedor</h2>
+
+            <div class="regra-item">
+                <div class="regra-icon"><i class="fas fa-credit-card"></i></div>
+                <div class="regra-texto">
+                    <strong>Pagamentos nas 3 primeiras compras:</strong> Somente à vista.
+                </div>
+            </div>
+            <div class="regra-item">
+                <div class="regra-icon"><i class="fas fa-file-invoice"></i></div>
+                <div class="regra-texto">
+                    <strong>A partir da 4ª compra:</strong> Pode solicitar <strong>Faturamento</strong> no molde:
+                    <br>
+                    <span style="display:inline-block;background:#fff8e1;padding:4px 12px;border-radius:6px;margin-top:4px;font-size:13px;">
+                        📋 50% à vista + 50% para 7 dias
+                    </span>
+                </div>
+            </div>
+            <div class="regra-item">
+                <div class="regra-icon"><i class="fas fa-star"></i></div>
+                <div class="regra-texto">
+                    <strong>A partir da 8ª compra:</strong> Pode solicitar <strong>Faturamento</strong> no molde:
+                    <br>
+                    <span style="display:inline-block;background:#fff8e1;padding:4px 12px;border-radius:6px;margin-top:4px;font-size:13px;">
+                        📋 50% à vista + 50% para 30 dias
+                    </span>
+                </div>
+            </div>
+            <div class="regra-item">
+                <div class="regra-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                <div class="regra-texto">
+                    <strong>Não trabalhamos com faturamentos de 100% das compras</strong>, por serem produtos produzidos sob demanda.
+                </div>
+            </div>
+            <div class="regra-item">
+                <div class="regra-icon"><i class="fas fa-truck"></i></div>
+                <div class="regra-texto">
+                    <strong>Frete CIF</strong> para todo o Brasil. Calcule no carrinho ou checkout.
+                </div>
+            </div>
+            <div class="regra-item">
+                <div class="regra-icon"><i class="fas fa-shopping-cart"></i></div>
+                <div class="regra-texto">
+                    <strong>Pedido mínimo para compra de revenda:</strong> <span class="destaque">R$ 400,00</span>
+                </div>
+            </div>
+            <div class="regra-item">
+                <div class="regra-icon"><i class="fas fa-store"></i></div>
+                <div class="regra-texto">
+                    <strong>Retiradas na loja</strong> devem ser agendadas para produção/separação.
+                </div>
+            </div>
+            <div class="regra-item">
+                <div class="regra-icon"><i class="fas fa-boxes"></i></div>
+                <div class="regra-texto">
+                    <strong>Vendas somente nas quantidades predefinidas no site:</strong>
+                    <br>
+                    <span style="display:inline-block;background:#e8f5e9;padding:4px 12px;border-radius:6px;margin-top:4px;font-size:13px;">
+                        📦 Pacotes de 10un, 50un, 100un etc. <strong>Não fracionamos</strong>.
+                    </span>
+                </div>
+            </div>
+            <div class="regra-item" style="border-bottom: none;">
+                <div class="regra-icon"><i class="fas fa-headset"></i></div>
+                <div class="regra-texto">
+                    <strong>Em caso de dúvidas, nossa equipe está à disposição.</strong>
+                    <br>
+                    <button onclick="fecharModal('regrasModal');setTimeout(abrirWhatsApp,300);"
+                            style="margin-top:8px;background:#25D366;color:white;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-weight:600;">
+                        <i class="fab fa-whatsapp"></i> Falar com Atendente
+                    </button>
+                </div>
+            </div>
+            <div class="regra-sub">
+                <i class="fas fa-info-circle"></i>
+                As regras de faturamento são aplicadas mediante solicitação e analisadas conforme histórico de compras.
+            </div>
+
+            <div style="display:flex;gap:10px;margin-top:15px;flex-wrap:wrap;">
+                <button onclick="copiarRegrasWhatsApp()"
+                        style="flex:1;min-width:150px;padding:12px;background:#25D366;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px;">
+                    <i class="fas fa-copy"></i> Copiar Regras
+                </button>
+                <button onclick="fecharModal('regrasModal')"
+                        style="flex:1;min-width:150px;padding:12px;background:var(--primary-blue);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:15px;">
+                    <i class="fas fa-times"></i> Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- SCRIPT PRINCIPAL — PARTES 4/7 a 7/7                          -->
+    <!-- (será adicionado nas próximas etapas)                        -->
+    <!-- ============================================================ -->
 
 <script>
 // ============================================================
