@@ -2190,58 +2190,54 @@
     .bloqueio-banner .btn-group button { width: 100%; justify-content: center; }
 }
  /* ===== BOTÃO REVENDEDOR DISCRETO ===== */
-/* ===== BOTÃO REVENDEDOR DISCRETO E MODERNO ===== */
+/* ===== BOTÃO REVENDEDOR DISCRETO (CORREÇÃO DEFINITIVA) ===== */
 .btn-revendedor-header {
-    background: #f39c12;
+    background: var(--orange-accent);
     color: white;
     border: none;
-    border-radius: 20px;
-    padding: 0 16px;
+    border-radius: 6px;
+    padding: 8px 16px;
     height: 38px;
     font-weight: 700;
     font-size: 13px;
     cursor: pointer;
-    display: inline-flex;
+    display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
     transition: all 0.3s ease;
     white-space: nowrap;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     flex-shrink: 0;
 }
 .btn-revendedor-header:hover {
-    background: #f57c00;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    background: var(--orange-top);
+    transform: scale(1.02);
 }
 .btn-revendedor-header i {
-    font-size: 15px;
-    margin: 0;
+    font-size: 14px;
 }
 
-/* Ajuste para o botão não montar no carrinho no PC */
+/* Ajuste do header para não esmagar os botões */
 .header-actions {
     display: flex;
     align-items: center;
-    gap: 10px; /* Espaçamento igual entre todos os botões */
+    gap: 10px;
+    flex-shrink: 0;
 }
 
+/* No celular, vira um botão mais compacto sem virar círculo feio */
 @media (max-width: 768px) {
     .btn-revendedor-header {
-        padding: 0;
-        width: 36px;
+        padding: 8px 12px;
         height: 36px;
-        border-radius: 50%;
+        font-size: 12px;
     }
     .btn-revendedor-header span {
-        display: none;
+        display: none; /* Esconde o texto e deixa só o ícone no celular */
     }
     .btn-revendedor-header i {
+        margin: 0;
         font-size: 16px;
-    }
-    .header-actions {
-        gap: 6px;
     }
 }
     </style>
@@ -2274,44 +2270,46 @@
         <i class="fas fa-search search-icon" onclick="buscarProdutoTopo()"></i>
     </div>
 
-    <!-- AQUI ESTA A CORREÇÃO DO LAYOUT -->
-    <div class="header-actions" style="display: flex; align-items: center; gap: 12px; flex-shrink: 0;">
-        <span class="cliente-nome" id="clienteNomeHeader"></span>
-        
-        <!-- BOTÃO REVENDEDOR -->
-        <button onclick="abrirBannerRevendedor()" style="background: #f39c12; color: #fff; border: none; border-radius: 20px; padding: 0 15px; height: 38px; font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; transition: 0.2s;" onmouseover="this.style.background='#f57c00'" onmouseout="this.style.background='#f39c12'">
-            <i class="fas fa-store"></i> <span class="d-none d-md-inline">Seja Revendedor</span>
-        </button>
+    <div class="header-actions">
+    <span class="cliente-nome" id="clienteNomeHeader"></span>
+    
+    <!-- BOTÃO SEJA REVENDEDOR (Antes do carrinho para não embolar) -->
+    <button class="btn-revendedor-header" onclick="abrirBannerRevendedor()" title="Seja um Revendedor">
+        <i class="fas fa-store"></i> <span>Seja Revendedor</span>
+    </button>
 
-        <button class="btn-search-mobile" onclick="buscarProdutoTopo()" aria-label="Buscar" style="display:none;" id="btnBuscaMobile">
-            <i class="fas fa-search"></i>
-        </button>
+    <!-- Busca mobile -->
+    <button class="btn-search-mobile" onclick="buscarProdutoTopo()" aria-label="Buscar" style="display:none;" id="btnBuscaMobile">
+        <i class="fas fa-search"></i>
+    </button>
 
-        <button class="btn-cart" onclick="abrirCarrinho()" aria-label="Carrinho">
-            <i class="fas fa-shopping-cart"></i>
-            <span class="badge" id="cartBadgeTop">0</span>
+    <!-- Carrinho -->
+    <button class="btn-cart" onclick="abrirCarrinho()" aria-label="Carrinho">
+        <i class="fas fa-shopping-cart"></i>
+        <span class="badge" id="cartBadgeTop">0</span>
+    </button>
+    
+    <!-- Usuário -->
+    <div class="user-dropdown">
+        <button class="btn-login" onclick="toggleUserMenu()" aria-label="Login" id="btnUserMenu">
+            <i class="fas fa-user"></i>
         </button>
-        
-        <div class="user-dropdown">
-            <button class="btn-login" onclick="toggleUserMenu()" aria-label="Login" id="btnUserMenu">
-                <i class="fas fa-user"></i>
-            </button>
-            <div class="user-dropdown-content" id="userDropdown">
-                <div class="dropdown-item login-item" onclick="abrirLogin()">
-                    <i class="fas fa-sign-in-alt"></i> Entrar / Cadastrar
-                </div>
-                <div class="dropdown-item" onclick="abrirDadosPessoais()" style="display:none;" data-item="dados">
-                    <i class="fas fa-user-circle"></i> Dados Pessoais
-                </div>
-                <div class="dropdown-item" onclick="abrirMeusPedidos()" style="display:none;" data-item="pedidos">
-                    <i class="fas fa-box"></i> Meus Pedidos
-                </div>
-                <div class="dropdown-item sair" onclick="sairConta()" style="display:none;" data-item="sair">
-                    <i class="fas fa-sign-out-alt"></i> Sair da Conta
-                </div>
+        <div class="user-dropdown-content" id="userDropdown">
+            <div class="dropdown-item login-item" onclick="abrirLogin()">
+                <i class="fas fa-sign-in-alt"></i> Entrar / Cadastrar
+            </div>
+            <div class="dropdown-item" onclick="abrirDadosPessoais()" style="display:none;" data-item="dados">
+                <i class="fas fa-user-circle"></i> Dados Pessoais
+            </div>
+            <div class="dropdown-item" onclick="abrirMeusPedidos()" style="display:none;" data-item="pedidos">
+                <i class="fas fa-box"></i> Meus Pedidos
+            </div>
+            <div class="dropdown-item sair" onclick="sairConta()" style="display:none;" data-item="sair">
+                <i class="fas fa-sign-out-alt"></i> Sair da Conta
             </div>
         </div>
     </div>
+</div>
 </div>
        
     </header>
