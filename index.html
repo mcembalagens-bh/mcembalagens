@@ -2189,6 +2189,37 @@
     .bloqueio-banner .btn-group { flex-direction: column; align-items: stretch; }
     .bloqueio-banner .btn-group button { width: 100%; justify-content: center; }
 }
+        /* ===== BOTÃO REVENDEDOR DISCRETO NO HEADER ===== */
+.btn-revendedor-header {
+    background: var(--orange-accent);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 15px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+.btn-revendedor-header:hover {
+    background: var(--orange-top);
+    transform: scale(1.05);
+}
+@media (max-width: 768px) {
+    .btn-revendedor-header {
+        padding: 0;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        justify-content: center;
+    }
+    .btn-revendedor-header span { display: none; }
+    .btn-revendedor-header i { font-size: 16px; margin: 0; }
+}
     </style>
 </head>
 <body>
@@ -2226,6 +2257,9 @@
 
             <div class="header-actions">
                 <span class="cliente-nome" id="clienteNomeHeader"></span>
+                <button class="btn-revendedor-header" onclick="abrirBannerRevendedor()" title="Seja um Revendedor">
+    <i class="fas fa-store"></i> <span>Seja Revendedor</span>
+</button>
                 <!-- Busca mobile (só ícone) -->
                 <button class="btn-search-mobile" onclick="buscarProdutoTopo()" aria-label="Buscar"
                         style="display:none;" id="btnBuscaMobile">
@@ -2274,12 +2308,13 @@
                 <button class="btn-entrar" onclick="abrirLogin()">
                     <i class="fas fa-sign-in-alt"></i> Entrar
                 </button>
-                <button class="btn-cadastrar" onclick="abrirCadastro()">
-                    <i class="fas fa-user-plus"></i> Cadastrar
-                </button>
-                <button class="btn-regras" onclick="abrirModalRegras()">
-                    <i class="fas fa-file-alt"></i> Veja como comprar com preço de Revenda
-                </button>
+               <!-- Mude o onclick do botão Cadastrar e Regras: -->
+<button class="btn-cadastrar" onclick="abrirRegrasParaCadastro()">
+    <i class="fas fa-user-plus"></i> Cadastrar
+</button>
+<button class="btn-regras" onclick="abrirRegrasParaCadastro()">
+    <i class="fas fa-file-alt"></i> Veja como comprar com preço de Revenda
+</button>
             </div>
         </div>
 
@@ -3223,11 +3258,18 @@
                 As regras de faturamento são aplicadas mediante solicitação e analisadas conforme histórico de compras.
             </div>
 
-            <div style="display:flex;gap:10px;margin-top:15px;flex-wrap:wrap;">
-                <button onclick="copiarRegrasWhatsApp()"
-                        style="flex:1;min-width:150px;padding:12px;background:#25D366;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px;">
-                    <i class="fas fa-copy"></i> Copiar Regras
-                </button>
+           <div style="display:flex;gap:10px;margin-top:15px;flex-wrap:wrap;">
+    <button onclick="copiarRegrasWhatsApp()" 
+            style="flex:1;min-width:120px;padding:12px;background:#e0e0e0;color:#333;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;">
+        <i class="fas fa-copy"></i> Copiar
+    </button>
+    
+    <!-- NOVO BOTÃO DE CONFIRMAÇÃO -->
+    <button onclick="confirmarRegrasECadastrar()" 
+            style="flex:2;min-width:200px;padding:12px;background:#27ae60;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 10px rgba(39,174,96,0.3);">
+        <i class="fas fa-check-circle"></i> Estou Ciente e Quero me Cadastrar
+    </button>
+</div>
                 <button onclick="fecharModal('regrasModal')"
                         style="flex:1;min-width:150px;padding:12px;background:var(--primary-blue);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:15px;">
                     <i class="fas fa-times"></i> Fechar
@@ -6014,7 +6056,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
 console.log('✅ PARTE 7/7 carregada — Login, Cadastro, Sessão e Realtime prontos!');
 console.log('🎉 SITE COMPLETO! Versão final unificada.');
-    
+   // ============================================================
+// CONTROLE DO BANNER E REGRAS DO REVENDEDOR
+// ============================================================
+function abrirBannerRevendedor() {
+    const banner = document.getElementById('bloqueioBanner');
+    banner.classList.remove('hidden');
+    banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// Essa função será chamada pelo botão "Cadastrar" e "Regras" do banner
+function abrirRegrasParaCadastro() {
+    // Abre o modal de regras
+    document.getElementById('regrasModal').style.display = 'block';
+    // Esconde o botão de fechar padrão para forçar a leitura (opcional)
+    // Mas vamos manter para não travar o usuário.
+}
+
+// Função chamada quando o usuário clica em "Estou Ciente" no final das regras
+function confirmarRegrasECadastrar() {
+    fecharModal('regrasModal');
+    setTimeout(() => {
+        abrirCadastro(); // Abre a tela de cadastro
+    }, 300);
+} 
 </script>
 
 </body>
