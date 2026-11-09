@@ -3357,9 +3357,8 @@ function renderizarRevendedores() {
         </tr>
     `}).join('');
 }
-
 // ============================================================
-// FUNÇÕES PARA GERENCIAR REVENDEDORES
+// FUNÇÕES PARA GERENCIAR REVENDEDORES (MIGRADO PARA SUPABASE)
 // ============================================================
 async function tornarRevendedor(idCliente) {
     const cliente = dados.clientes.find(c => parseInt(c.id_cliente) === parseInt(idCliente));
@@ -3375,38 +3374,23 @@ async function tornarRevendedor(idCliente) {
     mostrarSpinner('Atualizando...');
     
     try {
-        await fetch(API_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                acao: 'salvar_cliente',
-                cliente: {
-                    nome: cliente.nome || '',
-                    email: cliente.email || '',
-                    telefone: cliente.telefone || '',
-                    documento: cliente.cpf || cliente.documento || '',
-                    senha: cliente.senha || '',
-                    tipo_pessoa: cliente.tipo_pessoa || 'FISICA',
-                    inscricao_estadual: cliente.inscricao_estadual || '',
-                    endereco: cliente.endereco || '',
-                    numero: cliente.numero || '',
-                    complemento: cliente.complemento || '',
-                    bairro: cliente.bairro || '',
-                    cidade: cliente.cidade || '',
-                    estado: cliente.estado || '',
-                    cep: cliente.cep || '',
-                    endereco_entrega: cliente.endereco_entrega || '',
-                    cep_entrega: cliente.cep_entrega || '',
-                    observacao: 'REVENDA'
-                }
+        // 🔥 ATUALIZA DIRETO NO SUPABASE
+        const { error } = await supabaseClient
+            .from('clientes')
+            .update({ 
+                observacoes: 'REVENDA',
+                aviso_aprovacao_pendente: true // Dispara o modal verde no site do revendedor
             })
-        });
+            .eq('id_cliente', idCliente);
+            
+        if (error) throw error;
         
+        // Atualiza na memória local para não precisar recarregar a página
         cliente.observacoes = 'REVENDA';
+        cliente.aviso_aprovacao_pendente = true;
         
         esconderSpinner();
-        alert(`✅ "${cliente.nome}" agora é um revendedor! 👑`);
+        alert(`✅ "${cliente.nome}" agora é um revendedor! 👑\n\nO acesso já foi liberado.`);
         
         renderizarClientes();
         renderizarRevendedores();
@@ -3415,7 +3399,7 @@ async function tornarRevendedor(idCliente) {
     } catch (error) {
         console.error('❌ Erro ao tornar revendedor:', error);
         esconderSpinner();
-        alert('⚠️ Erro ao atualizar. Tente novamente.');
+        alert('⚠️ Erro ao atualizar. Tente novamente.\n\nDetalhe: ' + error.message);
     }
 }
 
@@ -3433,35 +3417,19 @@ async function removerRevendedor(idCliente) {
     mostrarSpinner('Atualizando...');
     
     try {
-        await fetch(API_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                acao: 'salvar_cliente',
-                cliente: {
-                    nome: cliente.nome || '',
-                    email: cliente.email || '',
-                    telefone: cliente.telefone || '',
-                    documento: cliente.cpf || cliente.documento || '',
-                    senha: cliente.senha || '',
-                    tipo_pessoa: cliente.tipo_pessoa || 'FISICA',
-                    inscricao_estadual: cliente.inscricao_estadual || '',
-                    endereco: cliente.endereco || '',
-                    numero: cliente.numero || '',
-                    complemento: cliente.complemento || '',
-                    bairro: cliente.bairro || '',
-                    cidade: cliente.cidade || '',
-                    estado: cliente.estado || '',
-                    cep: cliente.cep || '',
-                    endereco_entrega: cliente.endereco_entrega || '',
-                    cep_entrega: cliente.cep_entrega || '',
-                    observacao: ''
-                }
+        // 🔥 ATUALIZA DIRETO NO SUPABASE
+        const { error } = await supabaseClient
+            .from('clientes')
+            .update({ 
+                observacoes: '',
+                aviso_aprovacao_pendente: false 
             })
-        });
+            .eq('id_cliente', idCliente);
+            
+        if (error) throw error;
         
         cliente.observacoes = '';
+        cliente.aviso_aprovacao_pendente = false;
         
         esconderSpinner();
         alert(`❌ "${cliente.nome}" removido da lista de revendedores.`);
@@ -3473,10 +3441,9 @@ async function removerRevendedor(idCliente) {
     } catch (error) {
         console.error('❌ Erro ao remover revendedor:', error);
         esconderSpinner();
-        alert('⚠️ Erro ao atualizar. Tente novamente.');
+        alert('⚠️ Erro ao atualizar. Tente novamente.\n\nDetalhe: ' + error.message);
     }
 }
-
 // ============================================================
 // BUSCAR CLIENTES PARA PEDIDO MANUAL
 // ============================================================
