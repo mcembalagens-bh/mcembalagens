@@ -21,14 +21,29 @@
             padding: 40px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.08);
         }
+        
+        /* ESTILO DO BOTÃO VOLTAR CORRIGIDO */
         .voltar {
-            display: inline-block;
-            margin-bottom: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 25px;
+            background: #f0f4f8;
             color: #1a3a5c;
+            padding: 10px 18px;
+            border-radius: 8px;
             text-decoration: none;
             font-weight: 600;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            transition: all 0.2s ease;
         }
-        .voltar:hover { text-decoration: underline; }
+        .voltar:hover { 
+            background: #e2e8f0; 
+            transform: translateX(-3px);
+        }
+        .voltar i { font-size: 14px; }
+
         h1 {
             color: #1a3a5c;
             font-size: 28px;
@@ -68,12 +83,16 @@
             border-left: 4px solid #1a3a5c;
             margin: 15px 0;
         }
+        
+        /* BOTÃO VOLTAR DO FINAL DA PÁGINA */
         .btn-voltar {
-            display: inline-block;
-            margin-top: 30px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 40px;
             background: #1a3a5c;
             color: white;
-            padding: 12px 30px;
+            padding: 14px 30px;
             border-radius: 8px;
             text-decoration: none;
             font-weight: 600;
@@ -83,16 +102,22 @@
             background: #2a5a8c;
             transform: scale(1.02);
         }
+        
         @media (max-width: 768px) {
             .container { padding: 20px; }
             h1 { font-size: 22px; }
             h2 { font-size: 18px; }
+            .btn-voltar { width: 100%; justify-content: center; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <a href="javascript:history.back()" class="voltar"><i class="fas fa-arrow-left"></i> Voltar</a>
+        <!-- CORREÇÃO: href="/" aponta direto para a raiz do site -->
+        <a href="/" class="voltar">
+            <i class="fas fa-arrow-left"></i> Voltar para a Loja
+        </a>
+        
         <h1>Sobre a MC Embalagens BH</h1>
         <p class="subtitulo">Distribuidor Direto de Fábrica</p>
 
@@ -128,7 +153,9 @@
             <p>Nossas caixas são enviadas desmontadas e fáceis de montar, garantindo praticidade e economia no frete.</p>
         </div>
 
-        <a href="javascript:history.back()" class="btn-voltar"><i class="fas fa-arrow-left"></i> Voltar para a Loja</a>
+        <a href="/" class="btn-voltar">
+            <i class="fas fa-arrow-left"></i> Voltar para a Loja
+        </a>
     </div>
 </body>
 </html>
