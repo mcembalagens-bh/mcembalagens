@@ -4491,15 +4491,22 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         const urlParams = new URLSearchParams(window.location.search);
         const prodId = urlParams.get('produto');
+        
         if (prodId) {
+            // Se tem produto na URL, abre o modal
             const prod = encontrarProduto(parseInt(prodId));
             if (prod) {
                 abrirModalProduto(parseInt(prodId));
             }
+        } else {
+            // Se não tem produto na URL, tenta restaurar a navegação (Home ou Categoria)
+            if (typeof restaurarEstadoNavegacao === 'function') {
+                const restaurou = restaurarEstadoNavegacao();
+                if (!restaurou) showHome();
+            }
         }
-    }, 1500);
+    }, 1000); // 1 segundo para garantir que os produtos do Supabase carregarem
 });
-
 console.log('✅ PARTE 5/7 carregada — Produtos, Categorias e Carrinho prontos');
 
   // ============================================================
@@ -6331,27 +6338,7 @@ function buscarProdutoTopo() {
 // Verifica se o cara já estava logado (recarregou a página)
 verificarSessao();
 
-// Configura a abertura direta via link compartilhado (?produto=123)
-document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(() => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const prodId = urlParams.get('produto');
-        
-        if (prodId) {
-            // Se tem produto na URL, abre o modal
-            const prod = encontrarProduto(parseInt(prodId));
-            if (prod) {
-                abrirModalProduto(parseInt(prodId));
-            }
-        } else {
-            // Se não tem produto na URL, tenta restaurar a navegação normal
-            if (typeof restaurarEstadoNavegacao === 'function') {
-                const restaurou = restaurarEstadoNavegacao();
-                if (!restaurou) showHome();
-            }
-        }
-    }, 2000); // 2 segundos para garantir que os produtos do Supabase carregaram
-});
+
 
 console.log('✅ PARTE 7/7 carregada — Login, Cadastro, Sessão e Realtime prontos!');
 console.log('🎉 SITE COMPLETO! Versão final unificada.');
