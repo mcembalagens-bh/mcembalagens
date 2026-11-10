@@ -4144,9 +4144,9 @@ function adicionarProduto(productId) {
         alert('⚠️ Este produto está esgotado.');
         return;
     }
+    
     const isRevendedor = usuarioLogado && usuarioLogado.isRevendedor;
     const pacotes = [];
-    let totalUnidades = 0, totalPreco = 0;
     
     product.quantities.forEach(q => {
         const span = document.getElementById('qty-' + productId + '-' + q.qty);
@@ -4154,20 +4154,20 @@ function adicionarProduto(productId) {
             const qtd = parseInt(span.textContent) || 0;
             if (qtd > 0) {
                 const unidades = qtd * q.qty;
-                const precoBase = (unidades * q.price) / q.qty;
-                const precoFinal = isRevendedor ? precoBase * (1 - DESCONTO_REVENDEDOR) : precoBase;
+                // Preço base unitário
+                const precoUnitBase = q.price / q.qty;
+                // Aplica o desconto de revenda SE for revendedor
+                const precoUnitFinal = isRevendedor ? precoUnitBase * (1 - DESCONTO_REVENDEDOR) : precoUnitBase;
                 
                 pacotes.push({
                     step: q.qty,
                     qty: qtd,
                     totalUnits: unidades,
-                    price: precoFinal,
-                    unitPrice: (isRevendedor ? (q.price / q.qty) * (1 - DESCONTO_REVENDEDOR) : (q.price / q.qty)),
+                    price: precoUnitFinal * unidades,
+                    unitPrice: precoUnitFinal,
                     weight: q.weight,
                     dimensions: q.dimensions
                 });
-                totalUnidades += unidades;
-                totalPreco += precoFinal;
             }
         }
     });
@@ -4182,33 +4182,8 @@ function adicionarProduto(productId) {
         let solicitado = 0;
         pacotes.forEach(p => solicitado += p.totalUnits);
         if (solicitado > product.stock) {
-            alert('⚠️ Estoque insuficiente!\nSolicitado: ' + solicitado + '\nDisponível: ' + product.stock + '\nO pedido será ajustado.');
-            let ajustado = 0;
-            for (let i = pacotes.length - 1; i >= 0; i--) {
-                const p = pacotes[i];
-                if (ajustado + p.totalUnits <= product.stock) {
-                    ajustado += p.totalUnits;
-                } else {
-                    const restante = product.stock - ajustado;
-                    if (restante > 0) {
-                        const possiveis = Math.floor(restante / p.step);
-                        if (possiveis > 0) {
-                            p.qty = possiveis;
-                            p.totalUnits = possiveis * p.step;
-                            p.price = p.totalUnits * p.unitPrice;
-                            ajustado += p.totalUnits;
-                        } else {
-                            pacotes.splice(i, 1);
-                        }
-                    } else {
-                        pacotes.splice(i, 1);
-                    }
-                }
-            }
-            if (pacotes.length === 0) {
-                alert('⚠️ Não foi possível adicionar.');
-                return;
-            }
+            alert('⚠️ Estoque insuficiente!\nSolicitado: ' + solicitado + '\nDisponível: ' + product.stock);
+            return; // Aqui bloqueia se passar do estoque
         }
     }
 
@@ -4229,8 +4204,8 @@ function adicionarProduto(productId) {
                 price: p.price,
                 unitPrice: p.unitPrice,
                 images: product.images || [],
-                stock: product.stock, // <-- SALVA O ESTOQUE
-                productionDays: product.productionDays || 7, // <-- SALVA DIAS DE PRODUÇÃO
+                stock: product.stock,
+                productionDays: product.productionDays || 7,
                 vender_zerado: product.vender_zerado,
                 weight: product.weight || 0,
                 quantity: p.totalUnits
@@ -4279,7 +4254,7 @@ function abrirCarrinho() {
     container.innerHTML = '';
     let totalUnidades = 0;
     
-    // 1. Calcula o total de unidades de cada produto no carrinho
+    // Calcula o total de unidades de cada produto no carrinho (para exibir estoque)
     const totalPorProduto = {};
     carrinho.forEach(item => {
         if (!totalPorProduto[item.productId]) totalPorProduto[item.productId] = 0;
@@ -4295,21 +4270,15 @@ function abrirCarrinho() {
         div.className = 'cart-item-moderno';
         let imgHtml = imgSrc ? '<img src="' + imgSrc + '" alt="' + item.name + '">' : '<span class="img-placeholder">📦</span>';
         
-        // ============================================================
-        // LÓGICA DE ESTOQUE DINÂMICA (Verifica o total do produto no carrinho)
-        // ============================================================
         const product = encontrarProduto(item.productId);
         const podeZerado = product ? product.vender_zerado : item.vender_zerado;
         const estoqueAtual = product ? product.stock : item.stock;
         const prazoProducao = product ? product.productionDays : (item.productionDays || 7);
-        
-        // Total de unidades deste produto no carrinho (somando todos os pacotes)
         const totalUnidadesProdutoNoCarrinho = totalPorProduto[item.productId] || 0;
 
         let stockStatusHtml = '';
         if (!podeZerado) {
             if (totalUnidadesProdutoNoCarrinho > estoqueAtual) {
-                // Não deveria acontecer, mas se acontecer, avisa
                 stockStatusHtml = `<span class="stock-badge esgotado" style="background:#fce4ec;color:#c62828;"><i class="fas fa-exclamation-triangle"></i> Estoque insuficiente!</span>`;
             } else {
                 stockStatusHtml = `<span class="stock-badge available"><i class="fas fa-check-circle"></i> Disponível (${estoqueAtual - totalUnidadesProdutoNoCarrinho} restantes)</span>`;
@@ -4318,7 +4287,6 @@ function abrirCarrinho() {
             if (totalUnidadesProdutoNoCarrinho <= estoqueAtual) {
                 stockStatusHtml = `<span class="stock-badge available"><i class="fas fa-check-circle"></i> Disponível</span>`;
             } else {
-                // Se passou do estoque, mostra produção
                 stockStatusHtml = `<span class="stock-badge production"><i class="fas fa-clock"></i> Produção: ${prazoProducao} dias úteis</span>`;
             }
         }
@@ -4836,7 +4804,9 @@ function abrirCheckout() {
     let totalProdutos = 0;
     carrinho.forEach(i => totalProdutos += i.price || 0);
     
-    // Regra de Ouro: Se for revendedor e não atingiu R$400
+    // ============================================================
+    // REGRA: Se for revendedor e NÃO atingiu o mínimo
+    // ============================================================
     if (!vendaSemDescontoAtiva && usuarioLogado.isRevendedor && totalProdutos < PEDIDO_MINIMO_REVENDEDOR) {
         const continuar = confirm(
             "⚠️ Atenção: Pedido mínimo para revenda é R$ 400,00.\n\n" +
@@ -4846,19 +4816,20 @@ function abrirCheckout() {
         
         if (!continuar) return;
         
-        // Recalcula para preço cheio (sem os 10%)
+        // Recalcula o carrinho para preço cheio (sem desconto)
         carrinho.forEach(item => {
             const produtoOriginal = encontrarProduto(item.productId);
             if (produtoOriginal) {
                 const qtyInfo = produtoOriginal.quantities.find(q => q.qty === item.step);
                 if (qtyInfo) {
-                    item.price = item.qty * qtyInfo.price; 
-                    item.unitPrice = qtyInfo.price / item.step;
+                    const precoUnitBase = qtyInfo.price / qtyInfo.qty;
+                    item.price = precoUnitBase * item.totalUnits; 
+                    item.unitPrice = precoUnitBase;
                 }
             }
         });
 
-        vendaSemDescontoAtiva = true;
+        vendaSemDescontoAtiva = true; // Marca que ele optou por não ter desconto
         salvarCarrinho();
         atualizarBadge();
         mostrarNotificacao('🛒 Preços recalculados sem desconto de revenda.', 'info');
@@ -4889,8 +4860,14 @@ function abrirCheckout() {
     document.getElementById('erroBusca').style.display = 'none';
     document.getElementById('dadosClienteEncontrado').style.display = 'none';
     document.getElementById('areaNovoCadastro').style.display = 'none';
+    
+    // Progressivo: esconde as etapas 2 e 3 e o resumo
     document.getElementById('checkoutStep2').style.display = 'none';
-    document.getElementById('freteOpcoesContainer').innerHTML = '<div style="text-align:center;padding:20px;color:#999;"><i class="fas fa-spinner fa-spin"></i> Carregando...</div>';
+    document.getElementById('checkoutStep3').style.display = 'none';
+    const resumoBox = document.querySelector('#checkoutContent > div:nth-child(2) > div:first-child');
+    if (resumoBox) resumoBox.style.display = 'none';
+
+    document.getElementById('freteOpcoesContainer').innerHTML = '';
     document.getElementById('checkoutCepDisplay').textContent = '_____-___';
     document.getElementById('step1Status').textContent = '⏳ Pendente';
     document.getElementById('step2Status').textContent = '⏳ Aguardando';
@@ -5740,22 +5717,26 @@ async function fazerLogin() {
         atualizarInterfaceUsuario();
         mostrarBloqueio();
         iniciarRealtimeAprovacao();
-        
-        // 👇 CORREÇÃO: SE FOR REVENDEDOR, RECALCULA O CARRINHO NA HORA 👇
-        if (ehRevendedor && carrinho.length > 0) {
+
+        // 👇 AQUI ESTÁ A CORREÇÃO DO CARRINHO AO LOGAR 👇
+        if (carrinho.length > 0) {
+            // Recalcula os preços de TODOS os itens do carrinho com base no novo status
             carrinho.forEach(item => {
                 const produtoOriginal = encontrarProduto(item.productId);
                 if (produtoOriginal) {
                     const qtyInfo = produtoOriginal.quantities.find(q => q.qty === item.step);
                     if (qtyInfo) {
-                        item.price = item.qty * qtyInfo.price * (1 - DESCONTO_REVENDEDOR); 
-                        item.unitPrice = (qtyInfo.price / item.step) * (1 - DESCONTO_REVENDEDOR);
+                        const precoUnitBase = qtyInfo.price / qtyInfo.qty;
+                        const precoUnitFinal = ehRevendedor ? precoUnitBase * (1 - DESCONTO_REVENDEDOR) : precoUnitBase;
+                        
+                        item.price = precoUnitFinal * item.totalUnits;
+                        item.unitPrice = precoUnitFinal;
                     }
                 }
             });
             salvarCarrinho();
             atualizarBadge();
-            mostrarNotificacao('✅ Preços do carrinho atualizados para revenda!', 'success');
+            mostrarNotificacao('🛒 Preços do carrinho atualizados para ' + (ehRevendedor ? 'revenda!' : 'cliente comum!'), 'info');
         }
 
         if (ehRevendedor && currentProducts.length > 0) renderizarProdutos();
