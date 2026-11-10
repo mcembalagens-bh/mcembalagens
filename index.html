@@ -3043,8 +3043,8 @@
 
             <div style="flex:1;min-width:280px;">
 
-                <div style="background:white;border-radius:12px;padding:20px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
-                    <h3 style="color:var(--primary-dark);font-size:16px;margin:0 0 12px 0;">📋 Resumo do Pedido</h3>
+    <div id="resumoPedidoContainer" style="background:white;border-radius:12px;padding:20px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+        <h3 style="color:var(--primary-dark);font-size:16px;margin:0 0 12px 0;">📋 Resumo do Pedido</h3>
                     <div id="checkoutResumoProdutos" style="font-size:13px;color:#666;max-height:180px;overflow-y:auto;"></div>
                     <div style="border-top:1px solid #eee;padding-top:10px;margin-top:8px;">
                         <div style="display:flex;justify-content:space-between;font-weight:600;font-size:14px;">
@@ -4826,9 +4826,6 @@ function abrirCheckout() {
     let totalProdutos = 0;
     carrinho.forEach(i => totalProdutos += i.price || 0);
     
-    // ============================================================
-    // REGRA: Se for revendedor e NÃO atingiu o mínimo
-    // ============================================================
     if (!vendaSemDescontoAtiva && usuarioLogado.isRevendedor && totalProdutos < PEDIDO_MINIMO_REVENDEDOR) {
         const continuar = confirm(
             "⚠️ Atenção: Pedido mínimo para revenda é R$ 400,00.\n\n" +
@@ -4838,7 +4835,6 @@ function abrirCheckout() {
         
         if (!continuar) return;
         
-        // Recalcula o carrinho para preço cheio (sem desconto)
         carrinho.forEach(item => {
             const produtoOriginal = encontrarProduto(item.productId);
             if (produtoOriginal) {
@@ -4851,7 +4847,7 @@ function abrirCheckout() {
             }
         });
 
-        vendaSemDescontoAtiva = true; // Marca que ele optou por não ter desconto
+        vendaSemDescontoAtiva = true;
         salvarCarrinho();
         atualizarBadge();
         mostrarNotificacao('🛒 Preços recalculados sem desconto de revenda.', 'info');
@@ -4883,10 +4879,12 @@ function abrirCheckout() {
     document.getElementById('dadosClienteEncontrado').style.display = 'none';
     document.getElementById('areaNovoCadastro').style.display = 'none';
     
-    // Progressivo: esconde as etapas 2 e 3 e o resumo
+    // Esconde etapas 2 e 3
     document.getElementById('checkoutStep2').style.display = 'none';
     document.getElementById('checkoutStep3').style.display = 'none';
-    const resumoBox = document.querySelector('#checkoutContent > div:nth-child(2) > div:first-child');
+    
+    // 👇 Esconde o Resumo usando o ID
+    const resumoBox = document.getElementById('resumoPedidoContainer');
     if (resumoBox) resumoBox.style.display = 'none';
 
     document.getElementById('freteOpcoesContainer').innerHTML = '';
@@ -5114,6 +5112,13 @@ async function carregarOpcoesFreteCheckout() {
                     document.querySelectorAll('#freteOpcoesContainer .frete-opcao').forEach(e => e.classList.remove('selecionado'));
                     this.classList.add('selecionado');
                     checkoutState.freteSelecionado = op;
+                    
+                    // 👇 MOSTRA O RESUMO E O PAGAMENTO USANDO O ID
+                    const resumoBox = document.getElementById('resumoPedidoContainer');
+                    if (resumoBox) resumoBox.style.display = 'block';
+                    
+                    document.getElementById('checkoutStep3').style.display = 'block';
+                    
                     liberarPagamento();
                     atualizarResumoFinal();
                     mostrarNotificacao('✅ Frete selecionado!', 'success');
