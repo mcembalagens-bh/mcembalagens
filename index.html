@@ -5837,6 +5837,19 @@ async function fazerCadastro() {
         msgEl.textContent = '⚠️ CPF/CNPJ inválido.';
         return;
     }
+
+        // 👇 SE VEIO DO FLUXO DE REVENDA, VERIFICA SE JÁ EXISTE ANTES DE CRIAR
+    if (fluxoRevendaAtivo) {
+        const { data: clienteExistente } = await supabaseClient.from('clientes').select('observacoes').eq('cpf', docValidado.documento).limit(1);
+        if (clienteExistente && clienteExistente.length > 0) {
+            const obs = String(clienteExistente[0].observacoes || '').toUpperCase();
+            if (obs.indexOf('REVENDA') === -1 && obs.indexOf('ANALISE') === -1) {
+                msgEl.className = 'login-message warning';
+                msgEl.innerHTML = '⚠️ Você já tem cadastro como cliente comum. Clique no botão "Ativar Meu Acesso Agora" que aparece acima.';
+                return;
+            }
+        }
+    }
     
     const isCNPJ = docValidado.tipo === 'CNPJ';
     
