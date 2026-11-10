@@ -3232,46 +3232,32 @@
     <!-- ============================================================ -->
     <!-- MODAL DE APROVAÇÃO REVENDEDOR (BOAS-VINDAS)                  -->
     <!-- ============================================================ -->
-    <div class="modal" id="modalAprovacaoRevendedor">
-        <div class="modal-content">
-            <span class="modal-close" onclick="fecharModalAprovacaoRevendedor()">&times;</span>
-
-            <div style="font-size:72px;color:#27ae60;margin:10px 0 15px;animation:pulse 1.5s infinite;">
-                🎉
-            </div>
-
-            <h2 style="color:var(--primary-dark);margin-bottom:10px;font-size:24px;text-align:center;">
-                Parabéns!
-            </h2>
-            <p style="font-size:16px;color:#333;font-weight:600;margin-bottom:20px;text-align:center;">
-                Você agora é um <span style="color:#27ae60;">Revendedor MC Embalagens</span>
-            </p>
-
-            <div style="background:#e8f5e9;border-radius:8px;padding:20px;text-align:left;margin-bottom:20px;">
-                <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:14px;color:#155724;font-weight:600;">
-                    <i class="fas fa-check-circle" style="color:#27ae60;font-size:18px;"></i> Desconto de 10% em todos os produtos
-                </div>
-                <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:14px;color:#155724;font-weight:600;">
-                    <i class="fas fa-check-circle" style="color:#27ae60;font-size:18px;"></i> Desconto extra de 3% no PIX
-                </div>
-                <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:14px;color:#155724;font-weight:600;">
-                    <i class="fas fa-check-circle" style="color:#27ae60;font-size:18px;"></i> Boleto faturado exclusivo*(análise)
-                </div>
-                <div style="display:flex;align-items:center;gap:10px;font-size:14px;color:#155724;font-weight:600;">
-                    <i class="fas fa-check-circle" style="color:#27ae60;font-size:18px;"></i> Frete para todo o Brasil
-                </div>
-            </div>
-
-            <p style="font-size:14px;color:#666;margin-bottom:20px;text-align:center;">
-                Seu acesso já está liberado.<br>Você já pode comprar com preços exclusivos!
-            </p>
-
-            <button onclick="fecharModalAprovacaoRevendedor()"
-                    style="background:#27ae60;color:white;border:none;padding:16px 20px;border-radius:10px;cursor:pointer;font-weight:700;font-size:18px;width:100%;transition:all 0.3s;box-shadow:0 4px 15px rgba(39,174,96,0.3);">
-                <i class="fas fa-shopping-cart"></i> Começar a Comprar
-            </button>
+   <!-- ============================================================ -->
+<!-- MODAL BOAS-VINDAS REVENDEDOR (PROFISSIONAL)                  -->
+<!-- ============================================================ -->
+<div class="modal" id="modalAprovacaoRevendedor">
+    <div class="modal-content" style="max-width:420px; text-align:center; padding:35px 30px;">
+        <div style="width:72px; height:72px; margin:0 auto 20px; background:#e8f5e9; border-radius:50%; display:flex; align-items:center; justify-content:center;">
+            <i class="fas fa-check" style="font-size:32px; color:#27ae60;"></i>
         </div>
+        
+        <h2 style="color:#0d1b2a; font-size:22px; margin-bottom:8px; font-weight:700;">
+            Bem-vindo à Área do Revendedor
+        </h2>
+        
+        <p style="color:#666; font-size:15px; line-height:1.5; margin-bottom:28px;">
+            Seu acesso está liberado.<br>
+            Aproveite os preços exclusivos e condições especiais.
+        </p>
+        
+        <button onclick="fecharModalAprovacaoRevendedor()"
+                style="background:#1a3a5c; color:white; border:none; padding:14px 30px; border-radius:8px; cursor:pointer; font-weight:600; font-size:15px; width:100%; transition:all 0.2s;"
+                onmouseover="this.style.background='#2a5a8c'"
+                onmouseout="this.style.background='#1a3a5c'">
+            OK, começar a comprar
+        </button>
     </div>
+</div>
 
     <!-- ============================================================ -->
     <!-- MODAL REGRAS DE COMPRA                                       -->
@@ -3477,9 +3463,9 @@ function fecharModal(id) {
     
     // 👇 ADICIONE ESTE BLOCO PARA LIMPAR A URL AO FECHAR O MODAL 👇
     if (id === 'productModal') {
-        const novaUrl = window.location.origin + window.location.pathname;
-        history.replaceState({}, '', novaUrl);
-    }
+    const novaUrl = window.location.origin + window.location.pathname;
+    history.replaceState({}, '', novaUrl);
+}
 }
 
 // ============================================================
@@ -3508,6 +3494,10 @@ function showHome() {
 }
 
 function voltarCategorias() {
+    // Se veio de uma categoria, remove o estado de histórico
+if (window.location.search.indexOf('cat=') !== -1) {
+    history.pushState({ home: true }, '', window.location.origin + window.location.pathname);
+}
     document.getElementById('categoriesSection').style.display = 'block';
     document.getElementById('productsSection').style.display = 'none';
     document.getElementById('videosSection').style.display = 'block';
@@ -3884,6 +3874,7 @@ function abrirCategoria(id) {
     atualizarFooterVisibilidade();
     
     renderizarProdutos();
+    history.pushState({ categoria: id }, '', window.location.origin + window.location.pathname + '?cat=' + id);
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -4055,7 +4046,7 @@ function abrirModalProduto(id) {
     if (!product) return;
     
     const novaUrl = window.location.origin + window.location.pathname + '?produto=' + id;
-    history.replaceState({}, '', novaUrl);
+    history.pushState({ modalProduto: id }, '', novaUrl);
     
     const isRevendedor = usuarioLogado && usuarioLogado.isRevendedor;
     modalProductId = id;
@@ -6695,6 +6686,50 @@ async function salvarNovaSenhaRecuperacao() {
         msgEl.className = 'login-message error';
         msgEl.textContent = '❌ Erro ao salvar a nova senha.';
     }
+}
+    // ============================================================
+// BOTÃO VOLTAR DO NAVEGADOR (CORRIGIDO)
+// ============================================================
+window.addEventListener('popstate', function(event) {
+    const state = event.state || {};
+    
+    // Caso 1: Tinha um modal de produto aberto → fecha o modal
+    if (state.modalProduto) {
+        // Reabre o modal se o navegador voltou para ele
+        abrirModalProduto(state.modalProduto);
+        return;
+    }
+    
+    // Caso 2: Tinha categoria aberta → volta para a home
+    if (state.categoria) {
+        const cat = PRODUCTS_DATA.categories.find(c => c.id === state.categoria);
+        if (cat) {
+            abrirCategoria(cat.id);
+            return;
+        }
+    }
+    
+    // Caso 3: Estado home → mostra home
+    if (state.home || (!state.modalProduto && !state.categoria)) {
+        // Fecha o modal se estiver aberto
+        const modal = document.getElementById('productModal');
+        if (modal && modal.style.display === 'block') {
+            modal.style.display = 'none';
+        }
+        // Se estava em produtos, volta para categorias
+        const produtos = document.getElementById('productsSection');
+        if (produtos && produtos.style.display !== 'none') {
+            voltarCategorias();
+        } else {
+            showHome();
+        }
+        return;
+    }
+});
+
+// Estado inicial para o histórico ter base
+if (!history.state) {
+    history.replaceState({ home: true }, '', window.location.origin + window.location.pathname);
 }
 </script>
        <!-- ============================================================ -->
