@@ -6242,9 +6242,19 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         const urlParams = new URLSearchParams(window.location.search);
         const prodId = urlParams.get('produto');
+        
         if (prodId) {
+            // Se tem produto na URL, abre o modal
             const prod = encontrarProduto(parseInt(prodId));
-            if (prod) abrirModalProduto(parseInt(prodId));
+            if (prod) {
+                abrirModalProduto(parseInt(prodId));
+            }
+        } else {
+            // Se não tem produto na URL, tenta restaurar a navegação normal
+            if (typeof restaurarEstadoNavegacao === 'function') {
+                const restaurou = restaurarEstadoNavegacao();
+                if (!restaurou) showHome();
+            }
         }
     }, 2000);
 });
@@ -6312,6 +6322,67 @@ function abrirPixDoPedido() {
         mostrarNotificacao('⚠️ Dados do PIX não encontrados.', 'warning');
     }
 }
+    // ============================================================
+// SALVAR E RESTAURAR ESTADO DE NAVEGAÇÃO
+// ============================================================
+function salvarEstadoNavegacao() {
+    try {
+        const isHome = document.getElementById('categoriesSection').style.display !== 'none';
+        const isProducts = document.getElementById('productsSection').style.display !== 'none';
+        let pagina = isHome ? 'home' : (isProducts ? 'categoria' : 'home');
+        
+        const estado = {
+            pagina: pagina,
+            currentCategoryId: (pagina === 'categoria' && currentCategory) ? currentCategory.id : null,
+            currentCategoryName: (pagina === 'categoria' && currentCategory) ? currentCategory.name : null,
+            scrollY: window.scrollY,
+            timestamp: Date.now()
+        };
+        localStorage.setItem('estadoNavegacao', JSON.stringify(estado));
+    } catch (e) {}
+}
+
+function restaurarEstadoNavegacao() {
+    try {
+        const s = localStorage.getItem('estadoNavegacao');
+        if (!s) return false;
+        const estado = JSON.parse(s);
+        
+        if (Date.now() - estado.timestamp > 3600000) {
+            localStorage.removeItem('estadoNavegacao');
+            return false;
+        }
+        
+        if (estado.pagina === 'home') {
+            showHome();
+            setTimeout(() => window.scrollTo(0, estado.scrollY || 0), 300);
+            return true;
+        }
+        
+        if (estado.pagina === 'categoria' && estado.currentCategoryId) {
+            const cat = PRODUCTS_DATA.categories.find(c => c.id === estado.currentCategoryId);
+            if (!cat) {
+                showHome();
+                return false;
+            }
+            abrirCategoria(cat.id);
+            setTimeout(() => window.scrollTo(0, estado.scrollY || 0), 300);
+            return true;
+        }
+        return false;
+    } catch (e) {
+        return false;
+    }
+}
+
+// Salva a posição da tela a cada 500ms que o usuário rolar
+let timeoutScrollNavegacao;
+window.addEventListener('scroll', () => {
+    clearTimeout(timeoutScrollNavegacao);
+    timeoutScrollNavegacao = setTimeout(() => {
+        salvarEstadoNavegacao();
+    }, 500);
+});
 </script>
 
 </body>
