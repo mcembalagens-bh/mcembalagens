@@ -2461,13 +2461,20 @@
             </div>
         </section>
 
-        <!-- ===== PRODUTOS ===== -->
+               <!-- ===== PRODUTOS ===== -->
         <section class="products-section" id="productsSection" style="display: none;">
             <div class="products-header">
                 <button class="btn-back" onclick="voltarCategorias()">
                     <i class="fas fa-arrow-left"></i> Voltar
                 </button>
+                
                 <h3 id="categoryTitle">Produtos</h3>
+                
+                <!-- BOTÃO COMPARTILHAR CATEGORIA -->
+                <button onclick="compartilharCategoria()" style="background:#f0f4f8; border:1px solid #ddd; padding:8px 14px; border-radius:8px; cursor:pointer; color:var(--primary-blue); font-weight:600; display:flex; align-items:center; gap:6px; transition:all 0.3s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f0f4f8'">
+                    <i class="fas fa-share-alt"></i> Compartilhar
+                </button>
+
                 <span style="margin-left:auto;font-size:14px;color:#666;" id="productCount"></span>
             </div>
             <div class="products-grid" id="productsGrid"></div>
@@ -4552,28 +4559,50 @@ function init() {
 // Puxa os dados do Supabase assim que o script carrega
 carregarDadosPlanilha();
 
-// Verifica se a URL tem ?produto=123 para abrir direto o modal (Deep Link)
+// ============================================================
+// DEEP LINKING: ABRIR CATEGORIA OU PRODUTO DIRETO PELA URL
+// ============================================================
 document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(() => {
+    function checarParametrosURL() {
         const urlParams = new URLSearchParams(window.location.search);
+        const catId = urlParams.get('cat');
         const prodId = urlParams.get('produto');
-        
-        if (prodId) {
-            // Se tem produto na URL, abre o modal
-            const prod = encontrarProduto(parseInt(prodId));
-            if (prod) {
-                abrirModalProduto(parseInt(prodId));
-            }
-        } else {
-            // Se não tem produto na URL, tenta restaurar a navegação (Home ou Categoria)
+
+        if (!catId && !prodId) {
+            // Se não tem parâmetros, carrega normal
             if (typeof restaurarEstadoNavegacao === 'function') {
                 const restaurou = restaurarEstadoNavegacao();
                 if (!restaurou) showHome();
             }
+            return;
         }
-    }, 1000); // 1 segundo para garantir que os produtos do Supabase carregarem
+
+        // Se tiver parâmetro, espera os produtos do Supabase carregarem
+        const intervalo = setInterval(() => {
+            if (typeof PRODUCTS_DATA !== 'undefined' && PRODUCTS_DATA.categories.length > 0) {
+                clearInterval(intervalo);
+
+                if (catId) {
+                    const cat = PRODUCTS_DATA.categories.find(c => String(c.id) === String(catId));
+                    if (cat) {
+                        abrirCategoria(cat.id);
+                    } else {
+                        showHome(); // Se a categoria não existir, volta pra home
+                    }
+                } else if (prodId) {
+                    const prod = encontrarProduto(parseInt(prodId));
+                    if (prod) {
+                        abrirModalProduto(parseInt(prodId));
+                    } else {
+                        showHome(); // Se o produto não existir, volta pra home
+                    }
+                }
+            }
+        }, 300);
+    }
+
+    checarParametrosURL();
 });
-console.log('✅ PARTE 5/7 carregada — Produtos, Categorias e Carrinho prontos');
 
   // ============================================================
 // PARTE 6/7 — CHECKOUT, FRETE, PAGAMENTO E PIX
@@ -6737,50 +6766,7 @@ async function salvarNovaSenhaRecuperacao() {
         msgEl.textContent = '❌ Erro ao salvar a nova senha.';
     }
 }
-    // ============================================================
-// BOTÃO VOLTAR DO NAVEGADOR (CORRIGIDO)
-// ============================================================
-window.addEventListener('popstate', function(event) {
-    const state = event.state || {};
-    
-    // Caso 1: Tinha um modal de produto aberto → fecha o modal
-    if (state.modalProduto) {
-        // Reabre o modal se o navegador voltou para ele
-        abrirModalProduto(state.modalProduto);
-        return;
-    }
-    
-    // Caso 2: Tinha categoria aberta → volta para a home
-    if (state.categoria) {
-        const cat = PRODUCTS_DATA.categories.find(c => c.id === state.categoria);
-        if (cat) {
-            abrirCategoria(cat.id);
-            return;
-        }
-    }
-    
-    // Caso 3: Estado home → mostra home
-    if (state.home || (!state.modalProduto && !state.categoria)) {
-        // Fecha o modal se estiver aberto
-        const modal = document.getElementById('productModal');
-        if (modal && modal.style.display === 'block') {
-            modal.style.display = 'none';
-        }
-        // Se estava em produtos, volta para categorias
-        const produtos = document.getElementById('productsSection');
-        if (produtos && produtos.style.display !== 'none') {
-            voltarCategorias();
-        } else {
-            showHome();
-        }
-        return;
-    }
-});
 
-// Estado inicial para o histórico ter base
-if (!history.state) {
-    history.replaceState({ home: true }, '', window.location.origin + window.location.pathname);
-}
     // ============================================================
 // CONTROLE DO BOTÃO VOLTAR DO NAVEGADOR (Passo 3)
 // ============================================================
