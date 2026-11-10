@@ -6468,9 +6468,8 @@ function restaurarEstadoNavegacao() {
     }
 }
 
-   // Salva a posição da tela a cada 500ms que o usuário rolar, 
-// mas SEM salvar quando estamos no topo (para evitar pular ao carregar)
-// Salva apenas QUAL PÁGINA o usuário está (não salva mais a rolagem)
+// DESATIVADO: Não salva mais a posição da tela ao rolar
+/*
 let timeoutScrollNavegacao;
 window.addEventListener('scroll', () => {
     clearTimeout(timeoutScrollNavegacao);
@@ -6479,6 +6478,7 @@ window.addEventListener('scroll', () => {
         salvarEstadoNavegacao(); 
     }, 1000);
 });
+*/
 </script>
 
 </body>
