@@ -3931,7 +3931,9 @@ function abrirCategoria(id) {
     atualizarFooterVisibilidade();
     
     renderizarProdutos();
-    history.pushState({ categoria: id }, '', window.location.origin + window.location.pathname + '?cat=' + id);
+    // Cria o nome amigável para a URL (tira acentos, espaços e deixa minúsculo)
+const nomeAmigavel = cat.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-');
+history.pushState({ categoria: id }, '', window.location.origin + window.location.pathname + '?cat=' + id + '&nome=' + nomeAmigavel);
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -6792,6 +6794,31 @@ window.addEventListener('popstate', function(event) {
         voltarCategorias();
     }
 });
+// ============================================================
+// COMPARTILHAR CATEGORIA (Link Amigável)
+// ============================================================
+function compartilharCategoria() {
+    if (!currentCategory) return;
+    
+    // Cria o nome amigável para a URL (ex: caixas-presenteaveis)
+    const nomeAmigavel = currentCategory.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-');
+    const url = window.location.origin + window.location.pathname + '?cat=' + currentCategory.id + '&nome=' + nomeAmigavel;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: currentCategory.name,
+            text: 'Confira os produtos de ' + currentCategory.name + ' na MC Embalagens!',
+            url: url
+        }).catch(console.error);
+    } else {
+        navigator.clipboard.writeText(url).then(() => {
+            mostrarNotificacao('✅ Link da categoria copiado!', 'success');
+        }).catch(() => {
+            prompt('Copie o link da categoria:', url);
+        });
+    }
+}
+    
 </script>
        <!-- ============================================================ -->
     <!-- MODAL ESQUECI MINHA SENHA                                    -->
