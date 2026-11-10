@@ -4248,7 +4248,7 @@ function abrirCarrinho() {
     const totalUnEl = document.getElementById('totalUnidades');
     const btnFinalizar = document.querySelector('#cartModal .btn-checkout');
 
-    vendaSemDescontoAtiva = false;
+    vendaSemDescontoAtiva = false; // Reseta ao abrir
 
     if (carrinho.length === 0) {
         container.innerHTML = '<div class="carrinho-vazio"><i class="fas fa-shopping-cart"></i><p>Seu carrinho está vazio</p></div>';
@@ -4302,34 +4302,37 @@ function abrirCarrinho() {
     totalEl.textContent = 'R$ ' + total.toFixed(2);
     totalUnEl.textContent = totalUnidades + ' un';
 
-    // Validação de Pedido Mínimo para Revendedor
+    // ============================================================
+    // NOVA LÓGICA: BOTÃO SEMPRE ATIVO
+    // ============================================================
     const isRevendedor = usuarioLogado && usuarioLogado.isRevendedor;
+    
+    // Remove qualquer aviso antigo de pedido mínimo que possa ter ficado na tela
+    const avisoAntigo = container.querySelector('.pedido-minimo-aviso');
+    if (avisoAntigo) avisoAntigo.remove();
+
     if (isRevendedor && total < PEDIDO_MINIMO_REVENDEDOR) {
-        const falta = PEDIDO_MINIMO_REVENDEDOR - total;
+        // Mostra um aviso amigável, mas NÃO bloqueia o botão
         const aviso = document.createElement('div');
         aviso.className = 'pedido-minimo-aviso';
-        aviso.innerHTML = `
-            <strong><i class="fas fa-exclamation-triangle"></i> Você não atingiu o valor mínimo de R$ 400,00.</strong><br><br>
-            Faltam <strong>R$ ${falta.toFixed(2)}</strong> para você comprar com os preços de revenda (10% OFF + 3% no PIX).<br><br>
-            Se preferir, você pode finalizar este pedido agora como um <strong>cliente comum</strong> (sem os descontos de revenda).
-            <br><br>
-            <button onclick="comprarSemDesconto()" class="btn-comprar-sem-desconto">
-                <i class="fas fa-shopping-bag"></i> Sim, quero comprar sem desconto
-            </button>
-        `;
+        aviso.style.background = '#fff3cd';
+        aviso.style.borderLeft = '4px solid #f39c12';
+        aviso.style.color = '#856404';
+        aviso.style.padding = '10px';
+        aviso.style.borderRadius = '8px';
+        aviso.style.marginBottom = '10px';
+        aviso.style.fontSize = '13px';
+        aviso.innerHTML = '<i class="fas fa-info-circle"></i> <strong>Pedido mínimo para revenda é R$ 400,00.</strong> Ao finalizar, você poderá optar por comprar como cliente comum (sem desconto).';
         container.insertBefore(aviso, container.firstChild);
-        
-        if (btnFinalizar) {
-            btnFinalizar.disabled = true;
-            btnFinalizar.style.opacity = '0.5';
-            btnFinalizar.innerHTML = '<i class="fas fa-lock"></i> Valor mínimo não atingido';
-        }
-    } else {
-        if (btnFinalizar) {
-            btnFinalizar.disabled = false;
-            btnFinalizar.style.opacity = '1';
-            btnFinalizar.innerHTML = '<i class="fas fa-check-circle"></i> Finalizar Pedido';
-        }
+    }
+
+    // Garante que o botão está sempre ativo e verde
+    if (btnFinalizar) {
+        btnFinalizar.disabled = false;
+        btnFinalizar.style.opacity = '1';
+        btnFinalizar.style.cursor = 'pointer';
+        btnFinalizar.style.background = '#27ae60'; // Verde
+        btnFinalizar.innerHTML = '<i class="fas fa-check-circle"></i> Finalizar Pedido';
     }
 }
 
