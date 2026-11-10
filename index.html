@@ -2496,16 +2496,16 @@
                         Dom/Feriados: Fechado
                     </p>
                 </div>
-                <div>
-                    <h4><i class="fas fa-link"></i> Links Rápidos</h4>
-                    <ul>
-                        <li><a href="politica-privacidade.html" target="_blank">Política de Privacidade</a></li>
-                        <li><a href="politica-troca.html" target="_blank">Trocas e Devoluções</a></li>
-                        <li><a href="termos-envio.html" target="_blank">Termos de Envio</a></li>
-                        <li><a href="sobre-nos.html" target="_blank">Sobre Nós</a></li>
-                        <li><a href="sobre-prazos.html" target="_blank">Sobre os Prazos</a></li>
-                    </ul>
-                </div>
+               <div>
+    <h4><i class="fas fa-link"></i> Links Rápidos</h4>
+    <ul>
+        <li><a href="politica-privacidade.html">Política de Privacidade</a></li>
+        <li><a href="politica-troca.html">Trocas e Devoluções</a></li>
+        <li><a href="termos-envio.html">Termos de Envio</a></li>
+        <li><a href="sobre-nos.html">Sobre Nós</a></li>
+        <li><a href="sobre-prazos.html">Sobre os Prazos</a></li>
+    </ul>
+</div>
                 <div>
                     <h4><i class="fas fa-credit-card"></i> Formas de Pagamento</h4>
                     <div class="footer-pagamentos">
@@ -2536,45 +2536,53 @@
     <!-- ============================================================ -->
     <!-- BOTTOM NAVIGATION                                            -->
     <!-- ============================================================ -->
-    <nav class="bottom-nav">
-        <button class="nav-menu-toggle" onclick="abrirMenu()">
-            <i class="fas fa-bars"></i><span>Menu</span>
-        </button>
-        <button class="nav-item active" onclick="showHome()">
-            <i class="fas fa-home"></i><span>Início</span>
-        </button>
-        <button class="nav-item" onclick="abrirMeusPedidos()">
-            <i class="fas fa-box"></i><span>Pedidos</span>
-        </button>
-      <a class="nav-item" href="https://www.mcembalagens.com.br/contato" style="text-decoration:none;">
-    <i class="fas fa-headset"></i><span>Atendimento</span>
-</a>
-        <button class="nav-item" onclick="abrirWhatsApp()">
-            <i class="fab fa-whatsapp"></i><span>WhatsApp</span>
-        </button>
-    </nav>
+   <nav class="bottom-nav">
+    <button class="nav-menu-toggle" onclick="abrirMenu()">
+        <i class="fas fa-bars"></i><span>Menu</span>
+    </button>
+    <button class="nav-item active" onclick="showHome()">
+        <i class="fas fa-home"></i><span>Início</span>
+    </button>
+    <button class="nav-item" onclick="abrirMeusPedidos()">
+        <i class="fas fa-box"></i><span>Pedidos</span>
+    </button>
+    
+    <!-- BOTÃO ATENDIMENTO CORRIGIDO -->
+    <a class="nav-item" href="https://www.mcembalagens.com.br/contato" style="text-decoration:none;">
+        <i class="fas fa-headset"></i><span>Atendimento</span>
+    </a>
+    
+    <button class="nav-item" onclick="abrirWhatsApp()">
+        <i class="fab fa-whatsapp"></i><span>WhatsApp</span>
+    </button>
+</nav>
 
     <!-- ============================================================ -->
     <!-- MENU LATERAL                                                 -->
     <!-- ============================================================ -->
-    <div class="side-menu-overlay" id="sideMenuOverlay" onclick="fecharMenu()"></div>
-    <div class="side-menu" id="sideMenu">
-        <div class="side-menu-header">
-            <h2><i class="fas fa-bars" style="margin-right:10px;"></i>Menu</h2>
-            <button class="side-menu-close" onclick="fecharMenu()">&times;</button>
-        </div>
-        <a class="side-menu-item" onclick="fecharMenu();showHome();"><i class="fas fa-home"></i> Início</a>
-        <a class="side-menu-item" onclick="fecharMenu();abrirCarrinho();"><i class="fas fa-shopping-cart"></i> Meu Carrinho</a>
-        <a class="side-menu-item" onclick="fecharMenu();abrirMeusPedidos();"><i class="fas fa-box"></i> Meus Pedidos</a>
-       <a class="side-menu-item" href="https://www.mcembalagens.com.br/contato"><i class="fas fa-headset"></i> Central de Atendimento</a>
-        <a class="side-menu-item" onclick="fecharMenu();abrirWhatsApp();"><i class="fab fa-whatsapp"></i> WhatsApp</a>
-        <a class="side-menu-item" onclick="fecharMenu();abrirModalRegras();"><i class="fas fa-file-alt"></i> Regras de Compra</a>
-        <a class="side-menu-item" href="politica-troca.html" target="_blank"><i class="fas fa-exchange-alt"></i> Política de Troca</a>
-        <a class="side-menu-item" href="politica-privacidade.html" target="_blank"><i class="fas fa-shield-alt"></i> Política de Privacidade</a>
-        <a class="side-menu-item" href="termos-envio.html" target="_blank"><i class="fas fa-truck"></i> Termos de Envio</a>
-        <a class="side-menu-item" href="sobre-nos.html" target="_blank"><i class="fas fa-info-circle"></i> Sobre Nós</a>
-        <a class="side-menu-item" href="sobre-prazos.html" target="_blank"><i class="fas fa-clock"></i> Sobre os Prazos</a>
+   <div class="side-menu-overlay" id="sideMenuOverlay" onclick="fecharMenu()"></div>
+<div class="side-menu" id="sideMenu">
+    <div class="side-menu-header">
+        <h2><i class="fas fa-bars" style="margin-right:10px;"></i>Menu</h2>
+        <button class="side-menu-close" onclick="fecharMenu()">&times;</button>
     </div>
+    <a class="side-menu-item" onclick="fecharMenu();showHome();"><i class="fas fa-home"></i> Início</a>
+    <a class="side-menu-item" onclick="fecharMenu();abrirCarrinho();"><i class="fas fa-shopping-cart"></i> Meu Carrinho</a>
+    <a class="side-menu-item" onclick="fecharMenu();abrirMeusPedidos();"><i class="fas fa-box"></i> Meus Pedidos</a>
+    
+    <!-- BOTÃO DE ATENDIMENTO CORRIGIDO -->
+    <a class="side-menu-item" href="https://www.mcembalagens.com.br/contato"><i class="fas fa-headset"></i> Central de Atendimento</a>
+    
+    <a class="side-menu-item" onclick="fecharMenu();abrirWhatsApp();"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+    <a class="side-menu-item" onclick="fecharMenu();setTimeout(abrirRegrasParaCadastro, 300);"><i class="fas fa-file-alt"></i> Regras de Compra</a>
+    
+    <!-- LINKS INSTITUCIONAIS -->
+    <a class="side-menu-item" href="politica-troca.html"><i class="fas fa-exchange-alt"></i> Política de Troca</a>
+    <a class="side-menu-item" href="politica-privacidade.html"><i class="fas fa-shield-alt"></i> Política de Privacidade</a>
+    <a class="side-menu-item" href="termos-envio.html"><i class="fas fa-truck"></i> Termos de Envio</a>
+    <a class="side-menu-item" href="sobre-nos.html"><i class="fas fa-info-circle"></i> Sobre Nós</a>
+    <a class="side-menu-item" href="sobre-prazos.html"><i class="fas fa-clock"></i> Sobre os Prazos</a>
+</div>
 
     <!-- ============================================================ -->
     <!-- MODAL PRODUTO                                                -->
