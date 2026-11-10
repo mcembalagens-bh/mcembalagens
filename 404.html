@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirecionando...</title>
+    <script>
+        // Verifica se a URL NÃO tem o "www."
+        if (window.location.hostname === 'mcembalagens.com.br') {
+            // Redireciona para a versão com www, mantendo o caminho original
+            window.location.replace('https://www.mcembalagens.com.br' + window.location.pathname + window.location.search);
+        } else {
+            // Se der 404 em alguma página com www, volta para a Home
+            window.location.replace('https://www.mcembalagens.com.br');
+        }
+    </script>
+</head>
+<body style="font-family: sans-serif; text-align: center; padding: 50px;">
+    <h2>Redirecionando para o site...</h2>
+    <p>Se não for redirecionado automaticamente, <a href="https://www.mcembalagens.com.br">clique aqui</a>.</p>
+</body>
+</html>
