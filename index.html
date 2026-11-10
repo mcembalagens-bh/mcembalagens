@@ -6448,9 +6448,19 @@ function restaurarEstadoNavegacao() {
             return false;
         }
         
+        // A MÁGICA AQUI: Desativa a restauração automática do navegador
+        // para podermos controlar a rolagem de forma suave.
+        if ('scrollRestoration' in history) {
+            history.scrollRestoration = 'manual';
+        }
+
         if (estado.pagina === 'home') {
             showHome();
-            setTimeout(() => window.scrollTo(0, estado.scrollY || 0), 300);
+            // Em vez de forçar a rolagem na hora, esperamos o banco de dados carregar
+            // e usamos um setTimeout seguro.
+            setTimeout(() => {
+                window.scrollTo({ top: estado.scrollY || 0, behavior: 'instant' });
+            }, 600); // 600ms para garantir que as categorias já renderizaram
             return true;
         }
         
@@ -6461,7 +6471,9 @@ function restaurarEstadoNavegacao() {
                 return false;
             }
             abrirCategoria(cat.id);
-            setTimeout(() => window.scrollTo(0, estado.scrollY || 0), 300);
+            setTimeout(() => {
+                window.scrollTo({ top: estado.scrollY || 0, behavior: 'instant' });
+            }, 600);
             return true;
         }
         return false;
@@ -6470,13 +6482,21 @@ function restaurarEstadoNavegacao() {
     }
 }
 
-    // Salva a posição da tela a cada 500ms que o usuário rolar
+   // Salva a posição da tela a cada 500ms que o usuário rolar, 
+// mas SEM salvar quando estamos no topo (para evitar pular ao carregar)
 let timeoutScrollNavegacao;
 window.addEventListener('scroll', () => {
-    clearTimeout(timeoutScrollNavegacao);
-    timeoutScrollNavegacao = setTimeout(() => {
-        salvarEstadoNavegacao();
-    }, 500);
+    // Só salva se a rolagem for maior que 50 pixels (evita salvar o topo puro)
+    if (window.scrollY > 50) {
+        clearTimeout(timeoutScrollNavegacao);
+        timeoutScrollNavegacao = setTimeout(() => {
+            salvarEstadoNavegacao();
+        }, 500);
+    } else {
+        // Se o usuário voltou para o topo, limpa a navegação salva
+        // para não forçar a tela a rolar para baixo ao atualizar
+        localStorage.removeItem('estadoNavegacao');
+    }
 });
 </script>
 
