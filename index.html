@@ -6562,11 +6562,12 @@ function mudarMetodoRecuperacao(metodo) {
         const tel = String(recuperacaoCliente.telefone || '').replace(/\D/g, '');
         let mascara = 'Número não cadastrado';
         
-        if (tel.length >= 10) {
-            // Mostra apenas o início e os 4 últimos, mas esconde o miolo
-            const ddd = tel.substring(0,2);
-            const final = tel.slice(-4);
-            mascara = `(${ddd}) 9 xxxx-${final}`;
+        if (tel.length === 11) {
+            // Ex: (31) 9 8256-xxxx
+            mascara = `(${tel.substring(0,2)}) ${tel.substring(2,3)} ${tel.substring(3,7)}-xxxx`;
+        } else if (tel.length === 10) {
+            // Ex: (31) 8256-xxxx
+            mascara = `(${tel.substring(0,2)}) ${tel.substring(2,6)}-xxxx`;
         }
         
         document.getElementById('celularMascara').textContent = mascara;
