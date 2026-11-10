@@ -1,151 +1,208 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Termo de Envio - Caixas Kraft 420g | Distribuidor da Fábrica</title>
-    <meta name="description" content="Política de Envio e Prazos para Caixas Kraft 420g. Confira prazos, frete, rastreio e condições conforme o Código de Defesa do Consumidor.">
+    <title>Termo de Envio - MC Embalagens BH</title>
+    <meta name="description" content="Política de Envio e Prazos. Confira prazos, frete, rastreio e condições conforme o Código de Defesa do Consumidor.">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            --cor-primaria: #8B5A2B; /* Tom Kraft/Marrom */
-            --cor-texto: #333;
-            --cor-fundo: #F9F6F2;
-            --cor-card: #FFFFFF;
-            --borda: #E0D7CC;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            line-height: 1.7;
-            background-color: var(--cor-fundo);
-            color: var(--cor-texto);
-            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            color: #1a1a1a;
             padding: 20px;
         }
         .container {
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
-            background-color: var(--cor-card);
-            padding: 30px 40px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            border: 1px solid var(--borda);
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
         }
-        header {
-            text-align: center;
-            border-bottom: 2px solid var(--cor-primaria);
-            padding-bottom: 15px;
+        
+        /* ESTILO DO BOTÃO VOLTAR CORRIGIDO */
+        .voltar {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 25px;
+            background: #f0f4f8;
+            color: #1a3a5c;
+            padding: 10px 18px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            transition: all 0.2s ease;
+        }
+        .voltar:hover { 
+            background: #e2e8f0; 
+            transform: translateX(-3px);
+        }
+        .voltar i { font-size: 14px; }
+
+        h1 {
+            color: #1a3a5c;
+            font-size: 28px;
+            margin-bottom: 10px;
+            border-bottom: 3px solid #1a3a5c;
+            padding-bottom: 10px;
+        }
+        .subtitulo {
+            color: #666;
+            font-size: 16px;
             margin-bottom: 30px;
         }
-        header h1 {
-            color: var(--cor-primaria);
-            margin: 0;
-            font-size: 1.8rem;
-        }
-        header p {
-            margin: 5px 0 0;
-            font-weight: 500;
-        }
         h2 {
-            color: var(--cor-primaria);
-            font-size: 1.4rem;
+            color: #1a3a5c;
+            font-size: 20px;
             margin-top: 30px;
-            border-left: 4px solid var(--cor-primaria);
-            padding-left: 10px;
+            margin-bottom: 15px;
         }
         h3 {
-            font-size: 1.1rem;
+            color: #1a3a5c;
+            font-size: 16px;
             margin-top: 20px;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
-        p, li {
-            font-size: 1rem;
+        p {
+            line-height: 1.8;
+            color: #333;
+            margin-bottom: 12px;
         }
         ul {
-            padding-left: 20px;
+            padding-left: 25px;
+            margin-bottom: 15px;
         }
+        ul li {
+            line-height: 1.8;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        /* CAIXAS DE DESTAQUE */
         .aviso-legal {
-            background-color: #FFF8E1;
-            border: 1px solid #FFECB3;
-            border-radius: 6px;
-            padding: 15px;
-            margin: 25px 0;
-            font-size: 0.95rem;
+            background-color: #fff3cd;
+            border-left: 4px solid #f39c12;
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin: 20px 0;
+            font-size: 14px;
         }
-        .aviso-legal strong {
-            color: #8D6E63;
-        }
+        .aviso-legal strong { color: #856404; }
+
         .pontos-chave {
-            background-color: var(--cor-fundo);
-            border-left: 4px solid var(--cor-primaria);
+            background-color: #f0f4f8;
+            border-left: 4px solid #1a3a5c;
             padding: 15px 20px;
             margin-top: 30px;
-            border-radius: 0 6px 6px 0;
+            border-radius: 0 8px 8px 0;
         }
-        footer {
-            text-align: center;
+        
+        /* TABELA DE FRETE */
+        .tabela-frete {
             margin-top: 40px;
+            border-top: 2px solid #eee;
             padding-top: 20px;
-            border-top: 1px solid var(--borda);
-            font-size: 0.9rem;
-            color: #777;
         }
-        @media (max-width: 600px) {
+        .cidade-frete {
+            background: #f8f9fa;
+            padding: 12px 18px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #e8ecf0;
+        }
+        .cidade-frete h4 {
+            color: #2a5a8c;
+            font-size: 15px;
+            margin-bottom: 8px;
+        }
+        .cidade-frete ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .cidade-frete li {
+            padding: 4px 0;
+            border-bottom: 1px dashed #e0e0e0;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .cidade-frete li:last-child { border-bottom: none; }
+        .cidade-frete .gratis { color: #27ae60; font-weight: 700; }
+        
+        /* BOTÃO VOLTAR DO FINAL DA PÁGINA */
+        .btn-voltar {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 40px;
+            background: #1a3a5c;
+            color: white;
+            padding: 14px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .btn-voltar:hover {
+            background: #2a5a8c;
+            transform: scale(1.02);
+        }
+        
+        @media (max-width: 768px) {
             .container { padding: 20px; }
-            header h1 { font-size: 1.5rem; }
-            h2 { font-size: 1.2rem; }
+            h1 { font-size: 22px; }
+            h2 { font-size: 18px; }
+            .btn-voltar { width: 100%; justify-content: center; }
         }
     </style>
 </head>
 <body>
-
     <div class="container">
-        <header>
-            <h1>TERMO DE ENVIO</h1>
-            <p>CAIXAS KRAFT 420G | Distribuidor da Fábrica</p>
-        </header>
+        <!-- CORREÇÃO: href="/" aponta direto para a raiz do site -->
+        <a href="/" class="voltar">
+            <i class="fas fa-arrow-left"></i> Voltar para a Loja
+        </a>
+        
+        <h1>Termo de Envio</h1>
+        <p class="subtitulo">Caixas Kraft 420g | Distribuidor da Fábrica</p>
 
-        <section id="prazo-envio">
-            <h2>1. PRAZO DE ENVIO</h2>
-            <p>1.1. O prazo de envio informado no checkout começa a contar após a confirmação do pagamento pela nossa equipe financeira.</p>
-            <p>1.2. <strong>PIX e Boleto:</strong> Após a compensação bancária. O boleto bancário pode levar até 3 dias úteis para compensar.</p>
-            <p>1.3. <strong>Cartão de Crédito:</strong> Após a aprovação pela operadora do cartão, em até 1 dia útil.</p>
-            <p>1.4. Todos os prazos informados são em <strong>dias úteis</strong>, não contando sábados, domingos e feriados nacionais ou regionais.</p>
-        </section>
+        <h2>1. PRAZO DE ENVIO</h2>
+        <p>1.1. O prazo de envio informado no checkout começa a contar após a confirmação do pagamento pela nossa equipe financeira.</p>
+        <p>1.2. <strong>PIX e Boleto:</strong> Após a compensação bancária. O boleto bancário pode levar até 3 dias úteis para compensar.</p>
+        <p>1.3. <strong>Cartão de Crédito:</strong> Após a aprovação pela operadora do cartão, em até 1 dia útil.</p>
+        <p>1.4. Todos os prazos informados são em <strong>dias úteis</strong>, não contando sábados, domingos e feriados nacionais ou regionais.</p>
 
-        <section id="prazo-entrega">
-            <h2>2. PRAZO DE ENTREGA</h2>
-            <p>2.1. O prazo de entrega é calculado automaticamente no carrinho de compras e depende exclusivamente do CEP informado no momento da compra.</p>
-            <p>2.2. A responsabilidade pela entrega é da transportadora ou Correios contratada para o serviço escolhido pelo cliente.</p>
-            <p>2.3. Atrasos ocasionados por greve, condições climáticas adversas, retenção na fiscalização ou endereço incorreto/incompleto não são de responsabilidade do distribuidor.</p>
-        </section>
+        <h2>2. PRAZO DE ENTREGA</h2>
+        <p>2.1. O prazo de entrega é calculado automaticamente no carrinho de compras e depende exclusivamente do CEP informado no momento da compra.</p>
+        <p>2.2. A responsabilidade pela entrega é da transportadora ou Correios contratada para o serviço escolhido pelo cliente.</p>
+        <p>2.3. Atrasos ocasionados por greve, condições climáticas adversas, retenção na fiscalização ou endereço incorreto/incompleto não são de responsabilidade do distribuidor.</p>
 
-        <section id="custo-modalidades">
-            <h2>3. CUSTO E MODALIDADES DE FRETE</h2>
-            <p>3.1. O valor do frete é calculado automaticamente pelo sistema, considerando o CEP de destino e o peso cubado da caixa.</p>
-            <p>3.2. Oferecemos as seguintes modalidades: PAC, SEDEX e Transportadora. O cliente escolhe a opção desejada no checkout.</p>
-        </section>
+        <h2>3. CUSTO E MODALIDADES DE FRETE</h2>
+        <p>3.1. O valor do frete é calculado automaticamente pelo sistema, considerando o CEP de destino e o peso cubado da caixa.</p>
+        <p>3.2. Oferecemos as seguintes modalidades: PAC, SEDEX e Transportadora. O cliente escolhe a opção desejada no checkout.</p>
+        <p>3.3. Também oferecemos <strong>Entrega Própria</strong> para a região metropolitana de BH, conforme tabela abaixo.</p>
 
-        <section id="embalagem-avarias">
-            <h2>4. EMBALAGEM E AVARIAS NO TRANSPORTE</h2>
-            <p>4.1. Todas as <strong>caixas Kraft 420g</strong> são embaladas com proteção específica para transporte, a fim de minimizar riscos de avaria.</p>
-            <p>4.2. <strong>No ato do recebimento:</strong> Recomendamos que o cliente abra a caixa na presença do entregador.</p>
-            <p>4.3. Se for constatada qualquer avaria na embalagem ou produto, o recebimento deve ser recusado e registrado com fotos. Entraremos em contato em até 24h úteis para resolver a situação.</p>
-            <p>4.4. Avarias comunicadas após o recebimento e assinatura do canhoto não serão aceitas, conforme art. 26 do CDC.</p>
-        </section>
+        <h2>4. EMBALAGEM E AVARIAS NO TRANSPORTE</h2>
+        <p>4.1. Todas as <strong>caixas Kraft 420g</strong> são embaladas com proteção específica para transporte, a fim de minimizar riscos de avaria.</p>
+        <p>4.2. <strong>No ato do recebimento:</strong> Recomendamos que o cliente abra a caixa na presença do entregador.</p>
+        <p>4.3. Se for constatada qualquer avaria na embalagem ou produto, o recebimento deve ser recusado e registrado com fotos. Entraremos em contato em até 24h úteis para resolver a situação.</p>
+        <p>4.4. Avarias comunicadas após o recebimento e assinatura do canhoto não serão aceitas, conforme art. 26 do CDC.</p>
 
-        <section id="endereco">
-            <h2>5. ENDEREÇO INCORRETO / NÃO RECEBIMENTO</h2>
-            <p>5.1. É de total responsabilidade do cliente informar corretamente o CEP, número, complemento e ponto de referência no momento da compra.</p>
-            <p>5.2. Se o pedido retornar por endereço incorreto, incompleto ou por ausência no local de entrega, o reenvio será feito mediante o pagamento de um novo frete pelo cliente.</p>
-            <p>5.3. Pedidos que não forem retirados na agência dos Correios ou transportadora dentro do prazo de 7 dias serão devolvidos ao nosso centro de distribuição.</p>
-        </section>
+        <h2>5. ENDEREÇO INCORRETO / NÃO RECEBIMENTO</h2>
+        <p>5.1. É de total responsabilidade do cliente informar corretamente o CEP, número, complemento e ponto de referência no momento da compra.</p>
+        <p>5.2. Se o pedido retornar por endereço incorreto, incompleto ou por ausência no local de entrega, o reenvio será feito mediante o pagamento de um novo frete pelo cliente.</p>
+        <p>5.3. Pedidos que não forem retirados na agência dos Correios ou transportadora dentro do prazo de 7 dias serão devolvidos ao nosso centro de distribuição.</p>
 
-        <section id="rastreio">
-            <h2>6. RASTREIO DO PEDIDO</h2>
-            <p>6.1. O código de rastreio será enviado para o e-mail ou WhatsApp cadastrado em até 1 dia útil após a postagem do pedido.</p>
-            <p>6.2. O cliente poderá acompanhar o status da entrega diretamente no site oficial dos Correios ou da transportadora responsável.</p>
-        </section>
+        <h2>6. RASTREIO DO PEDIDO</h2>
+        <p>6.1. O código de rastreio será enviado para o e-mail ou WhatsApp cadastrado em até 1 dia útil após a postagem do pedido.</p>
+        <p>6.2. O cliente poderá acompanhar o status da entrega diretamente no site oficial dos Correios ou da transportadora responsável.</p>
 
         <div class="pontos-chave">
             <h3>Pontos-chave da Lei que estamos cumprindo:</h3>
@@ -156,112 +213,112 @@
             </ul>
         </div>
 
-        <footer>
-            <p>Última atualização: Abril de 2026 | Caixas Kraft 420g - Distribuidor da Fábrica</p>
-        </footer>
-    </div>
+        <!-- TABELA DE FRETE INSERIDA CORRETAMENTE AQUI DENTRO DO CONTAINER -->
+        <div class="tabela-frete">
+            <h2>📍 Tabela de Frete - Entrega Própria (Região Metropolitana de BH)</h2>
+            
+            <div class="cidade-frete">
+                <h4>🏙️ Belo Horizonte</h4>
+                <ul>
+                    <li><span>Até R$ 50,00</span> <span>R$ 28,90</span></li>
+                    <li><span>R$ 50,01 a R$ 299,99</span> <span>R$ 19,90</span></li>
+                    <li><span>Acima de R$ 300,00</span> <span class="gratis">Frete Grátis</span></li>
+                </ul>
+            </div>
 
+            <div class="cidade-frete">
+                <h4>🏙️ Betim</h4>
+                <ul>
+                    <li><span>R$ 50,00 a R$ 120,00</span> <span>R$ 56,90</span></li>
+                    <li><span>R$ 120,01 a R$ 299,99</span> <span>R$ 47,90</span></li>
+                    <li><span>Acima de R$ 300,00</span> <span>R$ 37,90</span></li>
+                </ul>
+            </div>
+
+            <div class="cidade-frete">
+                <h4>🏙️ Contagem</h4>
+                <ul>
+                    <li><span>R$ 50,00 a R$ 120,00</span> <span>R$ 38,90</span></li>
+                    <li><span>R$ 120,01 a R$ 299,99</span> <span>R$ 29,90</span></li>
+                    <li><span>Acima de R$ 300,00</span> <span>R$ 19,90</span></li>
+                </ul>
+            </div>
+
+            <div class="cidade-frete">
+                <h4>🏙️ Sabará</h4>
+                <ul>
+                    <li><span>R$ 50,00 a R$ 120,00</span> <span>R$ 38,90</span></li>
+                    <li><span>R$ 120,01 a R$ 299,99</span> <span>R$ 29,90</span></li>
+                    <li><span>Acima de R$ 300,00</span> <span>R$ 24,90</span></li>
+                </ul>
+            </div>
+
+            <div class="cidade-frete">
+                <h4>🏙️ Ibirité</h4>
+                <ul>
+                    <li><span>R$ 50,00 a R$ 120,00</span> <span>R$ 56,90</span></li>
+                    <li><span>R$ 120,01 a R$ 299,99</span> <span>R$ 47,90</span></li>
+                    <li><span>Acima de R$ 300,00</span> <span>R$ 37,90</span></li>
+                </ul>
+            </div>
+
+            <div class="cidade-frete">
+                <h4>🏙️ Ribeirão das Neves</h4>
+                <ul>
+                    <li><span>R$ 50,00 a R$ 120,00</span> <span>R$ 56,90</span></li>
+                    <li><span>R$ 120,01 a R$ 299,99</span> <span>R$ 47,90</span></li>
+                    <li><span>Acima de R$ 300,00</span> <span>R$ 37,90</span></li>
+                </ul>
+            </div>
+
+            <div class="cidade-frete">
+                <h4>🏙️ Santa Luzia</h4>
+                <ul>
+                    <li><span>R$ 50,00 a R$ 120,00</span> <span>R$ 49,90</span></li>
+                    <li><span>R$ 120,01 a R$ 299,99</span> <span>R$ 39,90</span></li>
+                    <li><span>Acima de R$ 300,00</span> <span>R$ 29,90</span></li>
+                </ul>
+            </div>
+
+            <div class="cidade-frete">
+                <h4>🏙️ Vespasiano</h4>
+                <ul>
+                    <li><span>R$ 50,00 a R$ 120,00</span> <span>R$ 56,90</span></li>
+                    <li><span>R$ 120,01 a R$ 299,99</span> <span>R$ 47,90</span></li>
+                    <li><span>Acima de R$ 300,00</span> <span>R$ 37,90</span></li>
+                </ul>
+            </div>
+
+            <div class="cidade-frete">
+                <h4>🏙️ Lagoa Santa</h4>
+                <ul>
+                    <li><span>R$ 50,00 a R$ 120,00</span> <span>R$ 56,90</span></li>
+                    <li><span>R$ 120,01 a R$ 299,99</span> <span>R$ 47,90</span></li>
+                    <li><span>Acima de R$ 300,00</span> <span>R$ 37,90</span></li>
+                </ul>
+            </div>
+
+            <div class="cidade-frete">
+                <h4>🏙️ Nova Lima</h4>
+                <ul>
+                    <li><span>R$ 50,00 a R$ 120,00</span> <span>R$ 56,90</span></li>
+                    <li><span>R$ 120,01 a R$ 299,99</span> <span>R$ 47,90</span></li>
+                    <li><span>Acima de R$ 300,00</span> <span>R$ 37,90</span></li>
+                </ul>
+            </div>
+            
+            <p style="margin-top: 15px; font-size: 12px; color: #888; text-align: center;">
+                *Os valores acima são referentes à modalidade de Entrega Própria e podem sofrer alterações sem aviso prévio.
+            </p>
+        </div>
+
+        <div class="aviso-legal">
+            <p><strong>Última atualização:</strong> Abril de 2026 | MC Embalagens BH</p>
+        </div>
+
+        <a href="/" class="btn-voltar">
+            <i class="fas fa-arrow-left"></i> Voltar para a Loja
+        </a>
+    </div>
 </body>
-
-
-
-    <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; background: #f9f9f9; border-radius: 8px;">
-    <h2 style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px;">📍 Tabela de Frete - Região Metropolitana de BH</h2>
-    
-    <div style="background: white; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
-        <h3 style="color: #2980b9;">🏙️ Belo Horizonte</h3>
-        <ul style="list-style: none; padding: 0;">
-            <li style="padding: 8px 0; border-bottom: 1px solid #eee;">• <strong>Até R$ 50,00</strong> → R$ 28,90</li>
-            <li style="padding: 8px 0; border-bottom: 1px solid #eee;">• <strong>R$ 50,01 a R$ 299,99</strong> → R$ 19,90</li>
-            <li style="padding: 8px 0;">• <strong>Acima de R$ 300,00</strong> → <span style="color: #27ae60; font-weight: bold;">Frete Grátis</span></li>
-        </ul>
-    </div>
-
-    <div style="background: white; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
-        <h3 style="color: #2980b9;">🏙️ Betim</h3>
-        <ul style="list-style: none; padding: 0;">
-            <li style="padding: 8px 0; border-bottom: 1px solid #eee;">• <strong>R$ 50,00 a R$ 120,00</strong> → R$ 56,90</li>
-            <li style="padding: 8px 0; border-bottom: 1px solid #eee;">• <strong>R$ 120,01 a R$ 299,99</strong> → R$ 47,90</li>
-            <li style="padding: 8px 0;">• <strong>Acima de R$ 300,00</strong> → R$ 37,90</li>
-        </ul>
-    </div>
-
-    <div style="background: white; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
-        <h3 style="color: #2980b9;">🏙️ Contagem</h3>
-        <ul style="list-style: none; padding: 0;">
-            <li style="padding: 8px 0; border-bottom: 1px solid #eee;">• <strong>R$ 50,00 a R$ 120,00</strong> → R$ 38,90</li>
-            <li style="padding: 8px 0; border-bottom: 1px solid #eee;">• <strong>R$ 120,01 a R$ 299,99</strong> → R$ 29,90</li>
-            <li style="padding: 8px 0;">• <strong>Acima de R$ 300,00</strong> → R$ 19,90</li>
-        </ul>
-    </div>
-
-    <div style="background: white; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
-        <h3 style="color: #2980b9;">🏙️ Sabará</h3>
-        <ul style="list-style: none; padding: 0;">
-            <li style="padding: 8px 0; border-bottom: 1px solid #eee;">• <strong>R$ 50,00 a R$ 120,00</strong> → R$ 38,90</li>
-            <li style="padding: 8px 0; border-bottom: 1px solid #eee;">• <strong>R$ 120,01 a R$ 299,99</strong> → R$ 29,90</li>
-            <li style="padding: 8px 0;">• <strong>Acima de R$ 300,00</strong> → R$ 24,90</li>
-        </ul>
-    </div>
-
-    <div style="background: white; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
-        <h3 style="color: #2980b9;">🏙️ Ibirité</h3>
-        <ul style="list-style: none; padding: 0;">
-            <li style="padding: 8px 0; border-bottom: 1px solid #eee;">• <strong>R$ 50,00 a R$ 120,00</strong> → R$ 56,90</li>
-            <li style="padding: 8px 0; border-bottom: 1px solid #eee;">• <strong>R$ 120,01 a R$ 299,99</strong> → R$ 47,90</li>
-            <li style="padding: 8px 0;">• <strong>Acima de R$ 300,00</strong> → R$ 37,90</li>
-        </ul>
-    </div>
-
-    <div style="background: white; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
-        <h3 style="color: #2980b9;">🏙️ Ribeirão das Neves</h3>
-        <ul style="list-style: none; padding: 0;">
-            <li style="padding: 8px 0; border-bottom: 1px solid #eee;">• <strong>R$ 50,00 a R$ 120,00</strong> → R$ 56,90</li>
-            <li style="padding: 8px 0; border-bottom: 1px solid #eee;">• <strong>R$ 120,01 a R$ 299,99</strong> → R$ 47,90</li>
-            <li style="padding: 8px 0;">• <strong>Acima de R$ 300,00</strong> → R$ 37,90</li>
-        </ul>
-    </div>
-
-    <div style="background: white; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
-        <h3 style="color: #2980b9;">🏙️ Santa Luzia</h3>
-        <ul style="list-style: none; padding: 0;">
-            <li style="padding: 8px 0; border-bottom: 1px solid #eee;">• <strong>R$ 50,00 a R$ 120,00</strong> → R$ 49,90</li>
-            <li style="padding: 8px 0; border-bottom: 1px solid #eee;">• <strong>R$ 120,01 a R$ 299,99</strong> → R$ 39,90</li>
-            <li style="padding: 8px 0;">• <strong>Acima de R$ 300,00</strong> → R$ 29,90</li>
-        </ul>
-    </div>
-
-    <div style="background: white; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
-        <h3 style="color: #2980b9;">🏙️ Vespasiano</h3>
-        <ul style="list-style: none; padding: 0;">
-            <li style="padding: 8px 0; border-bottom: 1px solid #eee;">• <strong>R$ 50,00 a R$ 120,00</strong> → R$ 56,90</li>
-            <li style="padding: 8px 0; border-bottom: 1px solid #eee;">• <strong>R$ 120,01 a R$ 299,99</strong> → R$ 47,90</li>
-            <li style="padding: 8px 0;">• <strong>Acima de R$ 300,00</strong> → R$ 37,90</li>
-        </ul>
-    </div>
-
-    <div style="background: white; padding: 15px; border-radius: 5px; margin-bottom: 15px;">
-        <h3 style="color: #2980b9;">🏙️ Lagoa Santa</h3>
-        <ul style="list-style: none; padding: 0;">
-            <li style="padding: 8px 0; border-bottom: 1px solid #eee;">• <strong>R$ 50,00 a R$ 120,00</strong> → R$ 56,90</li>
-            <li style="padding: 8px 0; border-bottom: 1px solid #eee;">• <strong>R$ 120,01 a R$ 299,99</strong> → R$ 47,90</li>
-            <li style="padding: 8px 0;">• <strong>Acima de R$ 300,00</strong> → R$ 37,90</li>
-        </ul>
-    </div>
-
-    <div style="background: white; padding: 15px; border-radius: 5px;">
-        <h3 style="color: #2980b9;">🏙️ Nova Lima</h3>
-        <ul style="list-style: none; padding: 0;">
-            <li style="padding: 8px 0; border-bottom: 1px solid #eee;">• <strong>R$ 50,00 a R$ 120,00</strong> → R$ 56,90</li>
-            <li style="padding: 8px 0; border-bottom: 1px solid #eee;">• <strong>R$ 120,01 a R$ 299,99</strong> → R$ 47,90</li>
-            <li style="padding: 8px 0;">• <strong>Acima de R$ 300,00</strong> → R$ 37,90</li>
-        </ul>
-    </div>
-
-    <p style="margin-top: 20px; font-size: 12px; color: #7f8c8d; text-align: center; border-top: 1px solid #ddd; padding-top: 10px;">
-        
-    </p>
-</div>
-
-    
 </html>
