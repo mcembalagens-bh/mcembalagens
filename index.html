@@ -4229,8 +4229,8 @@ function adicionarProduto(productId) {
                 price: p.price,
                 unitPrice: p.unitPrice,
                 images: product.images || [],
-                stock: product.stock,
-                productionDays: product.productionDays || 7,
+                stock: product.stock, // <-- SALVA O ESTOQUE
+                productionDays: product.productionDays || 7, // <-- SALVA DIAS DE PRODUÇÃO
                 vender_zerado: product.vender_zerado,
                 weight: product.weight || 0,
                 quantity: p.totalUnits
@@ -4262,7 +4262,7 @@ function abrirCarrinho() {
     const totalUnEl = document.getElementById('totalUnidades');
     const btnFinalizar = document.querySelector('#cartModal .btn-checkout');
 
-    vendaSemDescontoAtiva = false; // Reseta ao abrir
+    vendaSemDescontoAtiva = false;
 
     if (carrinho.length === 0) {
         container.innerHTML = '<div class="carrinho-vazio"><i class="fas fa-shopping-cart"></i><p>Seu carrinho está vazio</p></div>';
@@ -4278,13 +4278,44 @@ function abrirCarrinho() {
 
     container.innerHTML = '';
     let totalUnidades = 0;
+    
+    // Calcula o total de unidades por produto para exibir o estoque corretamente
+    const totalPorProduto = {};
+    carrinho.forEach(item => {
+        if (!totalPorProduto[item.productId]) totalPorProduto[item.productId] = 0;
+        totalPorProduto[item.productId] += item.totalUnits || 0;
+    });
+
     carrinho.forEach((item, index) => {
         const imgSrc = item.images && item.images[0] ? item.images[0] : '';
         const totalUnItem = item.totalUnits || item.quantity || 0;
         totalUnidades += totalUnItem;
+        
         const div = document.createElement('div');
         div.className = 'cart-item-moderno';
         let imgHtml = imgSrc ? '<img src="' + imgSrc + '" alt="' + item.name + '">' : '<span class="img-placeholder">📦</span>';
+        
+        // LÓGICA DE ESTOQUE / PRODUÇÃO NO CARRINHO
+        let stockStatusHtml = '';
+        const product = encontrarProduto(item.productId);
+        const podeVenderZerado = product ? product.vender_zerado : item.vender_zerado;
+        const estoqueAtual = product ? product.stock : item.stock;
+        const prazoProducao = product ? product.productionDays : (item.productionDays || 7);
+
+        if (!podeVenderZerado) {
+            if (estoqueAtual > 0) {
+                stockStatusHtml = `<span class="stock-badge available"><i class="fas fa-check-circle"></i> Disponível</span>`;
+            } else {
+                stockStatusHtml = `<span class="stock-badge esgotado"><i class="fas fa-times-circle"></i> Esgotado</span>`;
+            }
+        } else {
+            if (estoqueAtual > 0) {
+                stockStatusHtml = `<span class="stock-badge available"><i class="fas fa-check-circle"></i> Disponível</span>`;
+            } else {
+                stockStatusHtml = `<span class="stock-badge production"><i class="fas fa-clock"></i> Produção: ${prazoProducao} dias</span>`;
+            }
+        }
+
         div.innerHTML = '<div class="cart-item-moderno-inner">' +
             '<div class="cart-item-left-moderno">' +
             '<div class="cart-item-image-moderno">' + imgHtml + '</div>' +
@@ -4304,6 +4335,8 @@ function abrirCarrinho() {
             '<span class="pacote-total">' + totalUnItem + ' un</span>' +
             '</div>' +
             '</div>' +
+            '<div class="cart-item-status">' + stockStatusHtml + '</div>' + // <-- AQUI ENTRA O BADGE
+            '</div>' +
             '</div></div>' +
             '<div class="cart-item-right-moderno">' +
             '<div class="cart-item-subtotal">R$ ' + (item.price || 0).toFixed(2) + '</div>' +
@@ -4316,17 +4349,11 @@ function abrirCarrinho() {
     totalEl.textContent = 'R$ ' + total.toFixed(2);
     totalUnEl.textContent = totalUnidades + ' un';
 
-    // ============================================================
-    // NOVA LÓGICA: BOTÃO SEMPRE ATIVO
-    // ============================================================
     const isRevendedor = usuarioLogado && usuarioLogado.isRevendedor;
-    
-    // Remove qualquer aviso antigo de pedido mínimo que possa ter ficado na tela
     const avisoAntigo = container.querySelector('.pedido-minimo-aviso');
     if (avisoAntigo) avisoAntigo.remove();
 
     if (isRevendedor && total < PEDIDO_MINIMO_REVENDEDOR) {
-        // Mostra um aviso amigável, mas NÃO bloqueia o botão
         const aviso = document.createElement('div');
         aviso.className = 'pedido-minimo-aviso';
         aviso.style.background = '#fff3cd';
@@ -4340,12 +4367,11 @@ function abrirCarrinho() {
         container.insertBefore(aviso, container.firstChild);
     }
 
-    // Garante que o botão está sempre ativo e verde
     if (btnFinalizar) {
         btnFinalizar.disabled = false;
         btnFinalizar.style.opacity = '1';
         btnFinalizar.style.cursor = 'pointer';
-        btnFinalizar.style.background = '#27ae60'; // Verde
+        btnFinalizar.style.background = '#27ae60';
         btnFinalizar.innerHTML = '<i class="fas fa-check-circle"></i> Finalizar Pedido';
     }
 }
