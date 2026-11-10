@@ -3421,6 +3421,7 @@ let historicoNavegacao = ['home'];
 let inicializando = true;
 let vendaSemDescontoAtiva = false;
 let realtimeAprovacaoCanal = null;
+let fluxoRevendaAtivo = false;    
 
 // Estado do Checkout
 let checkoutState = {
@@ -5823,9 +5824,13 @@ async function fazerCadastro() {
         return;
     }
     
-    // REGRA DE OURO: CNPJ libera, CPF vai pra análise
     const isCNPJ = docValidado.tipo === 'CNPJ';
-    const novaObservacao = isCNPJ ? 'REVENDA' : 'ANALISE';
+    
+    // 👇 LÓGICA CORRIGIDA: Usa a flag para decidir a observação
+    let novaObservacao = '';
+    if (fluxoRevendaAtivo) {
+        novaObservacao = isCNPJ ? 'REVENDA' : 'ANALISE';
+    }
     
     msgEl.className = 'login-message';
     msgEl.textContent = '🔄 Cadastrando...';
@@ -5878,17 +5883,21 @@ async function fazerCadastro() {
             cep_entrega: cep,
             data_cadastro: new Date().toISOString(),
             observacoes: novaObservacao,
-            aviso_aprovacao_pendente: isCNPJ // Se for CNPJ, já avisa que foi aprovado na hora
+            aviso_aprovacao_pendente: fluxoRevendaAtivo && isCNPJ // Só avisa se for revenda E CNPJ
         }]);
         
         if (error) throw error;
         
-        if (isCNPJ) {
+        // 👇 MENSAGEM CORRIGIDA: Diferencia Cliente Comum de Revendedor
+        if (!fluxoRevendaAtivo) {
             msgEl.className = 'login-message success';
-            msgEl.innerHTML = '✅ <strong>Cadastro concluído!</strong><br>Como você é CNPJ, seu acesso foi <strong>liberado na hora</strong>!<br><br><button onclick="switchLoginTab(\'login\')" style="padding:10px 25px;background:var(--primary-blue);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;">Fazer Login</button>';
+            msgEl.innerHTML = '✅ <strong>Cadastro concluído!</strong><br>Você já pode fazer login e comprar.<br><br><button onclick="switchLoginTab(\'login\')" style="padding:10px 25px;background:var(--primary-blue);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;">Fazer Login</button>';
+        } else if (isCNPJ) {
+            msgEl.className = 'login-message success';
+            msgEl.innerHTML = '✅ <strong>Cadastro de Revendedor concluído!</strong><br>Como você é CNPJ, seu acesso foi <strong>liberado na hora</strong>!<br><br><button onclick="switchLoginTab(\'login\')" style="padding:10px 25px;background:var(--primary-blue);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;">Fazer Login</button>';
         } else {
             msgEl.className = 'login-message success';
-            msgEl.innerHTML = '✅ <strong>Cadastro enviado!</strong><br>Seu CPF foi para <strong>análise</strong> e será liberado em até 24h.<br><br><button onclick="switchLoginTab(\'login\')" style="padding:10px 25px;background:var(--primary-blue);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;">Fazer Login</button>';
+            msgEl.innerHTML = '✅ <strong>Solicitação enviada!</strong><br>Seu CPF foi para <strong>análise</strong> e será liberado em até 24h.<br><br><button onclick="switchLoginTab(\'login\')" style="padding:10px 25px;background:var(--primary-blue);color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;">Fazer Login</button>';
         }
         
         setTimeout(() => {
@@ -5901,6 +5910,8 @@ async function fazerCadastro() {
         msgEl.textContent = '❌ Erro ao cadastrar: ' + (error.message || 'Tente novamente.');
     } finally {
         btn.innerHTML = textoOriginal; btn.disabled = false;
+        // 👇 RESETA A FLAG: Para o próximo cadastro ser tratado como cliente comum
+        fluxoRevendaAtivo = false;
     }
 }
 
@@ -6283,6 +6294,7 @@ function abrirBannerRevendedor() {
 
 function abrirRegrasParaCadastro() {
     document.getElementById('regrasModal').style.display = 'block';
+    fluxoRevendaAtivo = true; // 👈 Ativa a flag
 }
 
 function confirmarRegrasECadastrar() {
