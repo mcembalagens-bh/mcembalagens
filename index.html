@@ -4836,11 +4836,8 @@ function abrirCheckout() {
     let totalProdutos = 0;
     carrinho.forEach(i => totalProdutos += i.price || 0);
     
-    // ============================================================
-    // REGRA DE OURO: ABAIXO DE R$ 400,00 PARA REVENDEDOR
-    // ============================================================
+    // Regra de Ouro: Se for revendedor e não atingiu R$400
     if (!vendaSemDescontoAtiva && usuarioLogado.isRevendedor && totalProdutos < PEDIDO_MINIMO_REVENDEDOR) {
-        // Pergunta amigável e profissional
         const continuar = confirm(
             "⚠️ Atenção: Pedido mínimo para revenda é R$ 400,00.\n\n" +
             "Seu carrinho está em R$ " + totalProdutos.toFixed(2) + ".\n\n" +
@@ -4848,8 +4845,8 @@ function abrirCheckout() {
         );
         
         if (!continuar) return;
-
-        // Recalcula o carrinho para o preço cheio
+        
+        // Recalcula para preço cheio (sem os 10%)
         carrinho.forEach(item => {
             const produtoOriginal = encontrarProduto(item.productId);
             if (produtoOriginal) {
@@ -4867,7 +4864,6 @@ function abrirCheckout() {
         mostrarNotificacao('🛒 Preços recalculados sem desconto de revenda.', 'info');
     }
 
-    // A partir daqui, o fluxo continua normal
     document.body.classList.add('checkout-ativo');
     document.getElementById('checkoutPage').style.display = 'block';
     document.getElementById('checkoutContent').style.display = 'flex';
@@ -5696,7 +5692,7 @@ async function fazerLogin() {
             return;
         }
         
-               const cliente = clientes[0];
+        const cliente = clientes[0];
         if (String(cliente.senha || '').trim() !== senha) {
             msgEl.className = 'login-message error';
             msgEl.innerHTML = '❌ Senha incorreta.<br><br><a href="#" onclick="fecharModal(\'loginModal\'); setTimeout(abrirRecuperarSenha, 300); return false;" style="color:#25D366;font-weight:600;">Esqueci minha senha</a>';
@@ -5718,7 +5714,6 @@ async function fazerLogin() {
         const ehRevendedor = resultado.isRevendedor;
         const estaEmAnalise = obs.indexOf('ANALISE') !== -1;
         
-        // Salva o usuário (seja revendedor ou não)
         usuarioLogado = {
             email: cliente.email,
             nome: cliente.nome || 'Usuário',
@@ -5746,10 +5741,25 @@ async function fazerLogin() {
         mostrarBloqueio();
         iniciarRealtimeAprovacao();
         
-        // Se for revendedor, atualiza os preços na hora
+        // 👇 CORREÇÃO: SE FOR REVENDEDOR, RECALCULA O CARRINHO NA HORA 👇
+        if (ehRevendedor && carrinho.length > 0) {
+            carrinho.forEach(item => {
+                const produtoOriginal = encontrarProduto(item.productId);
+                if (produtoOriginal) {
+                    const qtyInfo = produtoOriginal.quantities.find(q => q.qty === item.step);
+                    if (qtyInfo) {
+                        item.price = item.qty * qtyInfo.price * (1 - DESCONTO_REVENDEDOR); 
+                        item.unitPrice = (qtyInfo.price / item.step) * (1 - DESCONTO_REVENDEDOR);
+                    }
+                }
+            });
+            salvarCarrinho();
+            atualizarBadge();
+            mostrarNotificacao('✅ Preços do carrinho atualizados para revenda!', 'success');
+        }
+
         if (ehRevendedor && currentProducts.length > 0) renderizarProdutos();
         
-        // Se tem aviso de aprovação pendente no banco, mostra o modal de boas vindas
         if (cliente.aviso_aprovacao_pendente === true) {
             setTimeout(() => { mostrarModalAprovacaoRevendedor(); }, 500);
         }
