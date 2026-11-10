@@ -3471,6 +3471,12 @@ function mostrarNotificacao(mensagem, tipo) {
 function fecharModal(id) {
     const m = document.getElementById(id);
     if (m) m.style.display = 'none';
+    
+    // 👇 ADICIONE ESTE BLOCO PARA LIMPAR A URL AO FECHAR O MODAL 👇
+    if (id === 'productModal') {
+        const novaUrl = window.location.origin + window.location.pathname;
+        history.replaceState({}, '', novaUrl);
+    }
 }
 
 // ============================================================
@@ -4051,6 +4057,10 @@ function compartilharProduto(event, productId) {
 function abrirModalProduto(id) {
     const product = encontrarProduto(id);
     if (!product) return;
+     // 👇 ADICIONE ESTA LINHA PARA ATUALIZAR A URL 👇
+    const novaUrl = window.location.origin + window.location.pathname + '?produto=' + id;
+    history.replaceState({}, '', novaUrl);
+    
     const isRevendedor = usuarioLogado && usuarioLogado.isRevendedor;
     modalProductId = id;
     carouselIndex = 0;
@@ -6254,7 +6264,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!restaurou) showHome();
             }
         }
-    }, 2000);
+    }, 2000); // 2 segundos para garantir que os produtos do Supabase carregaram
 });
 
 console.log('✅ PARTE 7/7 carregada — Login, Cadastro, Sessão e Realtime prontos!');
