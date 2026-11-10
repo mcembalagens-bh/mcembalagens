@@ -6512,19 +6512,19 @@ window.addEventListener('scroll', () => {
 });
 */
 
-    // ============================================================
-// RECUPERAÇÃO DE SENHA
+// ============================================================
+// RECUPERAÇÃO DE SENHA (VERSÃO CORRIGIDA)
 // ============================================================
 let recuperacaoCliente = null;
 let recuperacaoEmail = '';
 
 function abrirRecuperarSenha() {
     document.getElementById('recuperarPasso1').style.display = 'block';
-    document.getElementById('recuperarPasso2').style.display = 'none';
+    document.getElementById('recuperarPasso2Celular').style.display = 'none';
+    document.getElementById('recuperarPasso2Doc').style.display = 'none';
     document.getElementById('recuperarPasso3').style.display = 'none';
     document.getElementById('recuperarEmail').value = '';
     
-    // Reseta mensagens
     ['recuperarMessage1','recuperarMessage2','recuperarMessage3','recuperarMessage4'].forEach(id => {
         const el = document.getElementById(id);
         if (el) { el.className = 'login-message'; el.textContent = ''; }
@@ -6560,7 +6560,10 @@ async function buscarEmailRecuperacao() {
         
         recuperacaoCliente = data[0];
         recuperacaoEmail = email;
-        prepararPasso2Recuperacao();
+        
+        // Mostra a tela do celular primeiro (padrão)
+        document.getElementById('recuperarPasso1').style.display = 'none';
+        mudarMetodoRecuperacao('cel');
         
     } catch (e) {
         console.error('Erro ao buscar email:', e);
@@ -6569,34 +6572,30 @@ async function buscarEmailRecuperacao() {
     }
 }
 
-function prepararPasso2Recuperacao() {
-    document.getElementById('recuperarPasso1').style.display = 'none';
-    document.getElementById('recuperarPasso2').style.display = 'block';
-    
-    // Prepara a máscara do celular
-    const tel = String(recuperacaoCliente.telefone || '').replace(/\D/g, '');
-    let mascara = 'Número não cadastrado';
-    
-    if (tel.length === 11) {
-        // Ex: (31) 9 xxxx-15xx (mostra o final)
-        mascara = `(${tel.substring(0,2)}) 9 ${tel.substring(3,7).replace(/\d/g, 'x')}-${tel.substring(7)}`;
-    } else if (tel.length === 10) {
-        // Ex: (31) xxxx-15xx (mostra o final)
-        mascara = `(${tel.substring(0,2)}) ${tel.substring(2,6).replace(/\d/g, 'x')}-${tel.substring(6)}`;
-    }
-    
-    document.getElementById('celularMascara').textContent = mascara;
-    document.getElementById('celularDigitos').value = '';
-    document.getElementById('docInicio').value = '';
-    document.getElementById('cepInicio').value = '';
-    
-    // Esconde o campo de celular se não tiver número
-    if (tel.length < 10) {
-        document.getElementById('celularDigitos').disabled = true;
-        document.getElementById('celularDigitos').placeholder = 'Sem tel.';
-    } else {
-        document.getElementById('celularDigitos').disabled = false;
-        document.getElementById('celularDigitos').placeholder = '____';
+function mudarMetodoRecuperacao(metodo) {
+    if (metodo === 'cel') {
+        document.getElementById('recuperarPasso2Doc').style.display = 'none';
+        document.getElementById('recuperarPasso2Celular').style.display = 'block';
+        
+        // Prepara a máscara
+        const tel = String(recuperacaoCliente.telefone || '').replace(/\D/g, '');
+        let mascara = 'Número não cadastrado';
+        
+        if (tel.length >= 10) {
+            // Mostra apenas o início e os 4 últimos, mas esconde o miolo
+            const ddd = tel.substring(0,2);
+            const final = tel.slice(-4);
+            mascara = `(${ddd}) 9 xxxx-${final}`;
+        }
+        
+        document.getElementById('celularMascara').textContent = mascara;
+        document.getElementById('celularDigitos').value = '';
+        
+    } else if (metodo === 'doc') {
+        document.getElementById('recuperarPasso2Celular').style.display = 'none';
+        document.getElementById('recuperarPasso2Doc').style.display = 'block';
+        document.getElementById('docInicio').value = '';
+        document.getElementById('cepInicio').value = '';
     }
 }
 
@@ -6606,7 +6605,7 @@ function confirmarCelularRecuperacao() {
     
     if (digitos.length !== 4) {
         msgEl.className = 'login-message error';
-        msgEl.textContent = '⚠️ Digite os 4 últimos dígitos do celular.';
+        msgEl.textContent = '⚠️ Digite os 4 últimos dígitos.';
         return;
     }
     
@@ -6619,7 +6618,7 @@ function confirmarCelularRecuperacao() {
         irParaNovaSenha();
     } else {
         msgEl.className = 'login-message error';
-        msgEl.textContent = '❌ Dígitos incorretos. Tente novamente.';
+        msgEl.textContent = '❌ Dígitos incorretos. Tente novamente ou escolha outra opção.';
     }
 }
 
@@ -6639,16 +6638,19 @@ function confirmarDocCepRecuperacao() {
     
     if (doc === docBanco.substring(0,3) && cep === cepBanco.substring(0,3)) {
         msgEl.className = 'login-message success';
-        msgEl.textContent = '✅ Documento e CEP confirmados!';
+        msgEl.textContent = '✅ Dados confirmados!';
         irParaNovaSenha();
     } else {
         msgEl.className = 'login-message error';
-        msgEl.textContent = '❌ Dados incorretos. Tente novamente.';
+        msgEl.textContent = '❌ Dados incorretos. Tente novamente ou fale no WhatsApp.';
+        // Mostra o link do WhatsApp como última alternativa
+        document.getElementById('linkWhatsAppRecuperacao').style.display = 'block';
     }
 }
 
 function irParaNovaSenha() {
-    document.getElementById('recuperarPasso2').style.display = 'none';
+    document.getElementById('recuperarPasso2Celular').style.display = 'none';
+    document.getElementById('recuperarPasso2Doc').style.display = 'none';
     document.getElementById('recuperarPasso3').style.display = 'block';
 }
 
@@ -6670,29 +6672,27 @@ async function salvarNovaSenhaRecuperacao() {
         if (error) throw error;
 
         msgEl.className = 'login-message success';
-        msgEl.textContent = '✅ Senha atualizada com sucesso! Redirecionando...';
+        msgEl.textContent = '✅ Senha atualizada! Redirecionando...';
         
         setTimeout(() => {
             fecharModal('recuperarSenhaModal');
-            // Preenche o email no login
             document.getElementById('loginEmailLogin').value = recuperacaoEmail;
             document.getElementById('loginSenhaLogin').value = novaSenha;
-            // Tenta logar automaticamente
             fazerLogin();
         }, 1500);
 
     } catch (e) {
         console.error('Erro ao salvar senha:', e);
         msgEl.className = 'login-message error';
-        msgEl.textContent = '❌ Erro ao salvar a nova senha. Tente novamente.';
+        msgEl.textContent = '❌ Erro ao salvar a nova senha.';
     }
 }
 </script>
-    <!-- ============================================================ -->
+       <!-- ============================================================ -->
     <!-- MODAL ESQUECI MINHA SENHA                                    -->
     <!-- ============================================================ -->
     <div class="modal" id="recuperarSenhaModal">
-        <div class="modal-content" style="max-width: 480px;">
+        <div class="modal-content" style="max-width: 460px;">
             <span class="modal-close" onclick="fecharModal('recuperarSenhaModal')">&times;</span>
             <h2 style="margin-bottom:5px;">🔑 Recuperar Senha</h2>
             <p style="color:#888;font-size:14px;margin-bottom:20px;">Confirme seus dados para criar uma nova senha.</p>
@@ -6701,44 +6701,58 @@ async function salvarNovaSenhaRecuperacao() {
             <div id="recuperarPasso1">
                 <div class="form-group">
                     <label>Digite seu E-mail cadastrado:</label>
-                    <input type="email" id="recuperarEmail" placeholder="seu@email.com">
+                    <input type="email" id="recuperarEmail" placeholder="seu@email.com" style="width:100%; padding:12px; border:2px solid #ddd; border-radius:8px;">
                 </div>
-                <button class="btn-login-action" onclick="buscarEmailRecuperacao()" style="margin-top:10px;">
+                <button class="btn-login-action" onclick="buscarEmailRecuperacao()" style="margin-top:10px; background:var(--primary-blue); color:white; border:none; padding:14px; border-radius:8px; font-weight:600; width:100%; cursor:pointer;">
                     <i class="fas fa-search"></i> Confirmar E-mail
                 </button>
                 <div id="recuperarMessage1" class="login-message"></div>
             </div>
 
-            <!-- Passo 2: Escolha do método -->
-            <div id="recuperarPasso2" style="display:none;">
-                <p style="font-size:14px;margin-bottom:15px;color:#333;">E-mail encontrado! Escolha como confirmar sua identidade:</p>
+            <!-- Passo 2A: Confirmar Celular -->
+            <div id="recuperarPasso2Celular" style="display:none;">
+                <p style="font-size:14px;margin-bottom:15px;color:#333;">Confirme seu celular cadastrado:</p>
                 
-                <!-- Opção A: Celular -->
-                <div style="border:1px solid #ddd;border-radius:8px;padding:15px;margin-bottom:10px;">
-                    <p style="font-weight:600;margin-bottom:8px;font-size:14px;"><i class="fas fa-mobile-alt"></i> Confirmar por Celular</p>
-                    <p style="font-size:13px;color:#555;margin-bottom:8px;">Qual número você cadastrou? Digite os <strong>4 últimos dígitos</strong>:</p>
-                    <div style="display:flex;gap:5px;align-items:center;margin-bottom:8px;flex-wrap:wrap;">
-                        <span style="font-weight:600;font-size:16px;letter-spacing:1px;" id="celularMascara"></span>
-                        <input type="text" id="celularDigitos" maxlength="4" placeholder="____" style="width:90px;padding:8px;border:2px solid #ddd;border-radius:6px;text-align:center;font-size:16px;letter-spacing:2px;">
+                <div style="background:#f8f9fa; border-radius:8px; padding:20px; text-align:center; margin-bottom:15px; border: 1px solid #eee;">
+                    <p style="font-size:13px;color:#666;margin-bottom:10px;">Digite os 4 últimos dígitos do número:</p>
+                    <div style="display:flex; justify-content:center; align-items:center; gap:10px;">
+                        <span style="font-weight:700; font-size:20px; color:var(--primary-dark); letter-spacing:2px;" id="celularMascara"></span>
+                        <input type="text" id="celularDigitos" maxlength="4" placeholder="____" style="width:100px; padding:12px; border:2px solid #ddd; border-radius:8px; text-align:center; font-size:20px; letter-spacing:4px; font-weight:600;">
                     </div>
-                    <button onclick="confirmarCelularRecuperacao()" style="background:var(--primary-blue);color:white;border:none;padding:10px;border-radius:6px;cursor:pointer;font-weight:600;width:100%;">
-                        Confirmar Celular
-                    </button>
-                    <div id="recuperarMessage2" class="login-message"></div>
                 </div>
+                
+                <button onclick="confirmarCelularRecuperacao()" style="background:var(--primary-blue);color:white;border:none;padding:14px;border-radius:8px;cursor:pointer;font-weight:600;width:100%;margin-bottom:10px;">
+                    Confirmar Celular
+                </button>
+                <div id="recuperarMessage2" class="login-message"></div>
+                
+                <div style="text-align:center; margin-top:15px;">
+                    <a href="#" onclick="mudarMetodoRecuperacao('doc')" style="font-size:13px; color:#888; text-decoration:underline;">Tentar de outra forma</a>
+                </div>
+            </div>
 
-                <!-- Opção B: Documento + CEP -->
-                <div style="border:1px solid #ddd;border-radius:8px;padding:15px;">
-                    <p style="font-weight:600;margin-bottom:8px;font-size:14px;"><i class="fas fa-id-card"></i> Confirmar por Documento + CEP</p>
-                    <p style="font-size:13px;color:#555;margin-bottom:8px;">Digite os <strong>3 primeiros dígitos</strong> do seu CPF/CNPJ e do seu CEP:</p>
-                    <div style="display:flex;gap:10px;margin-bottom:8px;">
-                        <input type="text" id="docInicio" maxlength="3" placeholder="CPF/CNPJ" style="flex:1;padding:8px;border:2px solid #ddd;border-radius:6px;text-align:center;font-size:14px;">
-                        <input type="text" id="cepInicio" maxlength="3" placeholder="CEP" style="flex:1;padding:8px;border:2px solid #ddd;border-radius:6px;text-align:center;font-size:14px;">
+            <!-- Passo 2B: Confirmar Documento + CEP -->
+            <div id="recuperarPasso2Doc" style="display:none;">
+                <p style="font-size:14px;margin-bottom:15px;color:#333;">Confirme seus dados cadastrais:</p>
+                
+                <div style="background:#f8f9fa; border-radius:8px; padding:20px; margin-bottom:15px; border: 1px solid #eee;">
+                    <p style="font-size:13px;color:#666;margin-bottom:10px;">Digite os 3 primeiros dígitos do seu CPF/CNPJ e do seu CEP:</p>
+                    <div style="display:flex;gap:10px;">
+                        <input type="text" id="docInicio" maxlength="3" placeholder="CPF/CNPJ" style="flex:1;padding:12px;border:2px solid #ddd;border-radius:8px;text-align:center;font-size:16px;">
+                        <input type="text" id="cepInicio" maxlength="3" placeholder="CEP" style="flex:1;padding:12px;border:2px solid #ddd;border-radius:8px;text-align:center;font-size:16px;">
                     </div>
-                    <button onclick="confirmarDocCepRecuperacao()" style="background:var(--primary-blue);color:white;border:none;padding:10px;border-radius:6px;cursor:pointer;font-weight:600;width:100%;">
-                        Confirmar Documento e CEP
-                    </button>
-                    <div id="recuperarMessage3" class="login-message"></div>
+                </div>
+                
+                <button onclick="confirmarDocCepRecuperacao()" style="background:var(--primary-blue);color:white;border:none;padding:14px;border-radius:8px;cursor:pointer;font-weight:600;width:100%;margin-bottom:10px;">
+                    Confirmar Documento e CEP
+                </button>
+                <div id="recuperarMessage3" class="login-message"></div>
+                
+                <div style="text-align:center; margin-top:15px;" id="linkVoltarCelular">
+                    <a href="#" onclick="mudarMetodoRecuperacao('cel')" style="font-size:13px; color:#888; text-decoration:underline;">Voltar para Celular</a>
+                </div>
+                <div style="text-align:center; margin-top:10px;" id="linkWhatsAppRecuperacao">
+                    <a href="#" onclick="abrirWhatsAppAtendente(); return false;" style="font-size:13px; color:#25D366; font-weight:600;">Não consigo confirmar, falar no WhatsApp</a>
                 </div>
             </div>
 
@@ -6747,9 +6761,9 @@ async function salvarNovaSenhaRecuperacao() {
                 <p style="font-size:14px;color:#27ae60;font-weight:600;margin-bottom:15px;text-align:center;">✅ Identidade confirmada!</p>
                 <div class="form-group">
                     <label>Crie sua Nova Senha (mínimo 6 caracteres):</label>
-                    <input type="password" id="novaSenhaRecuperacao" placeholder="••••••" minlength="6">
+                    <input type="password" id="novaSenhaRecuperacao" placeholder="••••••" minlength="6" style="width:100%; padding:12px; border:2px solid #ddd; border-radius:8px;">
                 </div>
-                <button class="btn-login-action" onclick="salvarNovaSenhaRecuperacao()">
+                <button onclick="salvarNovaSenhaRecuperacao()" style="background:var(--success); color:white; border:none; padding:14px; border-radius:8px; cursor:pointer; font-weight:600; width:100%; margin-top:10px;">
                     <i class="fas fa-save"></i> Salvar Nova Senha e Entrar
                 </button>
                 <div id="recuperarMessage4" class="login-message"></div>
