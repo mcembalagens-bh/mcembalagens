@@ -4145,6 +4145,11 @@ function adicionarProduto(productId) {
         return;
     }
     
+    // Se é revendedor, garante que o modo sem desconto está desligado
+    if (usuarioLogado && usuarioLogado.isRevendedor) {
+        vendaSemDescontoAtiva = false;
+    }
+    
     const isRevendedor = usuarioLogado && usuarioLogado.isRevendedor;
     const pacotes = [];
     
@@ -4154,9 +4159,7 @@ function adicionarProduto(productId) {
             const qtd = parseInt(span.textContent) || 0;
             if (qtd > 0) {
                 const unidades = qtd * q.qty;
-                // Preço base unitário
                 const precoUnitBase = q.price / q.qty;
-                // Aplica o desconto de revenda SE for revendedor
                 const precoUnitFinal = isRevendedor ? precoUnitBase * (1 - DESCONTO_REVENDEDOR) : precoUnitBase;
                 
                 pacotes.push({
@@ -4177,13 +4180,12 @@ function adicionarProduto(productId) {
         return;
     }
 
-    // Verifica Estoque
     if (!podeVenderZerado) {
         let solicitado = 0;
         pacotes.forEach(p => solicitado += p.totalUnits);
         if (solicitado > product.stock) {
             alert('⚠️ Estoque insuficiente!\nSolicitado: ' + solicitado + '\nDisponível: ' + product.stock);
-            return; // Aqui bloqueia se passar do estoque
+            return;
         }
     }
 
@@ -4237,7 +4239,29 @@ function abrirCarrinho() {
     const totalUnEl = document.getElementById('totalUnidades');
     const btnFinalizar = document.querySelector('#cartModal .btn-checkout');
 
-    vendaSemDescontoAtiva = false;
+    // ============================================================
+    // 👇 CORREÇÃO AQUI: RESETA O MODO SEM DESCONTO AO ABRIR O CARRINHO
+    // Se ele for revendedor, sempre volta para o desconto
+    // ============================================================
+    const isRevendedor = usuarioLogado && usuarioLogado.isRevendedor;
+    
+    if (isRevendedor) {
+        vendaSemDescontoAtiva = false; // Desativa o modo "sem desconto"
+        
+        // Recalcula os itens para garantir que estão com desconto
+        carrinho.forEach(item => {
+            const produtoOriginal = encontrarProduto(item.productId);
+            if (produtoOriginal) {
+                const qtyInfo = produtoOriginal.quantities.find(q => q.qty === item.step);
+                if (qtyInfo) {
+                    const precoUnitBase = qtyInfo.price / qtyInfo.qty;
+                    item.unitPrice = precoUnitBase * (1 - DESCONTO_REVENDEDOR);
+                    item.price = item.unitPrice * item.totalUnits;
+                }
+            }
+        });
+        salvarCarrinho();
+    }
 
     if (carrinho.length === 0) {
         container.innerHTML = '<div class="carrinho-vazio"><i class="fas fa-shopping-cart"></i><p>Seu carrinho está vazio</p></div>';
@@ -4254,7 +4278,6 @@ function abrirCarrinho() {
     container.innerHTML = '';
     let totalUnidades = 0;
     
-    // Calcula o total de unidades de cada produto no carrinho (para exibir estoque)
     const totalPorProduto = {};
     carrinho.forEach(item => {
         if (!totalPorProduto[item.productId]) totalPorProduto[item.productId] = 0;
@@ -4324,7 +4347,6 @@ function abrirCarrinho() {
     totalEl.textContent = 'R$ ' + total.toFixed(2);
     totalUnEl.textContent = totalUnidades + ' un';
 
-    const isRevendedor = usuarioLogado && usuarioLogado.isRevendedor;
     const avisoAntigo = container.querySelector('.pedido-minimo-aviso');
     if (avisoAntigo) avisoAntigo.remove();
 
