@@ -255,28 +255,7 @@
     cursor: pointer;
 }
 
-.revendedor-badge {
-    background: var(--orange-accent);
-    color: #fff;
-    padding: 4px 14px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-left: 10px;
-    display: none;
-    white-space: nowrap;
-    animation: pulseBadgeRevenda 2s infinite;
-}
-.revendedor-badge.show { display: inline-block; }
 
-@keyframes pulseBadgeRevenda {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-}
-
-@media (max-width: 768px) { .revendedor-badge { display: none !important; } }
 
 /* ===== AÇÕES DO HEADER ===== */
 .header-actions {
@@ -2353,7 +2332,7 @@
             <a href="#" onclick="showHome();return false;">
                 <img src="https://cdn.awsli.com.br/1608/1608652/arquivos/logo-mc-2026-branca.webp" alt="MC Embalagens BH">
             </a>
-            <span class="revendedor-badge" id="revendedorBadge" style="margin-left:10px;">🏷️ Revendedor</span>
+           
         </div>
 
         <!-- Busca -->
@@ -4787,11 +4766,38 @@ function abrirCheckout() {
     let totalProdutos = 0;
     carrinho.forEach(i => totalProdutos += i.price || 0);
     
+    // ============================================================
+    // REGRA DE OURO: ABAIXO DE R$ 400,00 PARA REVENDEDOR
+    // ============================================================
     if (!vendaSemDescontoAtiva && usuarioLogado.isRevendedor && totalProdutos < PEDIDO_MINIMO_REVENDEDOR) {
-        alert('⚠️ Pedido mínimo R$ ' + PEDIDO_MINIMO_REVENDEDOR.toFixed(2) + '.\nSeu pedido: R$ ' + totalProdutos.toFixed(2));
-        return;
+        // Pergunta amigável e profissional
+        const continuar = confirm(
+            "⚠️ Atenção: Pedido mínimo para revenda é R$ 400,00.\n\n" +
+            "Seu carrinho está em R$ " + totalProdutos.toFixed(2) + ".\n\n" +
+            "Deseja continuar este pedido como CLIENTE COMUM (sem os 10% de desconto de revenda)?"
+        );
+        
+        if (!continuar) return;
+
+        // Recalcula o carrinho para o preço cheio
+        carrinho.forEach(item => {
+            const produtoOriginal = encontrarProduto(item.productId);
+            if (produtoOriginal) {
+                const qtyInfo = produtoOriginal.quantities.find(q => q.qty === item.step);
+                if (qtyInfo) {
+                    item.price = item.qty * qtyInfo.price; 
+                    item.unitPrice = qtyInfo.price / item.step;
+                }
+            }
+        });
+
+        vendaSemDescontoAtiva = true;
+        salvarCarrinho();
+        atualizarBadge();
+        mostrarNotificacao('🛒 Preços recalculados sem desconto de revenda.', 'info');
     }
 
+    // A partir daqui, o fluxo continua normal
     document.body.classList.add('checkout-ativo');
     document.getElementById('checkoutPage').style.display = 'block';
     document.getElementById('checkoutContent').style.display = 'flex';
