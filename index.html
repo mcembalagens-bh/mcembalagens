@@ -5731,9 +5731,12 @@ async function fazerLogin() {
 // ============================================================
 async function validarDocumentoEmTempoReal(documento) {
     const msgEl = document.getElementById('cadastroMessage');
+    const btnCadastrar = document.querySelector('#panelCadastro .btn-login-action');
+
     if (!documento || documento.length < 3) {
         msgEl.className = 'login-message';
         msgEl.textContent = '';
+        if(btnCadastrar) btnCadastrar.disabled = false;
         return;
     }
     
@@ -5758,6 +5761,12 @@ async function validarDocumentoEmTempoReal(documento) {
             const temPendencia = obs.indexOf('PENDENCIA') !== -1;
             const emAnalise = obs.indexOf('ANALISE') !== -1;
             
+            // 👇 BLOQUEIA O BOTÃO CADASTRAR PARA NÃO CRIAR DUPLICADO
+            if(btnCadastrar) {
+                btnCadastrar.disabled = true;
+                btnCadastrar.style.opacity = '0.5';
+            }
+
             if (temPendencia) {
                 msgEl.className = 'login-message error';
                 msgEl.innerHTML = '<strong>🚫 Cadastro bloqueado!</strong><br>Este CPF/CNPJ possui pendências.<br><br><a href="#" onclick="abrirWhatsAppAtendente();return false;" style="display:inline-block;background:#25D366;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Falar com Atendente</a>';
@@ -5782,6 +5791,11 @@ async function validarDocumentoEmTempoReal(documento) {
             return;
         }
         
+        // Se chegou aqui, o documento NÃO existe.
+        if(btnCadastrar) {
+            btnCadastrar.disabled = false;
+            btnCadastrar.style.opacity = '1';
+        }
         msgEl.className = 'login-message success';
         msgEl.innerHTML = '✅ <strong>Documento disponível!</strong> Preencha os dados.';
     } catch (error) {
