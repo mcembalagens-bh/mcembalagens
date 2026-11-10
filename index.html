@@ -3165,10 +3165,8 @@
                 <i class="fas fa-qrcode"></i> Gerar QR Code PIX
             </button>
 
-            <!-- Botão Fechar (Discreto) -->
-            <button onclick="fecharModalConfirmacao()" style="background:#e0e0e0;color:#333;border:none;padding:12px;border-radius:8px;cursor:pointer;font-weight:600;font-size:15px;width:100%;">
-                Fechar
-            </button>
+          
+           
         </div>
     </div>
 
@@ -6335,19 +6333,19 @@ function salvarEstadoNavegacao() {
             pagina: pagina,
             currentCategoryId: (pagina === 'categoria' && currentCategory) ? currentCategory.id : null,
             currentCategoryName: (pagina === 'categoria' && currentCategory) ? currentCategory.name : null,
-            scrollY: window.scrollY,
+            scrollY: window.scrollY, // Salva a posição da tela
             timestamp: Date.now()
         };
         localStorage.setItem('estadoNavegacao', JSON.stringify(estado));
     } catch (e) {}
 }
-
 function restaurarEstadoNavegacao() {
     try {
         const s = localStorage.getItem('estadoNavegacao');
         if (!s) return false;
         const estado = JSON.parse(s);
         
+        // Se passou mais de 1 hora, ignora
         if (Date.now() - estado.timestamp > 3600000) {
             localStorage.removeItem('estadoNavegacao');
             return false;
@@ -6375,7 +6373,7 @@ function restaurarEstadoNavegacao() {
     }
 }
 
-// Salva a posição da tela a cada 500ms que o usuário rolar
+    // Salva a posição da tela a cada 500ms que o usuário rolar
 let timeoutScrollNavegacao;
 window.addEventListener('scroll', () => {
     clearTimeout(timeoutScrollNavegacao);
