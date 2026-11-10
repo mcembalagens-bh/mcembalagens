@@ -3133,28 +3133,42 @@
         </div>
     </div>
 
-    <!-- ============================================================ -->
-    <!-- MODAL CONFIRMAÇÃO DE PEDIDO                                  -->
+        <!-- ============================================================ -->
+    <!-- MODAL CONFIRMAÇÃO DE PEDIDO (PAGAMENTO)                      -->
     <!-- ============================================================ -->
     <div class="modal confirmacao-modal" id="confirmacaoModal">
         <div class="modal-content" style="max-width:500px;">
-            <span class="modal-close" onclick="fecharModal('confirmacaoModal')">&times;</span>
+            <!-- Só fecha no X -->
+            <span class="modal-close" onclick="fecharModalConfirmacao()">&times;</span>
             <div class="icone-grande"><i class="fas fa-check-circle"></i></div>
             <h2 style="color:var(--success);text-align:center;">✅ Pedido Realizado!</h2>
             <p style="color:#666;margin:10px 0;text-align:center;" id="confirmacaoMensagem">
-                Clique no botão abaixo para pagar com segurança.
+                Seu pedido foi gerado com sucesso. Pague abaixo:
             </p>
             <div class="numero-pedido" id="confirmacaoNumeroPedido">#0000</div>
-            <div style="margin-top:20px;display:flex;flex-direction:column;gap:10px;">
-                <button id="btnFinalizarPagamento" class="btn-checkout"
-                        style="background:#25D366;display:none;border:none;padding:14px;border-radius:8px;cursor:pointer;font-weight:600;font-size:16px;color:white;">
+            
+            <!-- Área do Link de Pagamento (Aparece para Cartão/Boleto) -->
+            <div id="areaLinkPagamento" style="margin-top:20px; display:none;">
+                <div style="background:#f5f7fa;border:1px dashed #ccc;border-radius:8px;padding:10px;display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:15px;">
+                    <input type="text" id="linkPagamentoTexto" readonly style="border:none;background:transparent;width:100%;color:#666;font-size:12px;outline:none;">
+                    <button onclick="copiarLinkPagamento()" style="background:var(--primary-blue);color:white;border:none;padding:8px 12px;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px;white-space:nowrap;">
+                        <i class="fas fa-copy"></i> Copiar
+                    </button>
+                </div>
+                <button id="btnFinalizarPagamento" onclick="irParaLinkPagamento()" style="background:#25D366;display:block;width:100%;border:none;padding:14px;border-radius:8px;cursor:pointer;font-weight:600;font-size:16px;color:white;margin-bottom:10px;">
                     <i class="fas fa-credit-card"></i> Ir para o Pagamento
                 </button>
-                <button onclick="fecharModal('confirmacaoModal')"
-                        style="background:#e0e0e0;color:#333;border:none;padding:12px;border-radius:8px;cursor:pointer;font-weight:600;font-size:15px;">
-                    Fechar
-                </button>
             </div>
+
+            <!-- Botão para PIX (que abre o QR Code direto) -->
+            <button id="btnPagarPix" onclick="abrirPixDoPedido()" style="background:#25D366;display:none;width:100%;border:none;padding:14px;border-radius:8px;cursor:pointer;font-weight:600;font-size:16px;color:white;margin-top:15px;margin-bottom:10px;">
+                <i class="fas fa-qrcode"></i> Gerar QR Code PIX
+            </button>
+
+            <!-- Botão Fechar (Discreto) -->
+            <button onclick="fecharModalConfirmacao()" style="background:#e0e0e0;color:#333;border:none;padding:12px;border-radius:8px;cursor:pointer;font-weight:600;font-size:15px;width:100%;">
+                Fechar
+            </button>
         </div>
     </div>
 
@@ -5360,7 +5374,9 @@ async function finalizarPedidoCheckout() {
             return;
         }
 
-        if (checkoutState.pagamentoSelecionado === 'PIX') {
+                   if (checkoutState.pagamentoSelecionado === 'PIX') {
+            // Salva os dados do PIX para o botão "Gerar QR Code" funcionar depois
+            localStorage.setItem('ultimoPedidoPix', JSON.stringify({ id: novoId, total: total }));
             mostrarPixManual(novoId, total);
             carrinho = [];
             salvarCarrinho();
@@ -5393,14 +5409,21 @@ async function finalizarPedidoCheckout() {
 
             if (errPag) throw errPag;
 
-            const link = (pagamento && pagamento.paymentLink) || (pagamento && pagamento.url);
+                       const link = (pagamento && pagamento.paymentLink) || (pagamento && pagamento.url);
             if (link) {
+                linkPagamentoAtual = link;
+                pedidoIdAtual = novoId;
+                
+                // Salva o link no navegador para a aba "Meus Pedidos"
+                const pagSalvos = JSON.parse(localStorage.getItem('pagamentosPedidos') || '{}');
+                pagSalvos[novoId] = { link: link };
+                localStorage.setItem('pagamentosPedidos', JSON.stringify(pagSalvos));
+
                 document.getElementById('confirmacaoNumeroPedido').textContent = '#' + novoId;
-                document.getElementById('confirmacaoMensagem').textContent = 'Clique abaixo para pagar com segurança.';
-                const btnPag = document.getElementById('btnFinalizarPagamento');
-                btnPag.style.display = 'block';
-                btnPag.innerHTML = '<i class="fas fa-credit-card"></i> Ir para Pagamento';
-                btnPag.onclick = function() { window.open(link, '_blank'); };
+                document.getElementById('confirmacaoMensagem').textContent = 'Seu pedido foi gerado com sucesso. Pague abaixo:';
+                document.getElementById('areaLinkPagamento').style.display = 'block';
+                document.getElementById('btnPagarPix').style.display = 'none';
+                document.getElementById('linkPagamentoTexto').value = link;
                 document.getElementById('confirmacaoModal').style.display = 'block';
             } else {
                 alert('⚠️ Pedido salvo, mas não foi possível gerar link de pagamento.');
@@ -6069,14 +6092,27 @@ async function abrirMeusPedidos() {
             if (String(status).toLowerCase() === 'pendente') status = '✅ Pedido efetuado';
             const data = (p.data_pedido || '').replace('T', ' ').substring(0, 16);
             
+            // Verifica se precisa mostrar botão de pagar
+            const isPendente = String(p.status).toLowerCase() === 'pendente';
+            const isPIX = String(p.pagamento).toUpperCase().indexOf('PIX') !== -1;
+            
+            let botaoAcao = '';
+            if (isPendente) {
+                if (isPIX) {
+                    botaoAcao = '<button onclick="event.stopPropagation(); abrirPixDoPedidoNaLista(' + p.id_pedido + ', ' + parseFloat(p.total) + ')" style="background:#25D366;color:white;border:none;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;margin-top:4px;"><i class="fas fa-qrcode"></i> Pagar PIX</button>';
+                } else {
+                    botaoAcao = '<button onclick="event.stopPropagation(); abrirLinkNaLista(' + p.id_pedido + ')" style="background:var(--primary-blue);color:white;border:none;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;margin-top:4px;"><i class="fas fa-credit-card"></i> Pagar Link</button>';
+                }
+            }
+
             return '<div onclick="verDetalhesPedido(' + p.id_pedido + ')" style="cursor:pointer;padding:12px 14px;border:1px solid #f0f0f0;margin-bottom:8px;border-radius:8px;">' +
                 '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">' +
                 '<div><span style="font-weight:600;color:var(--primary-dark);font-size:15px;">#' + p.id_pedido + '</span><span style="font-size:12px;color:#888;margin-left:8px;">' + data + '</span></div>' +
                 '<span style="background:' + statusColor + ';color:white;padding:2px 12px;border-radius:12px;font-size:11px;font-weight:600;">' + status + '</span>' +
                 '</div>' +
-                '<div style="display:flex;justify-content:space-between;margin-top:4px;">' +
-                '<span style="font-size:13px;color:#888;">' + (p.itens || '').split(' | ').length + ' itens</span>' +
+                '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">' +
                 '<span style="font-weight:700;color:var(--primary-blue);font-size:15px;">R$ ' + parseFloat(p.total || 0).toFixed(2) + '</span>' +
+                botaoAcao +
                 '</div></div>';
         }).join('');
         
@@ -6087,13 +6123,25 @@ async function abrirMeusPedidos() {
 }
 
 async function verDetalhesPedido(pedidoId) {
-    // Função simplificada para o usuário apenas ver os itens
     try {
         const { data: pedido, error } = await supabaseClient.from('pedidos').select('*').eq('id_pedido', pedidoId).single();
         if (error || !pedido) throw error || new Error('Pedido não encontrado');
         
         const itens = (pedido.itens || '').split(' | ').map((i, idx) => '<div style="padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:13px;">' + (idx+1) + '. ' + i + '</div>').join('');
         
+        // Verifica se o pedido está pendente para mostrar os botões de pagamento
+        const isPendente = String(pedido.status).toLowerCase() === 'pendente';
+        const isPIX = String(pedido.pagamento).toUpperCase().indexOf('PIX') !== -1;
+        
+        let botoesPagamento = '';
+        if (isPendente) {
+            if (isPIX) {
+                botoesPagamento = '<button onclick="document.getElementById(\'detalhesPedidoModal\').remove(); abrirPixDoPedidoNaLista(' + pedido.id_pedido + ', ' + parseFloat(pedido.total) + ')" style="background:#25D366;color:white;border:none;padding:12px;border-radius:8px;font-weight:600;width:100%;margin-top:10px;cursor:pointer;"><i class="fas fa-qrcode"></i> Pagar com PIX</button>';
+            } else {
+                botoesPagamento = '<button onclick="document.getElementById(\'detalhesPedidoModal\').remove(); abrirLinkNaLista(' + pedido.id_pedido + ')" style="background:var(--primary-blue);color:white;border:none;padding:12px;border-radius:8px;font-weight:600;width:100%;margin-top:10px;cursor:pointer;"><i class="fas fa-credit-card"></i> Ir para o Pagamento</button>';
+            }
+        }
+
         const modal = document.createElement('div');
         modal.id = 'detalhesPedidoModal';
         modal.className = 'modal';
@@ -6109,6 +6157,7 @@ async function verDetalhesPedido(pedidoId) {
             '<div style="max-height:250px;overflow-y:auto;border:1px solid #eee;border-radius:8px;padding:4px 12px;background:white;">' + itens + '</div>' +
             '<div style="margin-top:15px;display:flex;justify-content:space-between;font-size:18px;font-weight:700;color:var(--primary-blue);border-top:2px solid #eee;padding-top:10px;">' +
             '<span>TOTAL</span><span>R$ ' + parseFloat(pedido.total || 0).toFixed(2) + '</span></div>' +
+            botoesPagamento +
             '<button onclick="document.getElementById(\'detalhesPedidoModal\').remove()" style="background:#6c757d;color:white;border:none;padding:12px;border-radius:8px;cursor:pointer;font-weight:600;width:100%;margin-top:10px;">Fechar</button>' +
             '</div>';
         document.body.appendChild(modal);
@@ -6117,6 +6166,34 @@ async function verDetalhesPedido(pedidoId) {
     }
 }
 
+// ============================================================
+// FUNÇÕES AUXILIARES PARA A LISTA DE PEDIDOS
+// ============================================================
+function abrirPixDoPedidoNaLista(pedidoId, total) {
+    const m = document.getElementById('meusPedidosModal');
+    if (m) m.remove();
+    mostrarPixManual(pedidoId, total);
+}
+
+function abrirLinkNaLista(pedidoId) {
+    const pagamentosSalvos = JSON.parse(localStorage.getItem('pagamentosPedidos') || '{}');
+    if (pagamentosSalvos[pedidoId] && pagamentosSalvos[pedidoId].link) {
+        linkPagamentoAtual = pagamentosSalvos[pedidoId].link;
+        pedidoIdAtual = pedidoId;
+        
+        const m = document.getElementById('meusPedidosModal');
+        if (m) m.remove();
+
+        document.getElementById('confirmacaoNumeroPedido').textContent = '#' + pedidoId;
+        document.getElementById('confirmacaoMensagem').textContent = 'Clique abaixo para pagar com segurança:';
+        document.getElementById('areaLinkPagamento').style.display = 'block';
+        document.getElementById('btnPagarPix').style.display = 'none';
+        document.getElementById('linkPagamentoTexto').value = linkPagamentoAtual;
+        document.getElementById('confirmacaoModal').style.display = 'block';
+    } else {
+        mostrarNotificacao('⚠️ Link de pagamento expirado. Entre em contato.', 'warning');
+    }
+}
 // ============================================================
 // BUSCA NO TOPO (Desktop e Mobile)
 // ============================================================
@@ -6195,6 +6272,45 @@ function confirmarRegrasECadastrar() {
     setTimeout(() => {
         abrirCadastro();
     }, 300);
+}
+
+    // ============================================================
+// CONTROLE DO MODAL DE PAGAMENTO (CARTÃO / BOLETO / PIX)
+// ============================================================
+let linkPagamentoAtual = '';
+let pedidoIdAtual = '';
+
+function fecharModalConfirmacao() {
+    document.getElementById('confirmacaoModal').style.display = 'none';
+    // Não limpa o link para o cliente não perder se fechar sem querer
+}
+
+function copiarLinkPagamento() {
+    const input = document.getElementById('linkPagamentoTexto');
+    input.select();
+    input.setSelectionRange(0, 99999);
+    try {
+        document.execCommand('copy');
+        mostrarNotificacao('✅ Link de pagamento copiado!', 'success');
+    } catch (err) {
+        mostrarNotificacao('⚠️ Erro ao copiar link. Copie manualmente.', 'warning');
+    }
+}
+
+function irParaLinkPagamento() {
+    if (linkPagamentoAtual) {
+        window.open(linkPagamentoAtual, '_blank');
+    }
+}
+
+function abrirPixDoPedido() {
+    const ultimoPedido = JSON.parse(localStorage.getItem('ultimoPedidoPix') || '{}');
+    if (ultimoPedido.id && ultimoPedido.total) {
+        fecharModalConfirmacao();
+        mostrarPixManual(ultimoPedido.id, ultimoPedido.total);
+    } else {
+        mostrarNotificacao('⚠️ Dados do PIX não encontrados.', 'warning');
+    }
 }
 </script>
 
