@@ -5763,30 +5763,28 @@ async function validarDocumentoEmTempoReal(documento) {
             const temPendencia = obs.indexOf('PENDENCIA') !== -1;
             const emAnalise = obs.indexOf('ANALISE') !== -1;
             
-            // 👇 BLOQUEIA O BOTÃO CADASTRAR PARA NÃO CRIAR DUPLICADO
-            if(btnCadastrar) {
-                btnCadastrar.disabled = true;
-                btnCadastrar.style.opacity = '0.5';
-            }
+            // 👇 BLOQUEIA OS CAMPOS E O BOTÃO
+            bloquearCamposCadastro(true);
 
             if (temPendencia) {
                 msgEl.className = 'login-message error';
-                msgEl.innerHTML = '<strong>🚫 Cadastro bloqueado!</strong><br>Este CPF/CNPJ possui pendências.<br><br><a href="#" onclick="abrirWhatsAppAtendente();return false;" style="display:inline-block;background:#25D366;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Falar com Atendente</a>';
+                msgEl.innerHTML = '<strong>🚫 Cadastro bloqueado!</strong><br>Este CPF/CNPJ possui pendências.<br><br><a href="#" onclick="abrirWhatsAppAtendente();return false;" style="display:inline-block;background:#25D366;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Falar com Atendente</a><br><br><button onclick="limparCadastro()" style="background:var(--primary-blue);color:white;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-weight:600;">Cadastrar outro documento</button>';
             } else if (ehRevendedor) {
                 msgEl.className = 'login-message success';
                 msgEl.innerHTML = '<strong>✅ Já é Revendedor!</strong><br>Faça login.<br><br><button onclick="switchLoginTab(\'login\')" style="background:var(--primary-blue);color:white;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-weight:600;">Ir para Login</button>';
             } else if (emAnalise) {
                 msgEl.className = 'login-message warning';
-                msgEl.innerHTML = '<strong>⏳ Em análise!</strong><br>Aguarde 24h úteis.';
+                msgEl.innerHTML = '<strong>⏳ Em análise!</strong><br>Aguarde 24h úteis.<br><br><button onclick="limparCadastro()" style="background:var(--primary-blue);color:white;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-weight:600;">Cadastrar outro documento</button>';
             } else {
                 // Cliente comum querendo ser revendedor
                 msgEl.className = 'login-message warning';
                 msgEl.innerHTML = `
-                    <strong>👋 Você já tem cadastro como cliente comum!</strong><br><br>
-                    Solicite a ativação agora e compre com <strong>descontos exclusivos para revenda</strong>.
+                    <strong>👋 Vimos que você já tem cadastro como cliente comum!</strong><br><br>
+                    Você ainda não é revendedor, mas pode ser agora mesmo!<br>
+                    Solicite a ativação automática e compre com <strong>descontos exclusivos para revenda</strong>.
                     <br><br>
                     <button onclick="solicitarAnaliseRevenda('${cliente.email}', '${docLimpo}')" style="background:#f39c12;color:white;border:none;padding:12px 25px;border-radius:8px;cursor:pointer;font-weight:600;width:100%;">
-                        <i class="fas fa-crown"></i> Ativar Meu Acesso Agora
+                        <i class="fas fa-crown"></i> Ativar Meu Acesso de Revendedor Agora
                     </button>
                 `;
             }
@@ -5794,10 +5792,7 @@ async function validarDocumentoEmTempoReal(documento) {
         }
         
         // Se chegou aqui, o documento NÃO existe.
-        if(btnCadastrar) {
-            btnCadastrar.disabled = false;
-            btnCadastrar.style.opacity = '1';
-        }
+        bloquearCamposCadastro(false);
         msgEl.className = 'login-message success';
         msgEl.innerHTML = '✅ <strong>Documento disponível!</strong> Preencha os dados.';
     } catch (error) {
@@ -5806,7 +5801,58 @@ async function validarDocumentoEmTempoReal(documento) {
         msgEl.innerHTML = '⚠️ Não foi possível verificar.';
     }
 }
+// ============================================================
+// FUNÇÕES PARA BLOQUEAR E LIMPAR O FORMULÁRIO DE CADASTRO
+// ============================================================
+function bloquearCamposCadastro(bloquear) {
+    // Lista de IDs dos campos do formulário
+    const ids = [
+        'cadastroNome', 'cadastroEmail', 'cadastroTelefone', 'cadastroSenha', 
+        'cadastroCep', 'cadastroEndereco', 'cadastroNumero', 'cadastroComplemento', 
+        'cadastroBairro', 'cadastroCidade', 'cadastroUf', 'cadastroTipoPessoa', 
+        'cadastroInscricaoEstadual', 'cadastroDocumento'
+    ];
+    
+    ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.disabled = bloquear;
+            // Esconde visualmente os campos (opcional, mas deixa o modal mais limpo)
+            el.style.display = bloquear ? 'none' : '';
+        }
+    });
 
+    // Esconde os labels
+    document.querySelectorAll('#panelCadastro .form-group label, #panelCadastro .form-row label').forEach(l => {
+        l.style.display = bloquear ? 'none' : '';
+    });
+    document.querySelectorAll('#panelCadastro .form-group, #panelCadastro .form-row').forEach(g => {
+        g.style.display = bloquear ? 'none' : '';
+    });
+
+    // Esconde os títulos (como "Endereço")
+    const h4 = document.querySelector('#panelCadastro h4');
+    if (h4) h4.style.display = bloquear ? 'none' : '';
+
+    // Desabilita o botão de Cadastrar
+    const btn = document.querySelector('#panelCadastro .btn-login-action');
+    if (btn) {
+        btn.disabled = bloquear;
+        btn.style.display = bloquear ? 'none' : '';
+    }
+}
+
+function limparCadastro() {
+    document.getElementById('cadastroDocumento').value = '';
+    const msgEl = document.getElementById('cadastroMessage');
+    if (msgEl) {
+        msgEl.className = 'login-message';
+        msgEl.textContent = '';
+        msgEl.style.display = 'none';
+    }
+    bloquearCamposCadastro(false);
+    setTimeout(() => document.getElementById('cadastroDocumento').focus(), 100);
+}
 // ============================================================
 // FAZER CADASTRO (REGRA: CNPJ LIBERA, CPF VAI PRA ANÁLISE)
 // ============================================================
