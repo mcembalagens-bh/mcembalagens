@@ -3904,7 +3904,6 @@ function renderizarProdutos() {
     if (!grid) return;
     grid.innerHTML = '';
     
-    // Verifica se é revendedor
     const isRevendedor = usuarioLogado && usuarioLogado.isRevendedor;
 
     currentProducts.forEach(product => {
@@ -3927,7 +3926,6 @@ function renderizarProdutos() {
             imgDiv.innerHTML = '<span class="placeholder-icon">📦</span>';
         }
         
-        // Botão de compartilhar (Deep Link)
         const btnShare = '<button class="btn-share-product" onclick="compartilharProduto(event, ' + product.id + ')" title="Compartilhar"><i class="fas fa-share-alt"></i></button>';
         imgDiv.innerHTML += btnShare;
 
@@ -3965,14 +3963,9 @@ function renderizarProdutos() {
                 '</div>' + precoHtml + '</div>';
         });
 
-        let stockInfo = '';
-        if (estaEsgotado) stockInfo = '<div class="stock-info esgotado"><i class="fas fa-times-circle"></i> Produto esgotado</div>';
-        else if (product.vender_zerado && product.stock <= 0) stockInfo = '<div class="stock-info production"><i class="fas fa-clock"></i> Produção: ' + (product.productionDays || 7) + ' dias úteis</div>';
-        else if (product.stock > 0 && product.stock < 10) stockInfo = '<div class="stock-info" style="color:#f39c12;"><i class="fas fa-exclamation-triangle"></i> Últimas ' + product.stock + ' unidades</div>';
-        else if (product.stock > 0) stockInfo = '<div class="stock-info available"><i class="fas fa-box"></i> ' + product.stock + ' unidades em estoque</div>';
-
         const priceDisplayClass = isRevendedor ? 'price-display revendedor' : 'price-display';
 
+        // ESTOQUE REMOVIDO DAQUI
         infoDiv.innerHTML = '<h4>' + product.name + '</h4>' +
             '<div class="product-codigo"><span>Código: ' + (product.codigo || '---') + '</span></div>' +
             '<p class="product-description">' + product.description + '</p>' +
@@ -3981,7 +3974,7 @@ function renderizarProdutos() {
             '<div class="' + priceDisplayClass + '" id="priceDisplay-' + product.id + '">Selecione uma quantidade</div>' +
             '<button class="btn-add-product" onclick="adicionarProduto(' + product.id + ')"' + (!podeVender ? ' disabled' : '') + '>' +
             '<i class="fas fa-cart-plus"></i> ' + (estaEsgotado ? 'Esgotado' : 'Adicionar') +
-            '</button>' + stockInfo + '</div>';
+            '</button></div>';
 
         card.appendChild(imgDiv);
         card.appendChild(infoDiv);
@@ -4060,7 +4053,7 @@ function compartilharProduto(event, productId) {
 function abrirModalProduto(id) {
     const product = encontrarProduto(id);
     if (!product) return;
-     // 👇 ADICIONE ESTA LINHA PARA ATUALIZAR A URL 👇
+    
     const novaUrl = window.location.origin + window.location.pathname + '?produto=' + id;
     history.replaceState({}, '', novaUrl);
     
@@ -4119,7 +4112,6 @@ function abrirModalProduto(id) {
     });
 
     const specsDiv = document.getElementById('modalSpecs');
-    const estaEsgotado = !product.vender_zerado && product.stock <= 0;
     let specsHTML = '<h4>📋 Medidas dos Pacotes</h4>';
     product.quantities.forEach(q => {
         specsHTML += '<div class="spec-item">' +
@@ -4127,10 +4119,7 @@ function abrirModalProduto(id) {
             '<span class="value">Peso: ' + (q.weight || 'N/A') + ' | Dimensões: ' + (q.dimensions || 'N/A') + '</span>' +
             '</div>';
     });
-    specsHTML += '<div class="spec-item" style="margin-top:8px;border-top:2px solid #eee;padding-top:8px;">' +
-        '<span class="label">📦 Estoque</span>' +
-        '<span class="value">' + (estaEsgotado ? 'ESGOTADO' : (product.stock > 0 ? product.stock + ' unidades' : 'Sob encomenda')) + '</span>' +
-        '</div>';
+    // ESTOQUE REMOVIDO DAQUI
     specsDiv.innerHTML = specsHTML;
     
     document.getElementById('productModal').style.display = 'block';
