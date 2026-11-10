@@ -31,6 +31,17 @@
     <!-- ============================================================ -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-TNZN0LDZFP"></script>
     <script>
+        // Bloqueia logs normais, avisos (warnings) e informações
+(function() {
+    const noop = function() {};
+    const methods = ['log', 'info', 'warn', 'debug', 'dir', 'trace'];
+    methods.forEach(method => {
+        console[method] = noop;
+    });
+})();
+        // Desativa todos os console.log para o cliente não ver os logs de sistema
+console.log = function() {};
+        
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
