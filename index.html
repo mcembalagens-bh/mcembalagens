@@ -6731,6 +6731,31 @@ window.addEventListener('popstate', function(event) {
 if (!history.state) {
     history.replaceState({ home: true }, '', window.location.origin + window.location.pathname);
 }
+    // ============================================================
+// CONTROLE DO BOTÃO VOLTAR DO NAVEGADOR (Passo 3)
+// ============================================================
+// Quando a página carrega, cria um estado inicial "home"
+if (!history.state) {
+    history.replaceState({ pagina: 'home' }, '', window.location.href);
+}
+
+// Escuta o clique no botão voltar do navegador/celular
+window.addEventListener('popstate', function(event) {
+    const state = event.state || { pagina: 'home' };
+    
+    // Se o usuário estava vendo um produto (modal), o voltar fecha o modal
+    if (state.pagina === 'produto') {
+        const modal = document.getElementById('productModal');
+        if (modal) modal.style.display = 'none';
+        return;
+    }
+    
+    // Se o usuário estava na lista de produtos de uma categoria, volta para a home
+    const telaProdutos = document.getElementById('productsSection');
+    if (telaProdutos && telaProdutos.style.display === 'block') {
+        voltarCategorias();
+    }
+});
 </script>
        <!-- ============================================================ -->
     <!-- MODAL ESQUECI MINHA SENHA                                    -->
