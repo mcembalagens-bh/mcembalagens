@@ -2349,137 +2349,114 @@
     </div>
 </div>
 
-<!-- MODAL PDV - LAYOUT PROFISSIONAL AMPLIADO -->
+<!-- MODAL PDV - REFORMULADO -->
 <div class="modal-overlay" id="modalPedidoManual">
-    <div class="modal" style="max-width:1400px; width:98%; height:95vh; display:flex; flex-direction:column; padding:0; overflow:hidden;">
+    <!-- Modal ocupa 98% da tela, altura de 95vh -->
+    <div class="modal" style="max-width:98%; width:98%; height:95vh; display:flex; flex-direction:column; padding:0; overflow:hidden;">
         
-        <!-- CABEÇALHO FIXO -->
-        <div class="modal-header" style="margin:0; padding:15px 25px; background:var(--primary-blue); color:white; border-radius:10px 10px 0 0; border:none; flex-shrink:0;">
-            <h2 style="color:white; margin:0;"><i class="fas fa-cash-register"></i> Novo Pedido (PDV)</h2>
+        <!-- CABEÇALHO -->
+        <div class="modal-header" style="margin:0; padding:12px 20px; background:var(--primary-blue); color:white; border-radius:10px 10px 0 0; border:none; flex-shrink:0;">
+            <h2 style="color:white; margin:0; font-size:18px;"><i class="fas fa-cash-register"></i> Novo Pedido (PDV)</h2>
             <button class="modal-close" style="color:white; background:rgba(255,255,255,0.1); border-radius:50%; width:30px; height:30px;" onclick="fecharModal('modalPedidoManual')">&times;</button>
         </div>
 
-        <!-- ÁREA CENTRAL: PRODUTOS E CARRINHO -->
-        <div style="display:flex; flex:1; overflow:hidden; background:#f0f2f5;">
+        <!-- CORPO: PRODUTOS (ESQUERDA) E CARRINHO (DIREITA) -->
+        <div style="display:flex; flex:1; overflow:hidden;">
             
-            <!-- COLUNA ESQUERDA: BUSCA E PRODUTOS (MAIS LARGA) -->
-            <div style="flex:1.4; display:flex; flex-direction:column; border-right:1px solid #ddd; overflow:hidden;">
+            <!-- COLUNA ESQUERDA: BUSCA E PRODUTOS -->
+            <div style="flex:1.3; display:flex; flex-direction:column; border-right:1px solid #ddd; overflow:hidden; background:#f8f9fa;">
                 
-                <div style="padding:15px; background:white; border-bottom:1px solid #eee; flex-shrink:0;">
-                    <div style="display:flex; gap:10px;">
-                        <div style="flex:2; position:relative;">
-                            <label style="font-size:12px; font-weight:700; color:#555;">Buscar Cliente (Nome, CPF/CNPJ ou Tel)</label>
-                            <input type="text" id="pdvBuscaCliente" placeholder="Digite para buscar..." oninput="pdvBuscarCliente()" onfocus="pdvBuscarCliente()" style="width:100%; padding:12px; border:2px solid #ddd; border-radius:6px; font-size:15px;">
-                            <!-- Lista de clientes -->
-                            <div id="pdvListaClientes" style="display:none; position:absolute; background:white; border:1px solid #ddd; border-radius:6px; box-shadow:0 4px 15px rgba(0,0,0,0.15); width:100%; max-height:250px; overflow-y:auto; z-index:100; top:100%; left:0;"></div>
-                        </div>
-                        <div style="flex:1;">
-                            <label style="font-size:12px; font-weight:700; color:#555;">CPF/CNPJ</label>
-                            <input type="text" id="pdvClienteDocumento" readonly style="width:100%; padding:12px; border:2px solid #ddd; border-radius:6px; font-size:15px; background:#f8f9fa;">
-                        </div>
+                <!-- Busca de Cliente Compacta -->
+                <div style="padding:10px 15px; background:white; border-bottom:1px solid #eee; display:flex; gap:10px; align-items:center;">
+                    <div style="flex:2; position:relative;">
+                        <input type="text" id="pdvBuscaCliente" placeholder="🔍 Buscar Cliente (Nome, CPF/CNPJ, Tel)" oninput="pdvBuscarCliente()" onfocus="pdvBuscarCliente()" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px; font-size:14px;">
+                        <div id="pdvListaClientes" style="display:none; position:absolute; background:white; border:1px solid #ddd; border-radius:6px; box-shadow:0 4px 15px rgba(0,0,0,0.15); width:100%; max-height:250px; overflow-y:auto; z-index:100; top:100%; left:0;"></div>
+                    </div>
+                    <div style="flex:1;">
+                        <input type="text" id="pdvClienteDocumento" placeholder="CPF/CNPJ" readonly style="width:100%; padding:10px; border:1px solid #eee; border-radius:6px; font-size:14px; background:#f8f9fa;">
                     </div>
                 </div>
 
-                <div style="padding:15px; background:#f8f9fa; border-bottom:1px solid #eee; flex-shrink:0;">
-                    <label style="font-size:12px; font-weight:700; color:#555;"><i class="fas fa-search"></i> Adicionar Produto</label>
-                    <input type="text" id="pdvBuscaProduto" placeholder="Nome ou código..." oninput="pdvFiltrarProdutos()" style="width:100%; padding:12px; border:2px solid var(--primary-blue); border-radius:6px; font-size:15px; margin-top:5px;">
+                <!-- Busca de Produto -->
+                <div style="padding:10px 15px; background:white; border-bottom:2px solid #ddd;">
+                    <input type="text" id="pdvBuscaProduto" placeholder="🔍 Digite o nome ou código do produto..." oninput="pdvFiltrarProdutos()" style="width:100%; padding:12px; border:2px solid var(--primary-blue); border-radius:6px; font-size:15px;">
                 </div>
 
-                <!-- LISTA DE PRODUTOS -->
+                <!-- Lista de Produtos (Rolagem) -->
                 <div id="pdvListaProdutos" style="flex:1; overflow-y:auto; padding:10px; display:flex; flex-direction:column; gap:8px;"></div>
             </div>
 
-            <!-- COLUNA DIREITA: CARRINHO (MAIS LARGA) -->
+            <!-- COLUNA DIREITA: CARRINHO -->
             <div style="flex:1; display:flex; flex-direction:column; background:white; overflow:hidden;">
-                <div style="display:flex; padding:10px; background:#fff; gap:5px; border-bottom:1px solid #ddd; flex-shrink:0;">
-                    <button id="tabPdvAtacado" onclick="mudarModoPdv('ATACADO')" style="flex:1; padding:12px; border:none; border-radius:6px; font-weight:700; cursor:pointer; background:var(--primary-blue); color:white; font-size:14px;">📦 Atacado</button>
-                    <button id="tabPdvVarejo" onclick="mudarModoPdv('VAREJO')" style="flex:1; padding:12px; border:none; border-radius:6px; font-weight:700; cursor:pointer; background:#e0e0e0; color:#333; font-size:14px;">🏪 Varejo</button>
+                <!-- Botões Atacado/Varejo -->
+                <div style="display:flex; padding:10px; background:#f8f9fa; gap:5px; border-bottom:1px solid #ddd;">
+                    <button id="tabPdvAtacado" onclick="mudarModoPdv('ATACADO')" style="flex:1; padding:12px; border:2px solid var(--primary-blue); border-radius:6px; font-weight:700; cursor:pointer; background:var(--primary-blue); color:white; font-size:14px;">📦 Atacado</button>
+                    <button id="tabPdvVarejo" onclick="mudarModoPdv('VAREJO')" style="flex:1; padding:12px; border:2px solid #ddd; border-radius:6px; font-weight:700; cursor:pointer; background:#e0e0e0; color:#333; font-size:14px;">🏪 Varejo</button>
                 </div>
-                <!-- LISTA DO CARRINHO -->
-                <div id="pdvCarrinho" style="flex:1; overflow-y:auto; padding:15px; background:#fafafa;"></div>
+                <!-- Lista do Carrinho (Rolagem) -->
+                <div id="pdvCarrinho" style="flex:1; overflow-y:auto; padding:10px; background:#fafafa;"></div>
             </div>
         </div>
 
-        <!-- RODAPÉ: FINALIZAÇÃO E TOTAIS -->
-        <div style="padding:15px 20px; border-top:2px solid #ddd; background:white; flex-shrink:0; display:flex; flex-wrap:wrap; gap:20px; align-items:flex-start; box-shadow:0 -4px 10px rgba(0,0,0,0.05); max-height:45vh; overflow-y:auto;">
+        <!-- RODAPÉ: FINALIZAÇÃO (FAIXA FINA) -->
+        <div style="padding:10px 15px; border-top:2px solid #ddd; background:white; display:flex; flex-wrap:wrap; gap:15px; align-items:center; justify-content:space-between; flex-shrink:0;">
             
-            <!-- COLUNA 1: OPÇÕES E FRETE -->
-            <div style="flex:1; min-width:320px; display:flex; flex-direction:column; gap:10px;">
-                <div style="display:flex; gap:10px;">
-                    <div id="pdvContainerRevenda" style="flex:1; background:#e8f5e9; padding:8px 12px; border-radius:6px; border:1px solid #c8e6c9;">
-                        <label style="display:flex; align-items:center; gap:8px; font-weight:700; color:#155724; cursor:pointer; margin:0; font-size:13px;">
-                            <input type="checkbox" id="pdvCheckboxRevenda" onchange="pdvAtualizarCarrinho()" style="width:18px; height:18px;"> 👑 Revenda
-                        </label>
-                    </div>
-                    <div id="pdvContainerMisto" style="flex:1; background:#fff3cd; padding:8px 12px; border-radius:6px; border:1px solid #ffeeba;">
-                        <label style="display:flex; align-items:center; gap:8px; font-weight:700; color:#856404; cursor:pointer; margin:0; font-size:13px;">
-                            <input type="checkbox" id="pdvCheckboxMisto" style="width:18px; height:18px;"> 🔄 Misto
-                        </label>
+            <!-- Opções e Frete (Lado Esquerdo) -->
+            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; flex:2;">
+                <label style="display:flex; align-items:center; gap:5px; font-weight:700; color:#155724; font-size:12px; background:#e8f5e9; padding:6px 10px; border-radius:6px; cursor:pointer; border:1px solid #c8e6c9;">
+                    <input type="checkbox" id="pdvCheckboxRevenda" onchange="pdvAtualizarCarrinho()" style="width:16px; height:16px;"> 👑 Revenda
+                </label>
+                
+                <label style="display:flex; align-items:center; gap:5px; font-weight:700; color:#856404; font-size:12px; background:#fff3cd; padding:6px 10px; border-radius:6px; cursor:pointer; border:1px solid #ffeeba;">
+                    <input type="checkbox" id="pdvCheckboxMisto" style="width:16px; height:16px;"> 🔄 Misto
+                </label>
+
+                <div style="display:flex; gap:5px; align-items:center; background:#f1f3f5; padding:4px 8px; border-radius:6px; border:1px solid #ddd;">
+                    <input type="text" id="pdvCepDestino" placeholder="CEP" maxlength="8" oninput="this.value=this.value.replace(/\D/g,'')" style="width:80px; padding:6px; border:1px solid #ccc; border-radius:4px; font-size:12px;">
+                    <button onclick="calcularFretePdv()" id="btnCalcularFretePdv" style="padding:6px 10px; background:var(--primary-blue); color:white; border:none; border-radius:4px; cursor:pointer; font-weight:600; font-size:12px;">
+                        <i class="fas fa-truck"></i> Calcular
+                    </button>
+                </div>
+
+                <!-- Botões de Frete gerados via JS -->
+                <div id="pdvOpcoesFrete" style="display:flex; gap:5px; flex-wrap:wrap;"></div>
+                
+                <div style="display:flex; align-items:center; gap:5px;">
+                    <span style="font-size:12px; font-weight:600; color:#555;">Frete R$:</span>
+                    <input type="number" id="pdvFreteValor" placeholder="0,00" step="0.01" oninput="pdvCalcularTotais()" style="width:80px; text-align:right; padding:6px; border:2px solid var(--primary-blue); border-radius:4px; font-size:13px; font-weight:bold;">
+                </div>
+            </div>
+
+            <!-- Totais e Pagamento (Lado Direito) -->
+            <div style="display:flex; gap:15px; align-items:center; flex:1; justify-content:flex-end;">
+                <div style="display:flex; flex-direction:column; align-items:flex-end;">
+                    <span style="font-size:11px; color:#888;">Subtotal: <span id="pdvSubtotal">R$ 0,00</span></span>
+                    <div style="display:flex; align-items:center; gap:5px;">
+                        <span style="font-size:11px; color:var(--danger);">Desconto R$:</span>
+                        <input type="number" id="pdvDescontoValor" placeholder="0,00" step="0.01" oninput="pdvCalcularTotais()" style="width:70px; text-align:right; padding:4px; border:1px solid #ddd; border-radius:4px; color:var(--danger); font-size:12px;">
                     </div>
                 </div>
                 
-                <div style="background:#f8f9fa; padding:12px; border-radius:8px; border:1px solid #eee;">
-                    <label style="font-size:12px; font-weight:700; color:#555; display:block; margin-bottom:8px;"><i class="fas fa-truck"></i> Frete (Obrigatório)</label>
-                    <div style="display:flex; gap:8px; margin-bottom:10px;">
-                        <input type="text" id="pdvCepDestino" placeholder="CEP" maxlength="8" oninput="this.value=this.value.replace(/\D/g,'')" style="flex:1; padding:10px; border:1px solid #ddd; border-radius:4px; font-size:14px;">
-                        <button onclick="calcularFretePdv()" id="btnCalcularFretePdv" style="padding:10px 15px; background:var(--primary-blue); color:white; border:none; border-radius:4px; cursor:pointer; font-weight:600; font-size:13px;">
-                            <i class="fas fa-search"></i> Calcular
-                        </button>
-                    </div>
-                    
-                    <!-- Lista de botões de frete -->
-                    <div id="pdvOpcoesFrete" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px;"></div>
-                    
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; padding-top:10px; border-top:1px dashed #ccc;">
-                        <span style="font-size:12px; color:#555; font-weight:600;">Valor Final do Frete:</span>
-                        <div style="display:flex; align-items:center; gap:5px;">
-                            <span style="font-size:14px; font-weight:700; color:var(--primary-blue);">R$</span>
-                            <input type="number" id="pdvFreteValor" placeholder="0,00" step="0.01" oninput="pdvCalcularTotais()" style="width:100px; text-align:right; padding:8px; border:2px solid var(--primary-blue); border-radius:4px; font-size:15px; font-weight:bold;">
-                        </div>
-                    </div>
-                    <div id="pdvFreteNome" style="font-size:11px; color:#888; margin-top:5px; font-weight:bold; text-align:right;">Selecione uma opção</div>
-                </div>
-            </div>
+                <select id="pdvPagamento" style="padding:8px; border:1px solid #ddd; border-radius:4px; width:140px; font-weight:bold; font-size:13px;">
+                    <option value="">Pagamento...</option>
+                    <option value="PIX">PIX</option>
+                    <option value="Cartão de Crédito">Cartão de Crédito</option>
+                    <option value="Cartão de Débito">Cartão de Débito</option>
+                    <option value="Dinheiro">Dinheiro</option>
+                    <option value="Boleto">Boleto</option>
+                </select>
 
-            <!-- COLUNA 2: VALORES E PAGAMENTO -->
-            <div style="flex:1; min-width:250px; display:flex; flex-direction:column; gap:10px; background:#f8f9fa; padding:15px; border-radius:8px; border:1px solid #eee;">
-                <div style="display:flex; justify-content:space-between; font-size:15px;">
-                    <span>Subtotal:</span>
-                    <span id="pdvSubtotal" style="font-weight:700;">R$ 0,00</span>
+                <div style="display:flex; flex-direction:column; align-items:flex-end; margin-left:10px;">
+                    <span style="font-size:26px; font-weight:700; color:var(--primary-blue); line-height:1;">TOTAL: <span id="pdvTotal">R$ 0,00</span></span>
                 </div>
-                <div style="display:flex; justify-content:space-between; align-items:center; font-size:15px; color:var(--danger); margin-bottom:5px;">
-                    <span>Desconto (R$):</span>
-                    <input type="number" id="pdvDescontoValor" placeholder="0,00" step="0.01" oninput="pdvCalcularTotais()" style="width:100px; text-align:right; padding:6px; border:1px solid #ddd; border-radius:4px; color:var(--danger); font-weight:bold;">
-                </div>
-                <div style="display:flex; justify-content:space-between; align-items:center; font-size:15px; margin-top:5px;">
-                    <span>Pagamento:</span>
-                    <select id="pdvPagamento" style="padding:8px; border:1px solid #ddd; border-radius:4px; width:160px; font-weight:bold;">
-                        <option value="">Selecione...</option>
-                        <option value="PIX">PIX</option>
-                        <option value="Cartão de Crédito">Cartão de Crédito</option>
-                        <option value="Cartão de Débito">Cartão de Débito</option>
-                        <option value="Dinheiro">Dinheiro</option>
-                        <option value="Boleto">Boleto</option>
-                    </select>
-                </div>
-            </div>
 
-            <!-- COLUNA 3: TOTAL E BOTOES -->
-            <div style="flex:1.2; min-width:300px; display:flex; flex-direction:column; justify-content:space-between;">
-                <div style="display:flex; justify-content:space-between; align-items:center; font-size:32px; font-weight:700; color:var(--primary-blue); margin-bottom:15px;">
-                    <span>TOTAL:</span>
-                    <span id="pdvTotal">R$ 0,00</span>
-                </div>
-                <div style="display:flex; gap:10px; flex-direction:column;">
-                    <div style="display:flex; gap:10px;">
-                        <button onclick="imprimirOrcamentoPdv()" style="flex:1; background:#6c757d; color:white; border:none; padding:14px; border-radius:6px; font-weight:700; cursor:pointer; font-size:15px;">
-                            <i class="fas fa-print"></i> Orçamento
-                        </button>
-                        <button id="btnSalvarPdv" onclick="salvarPedidoPdv()" style="flex:2; background:var(--success); color:white; border:none; padding:14px; border-radius:6px; font-weight:700; cursor:pointer; font-size:17px; box-shadow:0 4px 10px rgba(39,174,96,0.3);">
-                            <i class="fas fa-check-circle"></i> Salvar Pedido
-                        </button>
-                    </div>
-                    <button onclick="limparPdv()" style="width:100%; background:transparent; border:none; color:#999; font-size:12px; cursor:pointer;">Limpar Carrinho</button>
+                <div style="display:flex; gap:8px; margin-left:10px;">
+                    <button onclick="imprimirOrcamentoPdv()" style="background:#6c757d; color:white; border:none; padding:10px 15px; border-radius:6px; font-weight:700; cursor:pointer; font-size:13px;">
+                        <i class="fas fa-print"></i>
+                    </button>
+                    <button id="btnSalvarPdv" onclick="salvarPedidoPdv()" style="background:var(--success); color:white; border:none; padding:10px 25px; border-radius:6px; font-weight:700; cursor:pointer; font-size:15px; box-shadow:0 4px 10px rgba(39,174,96,0.3);">
+                        <i class="fas fa-check-circle"></i> Salvar
+                    </button>
                 </div>
             </div>
         </div>
@@ -5941,18 +5918,32 @@ function abrirPedidoManual() {
 
 function mudarModoPdv(modo) {
     pdvModoAtual = modo;
+    
+    const btnAtacado = document.getElementById('tabPdvAtacado');
+    const btnVarejo = document.getElementById('tabPdvVarejo');
+    const containerRevenda = document.getElementById('pdvContainerRevenda');
+
     if (modo === 'ATACADO') {
-        document.getElementById('tabPdvAtacado').style.background = 'var(--primary-blue)';
-        document.getElementById('tabPdvAtacado').style.color = 'white';
-        document.getElementById('tabPdvVarejo').style.background = '#e0e0e0';
-        document.getElementById('tabPdvVarejo').style.color = '#333';
-        document.getElementById('pdvContainerRevenda').style.display = 'block';
+        btnAtacado.style.background = 'var(--primary-blue)';
+        btnAtacado.style.color = 'white';
+        btnAtacado.style.borderColor = 'var(--primary-blue)';
+        
+        btnVarejo.style.background = '#e0e0e0';
+        btnVarejo.style.color = '#333';
+        btnVarejo.style.borderColor = '#ddd';
+        
+        containerRevenda.style.display = 'flex';
     } else {
-        document.getElementById('tabPdvAtacado').style.background = '#e0e0e0';
-        document.getElementById('tabPdvAtacado').style.color = '#333';
-        document.getElementById('tabPdvVarejo').style.background = 'var(--orange-top)';
-        document.getElementById('tabPdvVarejo').style.color = 'white';
-        document.getElementById('pdvContainerRevenda').style.display = 'none';
+        btnAtacado.style.background = '#e0e0e0';
+        btnAtacado.style.color = '#333';
+        btnAtacado.style.borderColor = '#ddd';
+        
+        // 🔥 VAREJO LARANJA
+        btnVarejo.style.background = 'var(--orange-top)';
+        btnVarejo.style.color = 'white';
+        btnVarejo.style.borderColor = 'var(--orange-top)';
+        
+        containerRevenda.style.display = 'none';
     }
     pdvAtualizarCarrinho();
 }
@@ -5961,16 +5952,16 @@ function pdvBuscarCliente() {
     const termo = document.getElementById('pdvBuscaCliente').value.toLowerCase();
     const lista = document.getElementById('pdvListaClientes');
     
-    // Prepara o termo para busca (remove formatação se for CPF/CNPJ/Telefone)
-    const termoLimpo = termo.replace(/\D/g, '');
+    // Remove tudo que não é número (para buscar CPF/Telefone)
+    const termoNumeros = termo.replace(/\D/g, '');
 
-    // Opção Balcão sempre no topo
     let htmlBalcao = `<div onclick="pdvSelecionarCliente(0, 'Cliente Balcão', '')" style="padding:12px; border-bottom:1px solid #eee; cursor:pointer; background:#f0f8ff;">
         <strong style="font-size:14px;">👤 Cliente Balcão</strong>
         <div style="font-size:12px; color:#888;">Venda sem cadastro</div>
     </div>`;
 
-    if (termo.length < 2 && termoLimpo.length < 2) { 
+    // Se não digitou nada, mostra o balcão
+    if (termo.length === 0) { 
         lista.innerHTML = htmlBalcao;
         lista.style.display = 'block'; 
         return; 
@@ -5980,21 +5971,21 @@ function pdvBuscarCliente() {
         const nome = String(c.nome || '').toLowerCase();
         const email = String(c.email || '').toLowerCase();
         
-        // Limpa o telefone e o CPF do banco para comparar
-        const telLimpo = String(c.telefone || '').replace(/\D/g, '');
-        const cpfLimpo = String(c.cpf || c.documento || '').replace(/\D/g, '');
+        // Limpa o CPF e o Telefone do banco de dados
+        const cpfBanco = String(c.cpf || c.documento || '').replace(/\D/g, '');
+        const telBanco = String(c.telefone || '').replace(/\D/g, '');
 
-        // Verifica se bate com o nome, email, telefone ou CPF
+        // Verifica se bate com o Nome, Email, ou se os NÚMEROS digitados estão no CPF/Telefone
         return nome.includes(termo) || 
                email.includes(termo) ||
-               (termoLimpo.length > 2 && telLimpo.includes(termoLimpo)) ||
-               (termoLimpo.length > 2 && cpfLimpo.includes(termoLimpo));
+               (termoNumeros.length > 2 && cpfBanco.includes(termoNumeros)) ||
+               (termoNumeros.length > 2 && telBanco.includes(termoNumeros));
     }).slice(0, 10); 
     
     let htmlClientes = encontrados.map(c => `
         <div onclick="pdvSelecionarCliente(${c.id_cliente}, '${c.nome.replace(/'/g, "\\'")}', '${c.cpf || ''}')" style="padding:12px; border-bottom:1px solid #eee; cursor:pointer;" onmouseover="this.style.background='#f0f4f8'" onmouseout="this.style.background='white'">
             <strong style="font-size:14px;">${c.nome}</strong>
-            <div style="font-size:12px; color:#888;">${c.telefone || ''} | CPF/CNPJ: ${formatarDocumento(c.cpf)}</div>
+            <div style="font-size:12px; color:#888;">${c.telefone || ''} | CPF: ${formatarDocumento(c.cpf)}</div>
         </div>
     `).join('');
     
