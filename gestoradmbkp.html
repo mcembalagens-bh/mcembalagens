@@ -1786,6 +1786,46 @@
     background: #fff3cd !important;
     color: #856404 !important;
 }
+
+      /* ============================================================ */
+/* MODAL GERENCIAR CLIENTE                                       */
+/* ============================================================ */
+#modalGerenciarCliente .checkbox-group {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 8px 12px; background: white; border: 1px solid #e0e0e0;
+    border-radius: 6px; transition: all 0.2s;
+}
+#modalGerenciarCliente .checkbox-group:hover {
+    background: #f8f9fa; border-color: var(--primary-blue);
+}
+#modalGerenciarCliente .checkbox-group input[type="checkbox"] {
+    width: 18px; height: 18px; margin-top: 2px;
+    flex-shrink: 0; cursor: pointer; accent-color: var(--primary-blue);
+}
+#modalGerenciarCliente .checkbox-group label {
+    font-size: 13px; color: #333; cursor: pointer; line-height: 1.4; margin: 0;
+}
+#modalGerenciarCliente .parcela-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 14px; background: #e8f5e9; border-left: 4px solid #27ae60;
+    border-radius: 6px; margin-bottom: 6px; font-size: 13px;
+}
+#modalGerenciarCliente .parcela-item .parcela-info { flex: 1; }
+#modalGerenciarCliente .parcela-item .parcela-info strong { color: #155724; }
+#modalGerenciarCliente .parcela-item .parcela-info small {
+    color: #555; font-size: 11px; display: block; margin-top: 2px;
+}
+#modalGerenciarCliente .parcela-item .btn-remover-parcela {
+    background: #e74c3c; color: white; border: none; border-radius: 4px;
+    padding: 4px 10px; cursor: pointer; font-size: 12px; transition: all 0.2s;
+}
+#modalGerenciarCliente .parcela-item .btn-remover-parcela:hover {
+    background: #c0392b; transform: scale(1.05);
+}
+#modalGerenciarCliente .parcela-vazia {
+    text-align: center; padding: 15px; color: #999; font-size: 12px;
+    border: 2px dashed #ddd; border-radius: 6px; background: #fafafa;
+}
     </style>
 </head>
 <body>
@@ -2538,6 +2578,157 @@
     </div>
 </div>
 
+      <!-- ============================================================ -->
+    <!-- MODAL GERENCIAR CLIENTE (NOVO) -->
+    <!-- ============================================================ -->
+    <div class="modal-overlay" id="modalGerenciarCliente">
+        <div class="modal" style="max-width:750px;max-height:92vh;overflow-y:auto;">
+            <div class="modal-header">
+                <h2><i class="fas fa-user-cog"></i> Gerenciar Cliente</h2>
+                <button class="modal-close" onclick="fecharModal('modalGerenciarCliente')">&times;</button>
+            </div>
+
+            <input type="hidden" id="gcIdCliente" value="">
+
+            <!-- CABEÇALHO DO CLIENTE -->
+            <div style="background:#f0f4f8;padding:12px 15px;border-radius:8px;margin-bottom:15px;">
+                <div style="font-size:16px;font-weight:700;color:var(--primary-blue);" id="gcNomeCliente">---</div>
+                <div style="font-size:12px;color:#888;" id="gcInfoCliente">---</div>
+            </div>
+
+            <!-- STATUS DO CLIENTE -->
+            <div style="border:1px solid #e0e0e0;border-radius:8px;padding:15px;margin-bottom:15px;">
+                <h4 style="color:var(--primary-blue);margin-bottom:12px;font-size:14px;">
+                    <i class="fas fa-flag"></i> Status do Cliente
+                </h4>
+                
+                <div class="checkbox-group" style="margin-bottom:10px;">
+                    <input type="checkbox" id="gcIsRevendedor" onchange="gcAtualizarPreview()">
+                    <label for="gcIsRevendedor">
+                        <strong>É Revendedor</strong> — libera acesso com preços exclusivos (10% desconto)
+                    </label>
+                </div>
+                
+                <div class="checkbox-group" style="margin-bottom:10px;">
+                    <input type="checkbox" id="gcPendencia" onchange="gcAtualizarPreview()">
+                    <label for="gcPendencia">
+                        <strong>Bloqueado por Pendência</strong> — cliente <u>não consegue logar</u> no revenda
+                    </label>
+                </div>
+                
+                <div class="checkbox-group">
+                    <input type="checkbox" id="gcAnalise" onchange="gcAtualizarPreview()">
+                    <label for="gcAnalise">
+                        <strong>Em Análise</strong> — cliente vê "aguardando liberação" ao tentar logar
+                    </label>
+                </div>
+            </div>
+
+            <!-- PARCELAMENTO (só aparece se for revendedor) -->
+            <div id="gcAreaParcelas" style="border:1px solid #e0e0e0;border-radius:8px;padding:15px;margin-bottom:15px;display:none;">
+                <h4 style="color:var(--primary-blue);margin-bottom:12px;font-size:14px;">
+                    <i class="fas fa-calendar-alt"></i> Opções de Parcelamento (Boleto Faturado)
+                </h4>
+                <p style="font-size:12px;color:#888;margin-bottom:12px;">
+                    Adicione as parcelas que este revendedor poderá escolher no checkout. 
+                    <strong>Ele verá exatamente essas opções.</strong>
+                </p>
+                
+                <!-- LISTA DE PARCELAS ADICIONADAS -->
+                <div id="gcListaParcelas" style="margin-bottom:12px;"></div>
+                
+                <!-- ADICIONAR NOVA PARCELA -->
+                <div style="display:flex;gap:8px;flex-wrap:wrap;background:#f8f9fa;padding:10px;border-radius:6px;">
+                    <div style="flex:1;min-width:100px;">
+                        <label style="display:block;font-size:11px;font-weight:600;color:#666;margin-bottom:3px;">Dias para vencimento</label>
+                        <input type="number" id="gcNovaParcelaDias" placeholder="Ex: 7" min="1" 
+                               style="width:100%;padding:6px 10px;border:2px solid #ddd;border-radius:5px;font-size:13px;">
+                    </div>
+                    <div style="flex:1;min-width:100px;">
+                        <label style="display:block;font-size:11px;font-weight:600;color:#666;margin-bottom:3px;">Valor mínimo (R$)</label>
+                        <input type="number" id="gcNovaParcelaMinimo" placeholder="Ex: 100" min="0" step="0.01"
+                               style="width:100%;padding:6px 10px;border:2px solid #ddd;border-radius:5px;font-size:13px;">
+                    </div>
+                    <div style="display:flex;align-items:flex-end;">
+                        <button type="button" onclick="gcAdicionarParcela()" 
+                                style="padding:8px 16px;background:var(--primary-blue);color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:13px;white-space:nowrap;">
+                            <i class="fas fa-plus"></i> Adicionar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONTROLE FINANCEIRO -->
+            <div style="border:1px solid #e0e0e0;border-radius:8px;padding:15px;margin-bottom:15px;">
+                <h4 style="color:var(--primary-blue);margin-bottom:12px;font-size:14px;">
+                    <i class="fas fa-dollar-sign"></i> Controle Financeiro
+                </h4>
+                
+                <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                    <div class="form-group">
+                        <label style="display:block;font-size:12px;font-weight:600;color:#333;margin-bottom:4px;">
+                            Limite de Crédito (R$)
+                        </label>
+                        <input type="number" id="gcLimiteCredito" min="0" step="0.01" placeholder="0,00"
+                               style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
+                    </div>
+                    <div class="form-group">
+                        <label style="display:block;font-size:12px;font-weight:600;color:#333;margin-bottom:4px;">
+                            Próximo Vencimento
+                        </label>
+                        <input type="date" id="gcProximoVencimento"
+                               style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
+                    </div>
+                </div>
+                
+                <div class="form-group" style="margin-top:10px;">
+                    <label style="display:block;font-size:12px;font-weight:600;color:#333;margin-bottom:4px;">
+                        Situação Financeira
+                    </label>
+                    <select id="gcSituacao" style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
+                        <option value="Em dia">✅ Em dia</option>
+                        <option value="Devendo">⚠️ Devendo</option>
+                        <option value="Negativado">🚫 Negativado</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- OBSERVAÇÃO INTERNA -->
+            <div style="border:1px solid #e0e0e0;border-radius:8px;padding:15px;margin-bottom:15px;">
+                <h4 style="color:var(--primary-blue);margin-bottom:12px;font-size:14px;">
+                    <i class="fas fa-sticky-note"></i> Observação Interna (aparece só no gestor)
+                </h4>
+                <textarea id="gcObservacaoInterna" rows="3" 
+                          placeholder="Ex: cliente prefere entrega à tarde, sempre compra caixas kraft..."
+                          style="width:100%;padding:10px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;resize:vertical;"></textarea>
+            </div>
+
+            <!-- PREVIEW DO QUE SERÁ SALVO -->
+            <div style="border:2px solid var(--primary-blue);border-radius:8px;padding:15px;margin-bottom:15px;background:#f0f4f8;">
+                <h4 style="color:var(--primary-blue);margin-bottom:8px;font-size:13px;">
+                    <i class="fas fa-eye"></i> Preview (o que será salvo no banco)
+                </h4>
+                <div style="font-size:12px;color:#555;margin-bottom:6px;">
+                    <strong>Campo observacoes:</strong>
+                </div>
+                <div id="gcPreviewObservacoes" 
+                     style="background:white;padding:10px;border-radius:6px;font-family:monospace;font-size:13px;color:var(--primary-blue);word-break:break-all;min-height:36px;border:1px solid #ddd;">
+                    REVENDA
+                </div>
+            </div>
+
+            <!-- AÇÕES -->
+            <div class="form-actions" style="justify-content:center;gap:10px;flex-wrap:wrap;">
+                <button class="btn-cancel" onclick="fecharModal('modalGerenciarCliente')" style="padding:10px 25px;">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button class="btn-save" onclick="gcSalvarCliente()" id="gcBtnSalvar" style="padding:10px 25px;">
+                    <i class="fas fa-save"></i> Salvar Alterações
+                </button>
+            </div>
+        </div>
+    </div>
+
 <!-- 🔥 NOVO: MODAL SIMULAÇÃO DE FRETES -->
 <div class="modal-overlay" id="modalFretes">
     <div class="modal" style="max-width:1100px;">
@@ -3024,10 +3215,10 @@ function renderizarRevendedores() {
     const tbody = document.getElementById('revendedoresTable');
     const busca = document.getElementById('buscaRevendedores')?.value?.toLowerCase() || '';
     
-    // 🔥 FILTRA APENAS CLIENTES COM 'REVENDA' (maiúsculo)
+    // 🔥 FILTRA CLIENTES QUE COMEÇAM COM 'REVENDA' (aceita REVENDA-7/14, REVENDA PENDENCIA, etc)
     let revendedores = dados.clientes.filter(c => {
         const obs = String(c.observacoes || '').toUpperCase().trim();
-        return obs === 'REVENDA';
+        return obs.startsWith('REVENDA');
     });
     
     // Aplica filtro de busca
@@ -3110,6 +3301,26 @@ function renderizarRevendedores() {
         const documento = c.cpf || c.documento || '---';
         const docFormatado = formatarDocumento(documento);
         
+        // ============================================================
+        // DEFINE O BADGE DE STATUS VISUAL (Ativo, Bloqueado, Faturado)
+        // ============================================================
+        const obs = String(c.observacoes || '').toUpperCase().trim();
+        let badgeStatus = '';
+        
+        if (obs.includes('PENDENCIA') || obs.includes('PENDÊNCIA')) {
+            badgeStatus = '<span class="status-badge" style="background:#f8d7da;color:#721c24;">🚫 Bloqueado</span>';
+        } else if (obs.includes('ANALISE')) {
+            badgeStatus = '<span class="status-badge" style="background:#fff3cd;color:#856404;">⏳ Em Análise</span>';
+        } else if (obs.includes('-') || (c.parcelas_config && c.parcelas_config.length > 0)) {
+            badgeStatus = '<span class="status-badge" style="background:#cce5ff;color:#004085;">💳 Faturado</span>';
+        } else {
+            badgeStatus = '<span class="status-badge" style="background:#d4edda;color:#155724;">👑 Ativo</span>';
+        }
+
+        // Formata o limite de crédito
+        const limite = parseFloat(c.limite_credito) || 0;
+        const limiteTexto = limite > 0 ? `R$ ${limite.toFixed(2)}` : 'Sem limite';
+        
         return `
         <tr>
             <td><strong>#${c.id_cliente}</strong></td>
@@ -3117,18 +3328,26 @@ function renderizarRevendedores() {
             <td>${c.email || '-'}</td>
             <td>${c.telefone || '-'}</td>
             <td>${docFormatado}</td>
-            <td><span class="status-badge" style="background:#d4edda;color:#155724;">👑 Revendedor</span></td>
+            <td>${badgeStatus}</td>
             <td style="font-size:12px;font-weight:600;color:#6c5ce7;">
                 ${c.totalCompras} compra(s)
                 <span style="display:block;font-size:11px;color:#888;font-weight:400;">
                     R$ ${c.valorTotal.toFixed(2)}
                 </span>
             </td>
-            <td style="font-size:11px;">${c.dataUltimaCompra || c.data_cadastro || '-'}</td>
+            <td style="font-size:11px;">
+                ${c.dataUltimaCompra || c.data_cadastro || '-'}
+                <span style="display:block;font-size:10px;color:#aaa;margin-top:2px;">
+                    Limite: ${limiteTexto}
+                </span>
+            </td>
             <td>
                 <div style="display:flex;gap:4px;flex-wrap:wrap;">
                     <button class="btn-sm btn-view" onclick="verDetalhesCliente(${c.id_cliente})" title="Ver detalhes">
                         <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn-sm" onclick="abrirGerenciarCliente(${c.id_cliente})" title="Gerenciar (revendedor, parcelas, financeiro)" style="background:#f39c12;color:white;padding:4px 10px;border:none;border-radius:5px;cursor:pointer;">
+                        <i class="fas fa-user-cog"></i>
                     </button>
                     <button class="btn-sm" onclick="removerRevendedor(${c.id_cliente})" title="Remover revendedor" style="background:#e74c3c;color:white;padding:4px 10px;border:none;border-radius:5px;cursor:pointer;">
                         <i class="fas fa-user-slash"></i>
@@ -3138,9 +3357,9 @@ function renderizarRevendedores() {
         </tr>
     `}).join('');
 }
-
+    
 // ============================================================
-// FUNÇÕES PARA GERENCIAR REVENDEDORES
+// FUNÇÕES PARA GERENCIAR REVENDEDORES (MIGRADO PARA SUPABASE)
 // ============================================================
 async function tornarRevendedor(idCliente) {
     const cliente = dados.clientes.find(c => parseInt(c.id_cliente) === parseInt(idCliente));
@@ -3156,38 +3375,23 @@ async function tornarRevendedor(idCliente) {
     mostrarSpinner('Atualizando...');
     
     try {
-        await fetch(API_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                acao: 'salvar_cliente',
-                cliente: {
-                    nome: cliente.nome || '',
-                    email: cliente.email || '',
-                    telefone: cliente.telefone || '',
-                    documento: cliente.cpf || cliente.documento || '',
-                    senha: cliente.senha || '',
-                    tipo_pessoa: cliente.tipo_pessoa || 'FISICA',
-                    inscricao_estadual: cliente.inscricao_estadual || '',
-                    endereco: cliente.endereco || '',
-                    numero: cliente.numero || '',
-                    complemento: cliente.complemento || '',
-                    bairro: cliente.bairro || '',
-                    cidade: cliente.cidade || '',
-                    estado: cliente.estado || '',
-                    cep: cliente.cep || '',
-                    endereco_entrega: cliente.endereco_entrega || '',
-                    cep_entrega: cliente.cep_entrega || '',
-                    observacao: 'REVENDA'
-                }
+        // 🔥 ATUALIZA DIRETO NO SUPABASE
+        const { error } = await supabaseClient
+            .from('clientes')
+            .update({ 
+                observacoes: 'REVENDA',
+                aviso_aprovacao_pendente: true // Dispara o modal verde no site do revendedor
             })
-        });
+            .eq('id_cliente', idCliente);
+            
+        if (error) throw error;
         
+        // Atualiza na memória local para não precisar recarregar a página
         cliente.observacoes = 'REVENDA';
+        cliente.aviso_aprovacao_pendente = true;
         
         esconderSpinner();
-        alert(`✅ "${cliente.nome}" agora é um revendedor! 👑`);
+        alert(`✅ "${cliente.nome}" agora é um revendedor! 👑\n\nO acesso já foi liberado.`);
         
         renderizarClientes();
         renderizarRevendedores();
@@ -3196,7 +3400,7 @@ async function tornarRevendedor(idCliente) {
     } catch (error) {
         console.error('❌ Erro ao tornar revendedor:', error);
         esconderSpinner();
-        alert('⚠️ Erro ao atualizar. Tente novamente.');
+        alert('⚠️ Erro ao atualizar. Tente novamente.\n\nDetalhe: ' + error.message);
     }
 }
 
@@ -3211,38 +3415,22 @@ async function removerRevendedor(idCliente) {
         return;
     }
     
-    mostrarSpinner('Atualizando...');
+       mostrarSpinner('Atualizando...');
     
     try {
-        await fetch(API_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                acao: 'salvar_cliente',
-                cliente: {
-                    nome: cliente.nome || '',
-                    email: cliente.email || '',
-                    telefone: cliente.telefone || '',
-                    documento: cliente.cpf || cliente.documento || '',
-                    senha: cliente.senha || '',
-                    tipo_pessoa: cliente.tipo_pessoa || 'FISICA',
-                    inscricao_estadual: cliente.inscricao_estadual || '',
-                    endereco: cliente.endereco || '',
-                    numero: cliente.numero || '',
-                    complemento: cliente.complemento || '',
-                    bairro: cliente.bairro || '',
-                    cidade: cliente.cidade || '',
-                    estado: cliente.estado || '',
-                    cep: cliente.cep || '',
-                    endereco_entrega: cliente.endereco_entrega || '',
-                    cep_entrega: cliente.cep_entrega || '',
-                    observacao: ''
-                }
+        // 🔥 ATUALIZA DIRETO NO SUPABASE
+        const { error } = await supabaseClient
+            .from('clientes')
+            .update({ 
+                observacoes: '',
+                aviso_aprovacao_pendente: false 
             })
-        });
+            .eq('id_cliente', idCliente);
+            
+        if (error) throw error;
         
         cliente.observacoes = '';
+        cliente.aviso_aprovacao_pendente = false;
         
         esconderSpinner();
         alert(`❌ "${cliente.nome}" removido da lista de revendedores.`);
@@ -3254,10 +3442,9 @@ async function removerRevendedor(idCliente) {
     } catch (error) {
         console.error('❌ Erro ao remover revendedor:', error);
         esconderSpinner();
-        alert('⚠️ Erro ao atualizar. Tente novamente.');
+        alert('⚠️ Erro ao atualizar. Tente novamente.\n\nDetalhe: ' + error.message);
     }
 }
-
 // ============================================================
 // BUSCAR CLIENTES PARA PEDIDO MANUAL
 // ============================================================
@@ -3987,6 +4174,286 @@ async function finalizarPedidoCheckout() {
     if (carrinhoManual.length === 0) {
         alert('⚠️ Adicione itens ao carrinho primeiro!');
         return;
+    }
+}
+
+// ============================================================
+// FUNÇÃO PARSER DE OBSERVAÇÃO (NECESSÁRIA PARA O MODAL)
+// ============================================================
+function parseObservacaoRevendedor(observacao) {
+    if (!observacao) return { isRevendedor: false, opcoes: [], obsInterna: '' };
+    const obs = String(observacao).trim();
+    if (!obs.toUpperCase().startsWith('REVENDA')) {
+        return { isRevendedor: false, opcoes: [], obsInterna: obs };
+    }
+    let parteRevenda = obs;
+    let obsInterna = '';
+    const virgulaIndex = obs.indexOf(',');
+    if (virgulaIndex !== -1) {
+        parteRevenda = obs.substring(0, virgulaIndex).trim();
+        obsInterna = obs.substring(virgulaIndex + 1).trim().replace(/^[,;\s]+/, '');
+    } else {
+        const partes = obs.split(' ');
+        for (let i = 1; i < partes.length; i++) {
+            const parte = partes[i].trim();
+            if (/[a-zA-Z]/.test(parte)) {
+                const posicao = obs.indexOf(parte);
+                parteRevenda = obs.substring(0, posicao - 1).trim();
+                obsInterna = obs.substring(posicao).trim();
+                break;
+            }
+        }
+    }
+    const partes = parteRevenda.split('-');
+    const opcoes = [];
+    for (let i = 1; i < partes.length; i++) {
+        const parte = partes[i].trim();
+        if (!parte) continue;
+        if (parte.includes('/')) {
+            const dias = parte.split('/').map(d => parseInt(d.trim()));
+            if (dias.every(d => !isNaN(d) && d > 0)) {
+                opcoes.push({
+                    tipo: 'parcelado',
+                    parcelas: dias.length,
+                    dias: dias,
+                    label: `50% sinal e 50% faturado ${dias.join(' e ')} dias`
+                });
+            }
+        } else {
+            const dia = parseInt(parte);
+            if (!isNaN(dia) && dia > 0) {
+                opcoes.push({
+                    tipo: 'simples',
+                    dias: dia,
+                    label: `50% sinal e 50% faturado ${dia} dias`
+                });
+            }
+        }
+    }
+    return { isRevendedor: true, opcoes: opcoes, obsInterna: obsInterna };
+}
+    
+// ============================================================
+// GERENCIAR CLIENTE — MODAL AVANÇADO
+// ============================================================
+let gcParcelasTemporarias = [];
+
+function abrirGerenciarCliente(idCliente) {
+    const cliente = dados.clientes.find(c => parseInt(c.id_cliente) === parseInt(idCliente));
+    if (!cliente) { alert('Cliente não encontrado!'); return; }
+
+    document.getElementById('gcIdCliente').value = cliente.id_cliente;
+    document.getElementById('gcNomeCliente').textContent = (cliente.nome || 'Sem nome') + ' (#' + cliente.id_cliente + ')';
+    document.getElementById('gcInfoCliente').textContent = (cliente.email || 'sem email') + ' | ' + (cliente.telefone || 'sem telefone');
+
+    const obsAtual = String(cliente.observacoes || '').trim().toUpperCase();
+    const isRevendedor = obsAtual.startsWith('REVENDA');
+    const temPendencia = obsAtual.includes('PENDENCIA') || obsAtual.includes('PENDÊNCIA');
+    const emAnalise = obsAtual.includes('ANALISE');
+
+    document.getElementById('gcIsRevendedor').checked = isRevendedor;
+    document.getElementById('gcPendencia').checked = temPendencia;
+    document.getElementById('gcAnalise').checked = emAnalise;
+
+    let parcelas = [];
+    if (cliente.parcelas_config && Array.isArray(cliente.parcelas_config) && cliente.parcelas_config.length > 0) {
+        parcelas = cliente.parcelas_config.map(p => ({ dias: parseInt(p.dias) || 0, minimo: parseFloat(p.minimo) || 0 }));
+    } else if (isRevendedor) {
+        const parser = parseObservacaoRevendedor(cliente.observacoes);
+        if (parser.opcoes && parser.opcoes.length > 0) {
+            parser.opcoes.forEach(op => {
+                if (op.dias && Array.isArray(op.dias)) {
+                    op.dias.forEach(d => parcelas.push({ dias: d, minimo: 0 }));
+                } else if (op.dias) {
+                    parcelas.push({ dias: op.dias, minimo: 0 });
+                }
+            });
+        }
+    }
+    gcParcelasTemporarias = parcelas;
+
+    document.getElementById('gcNovaParcelaDias').value = '';
+    document.getElementById('gcNovaParcelaMinimo').value = '';
+    document.getElementById('gcLimiteCredito').value = parseFloat(cliente.limite_credito) || 0;
+    document.getElementById('gcProximoVencimento').value = cliente.proximo_vencimento || '';
+    document.getElementById('gcSituacao').value = cliente.situacao_financeira || 'Em dia';
+
+    const parserObs = parseObservacaoRevendedor(cliente.observacoes);
+    document.getElementById('gcObservacaoInterna').value = parserObs.obsInterna || '';
+
+    gcRenderizarParcelas();
+    gcAtualizarPreview();
+    document.getElementById('modalGerenciarCliente').classList.add('open');
+}
+
+function gcRenderizarParcelas() {
+    const container = document.getElementById('gcListaParcelas');
+    if (gcParcelasTemporarias.length === 0) {
+        container.innerHTML = '<div class="parcela-vazia"><i class="fas fa-calendar-plus"></i> Nenhuma parcela configurada ainda</div>';
+        return;
+    }
+    gcParcelasTemporarias.sort((a, b) => a.dias - b.dias);
+    container.innerHTML = gcParcelasTemporarias.map((p, index) => `
+        <div class="parcela-item">
+            <div class="parcela-info">
+                <strong><i class="fas fa-clock"></i> ${p.dias} dias</strong>
+                ${p.minimo > 0 ? `<small>Valor mínimo: R$ ${p.minimo.toFixed(2)}</small>` : '<small>Sem valor mínimo</small>'}
+            </div>
+            <button class="btn-remover-parcela" onclick="gcRemoverParcela(${index})"><i class="fas fa-trash"></i> Remover</button>
+        </div>
+    `).join('');
+}
+
+function gcAdicionarParcela() {
+    const diasInput = document.getElementById('gcNovaParcelaDias');
+    const minimoInput = document.getElementById('gcNovaParcelaMinimo');
+    const dias = parseInt(diasInput.value);
+    const minimo = parseFloat(minimoInput.value) || 0;
+
+    if (!dias || dias <= 0) { alert('⚠️ Digite um número de dias válido (ex: 7, 14, 30)'); diasInput.focus(); return; }
+    if (gcParcelasTemporarias.some(p => p.dias === dias)) { alert('⚠️ Já existe uma parcela com ' + dias + ' dias.'); diasInput.focus(); return; }
+
+    gcParcelasTemporarias.push({ dias: dias, minimo: minimo });
+    gcRenderizarParcelas();
+    gcAtualizarPreview();
+    diasInput.value = '';
+    minimoInput.value = '';
+    diasInput.focus();
+}
+
+function gcRemoverParcela(index) {
+    if (!confirm('Remover esta parcela?')) return;
+    gcParcelasTemporarias.splice(index, 1);
+    gcRenderizarParcelas();
+    gcAtualizarPreview();
+}
+
+function gcAtualizarPreview() {
+    const isRev = document.getElementById('gcIsRevendedor').checked;
+    const temPend = document.getElementById('gcPendencia').checked;
+    const emAnalise = document.getElementById('gcAnalise').checked;
+    const obsInterna = document.getElementById('gcObservacaoInterna').value.trim();
+
+    document.getElementById('gcAreaParcelas').style.display = (isRev && !temPend) ? 'block' : 'none';
+
+    let partes = [];
+    if (temPend) {
+        if (isRev) partes.push('REVENDA PENDENCIA'); else partes.push('PENDENCIA');
+    } else if (emAnalise) {
+        if (isRev) partes.push('REVENDA ANALISE'); else partes.push('ANALISE');
+    } else if (isRev) {
+        if (gcParcelasTemporarias.length > 0) {
+            const diasOrdenados = gcParcelasTemporarias.slice().sort((a, b) => a.dias - b.dias).map(p => p.dias);
+            partes.push('REVENDA-' + diasOrdenados.join('/'));
+        } else {
+            partes.push('REVENDA');
+        }
+    } else {
+        partes.push('');
+    }
+
+    let textoFinal = partes.filter(p => p).join(' ');
+    if (obsInterna) {
+        if (textoFinal) textoFinal += ', ' + obsInterna;
+        else textoFinal = obsInterna;
+    }
+
+    document.getElementById('gcPreviewObservacoes').textContent = textoFinal || '(vazio)';
+}
+
+document.addEventListener('input', function(e) {
+    if (e.target && e.target.id === 'gcObservacaoInterna') gcAtualizarPreview();
+});
+
+async function gcSalvarCliente() {
+    const idCliente = parseInt(document.getElementById('gcIdCliente').value);
+    if (!idCliente) { alert('Cliente inválido.'); return; }
+
+    const isRev = document.getElementById('gcIsRevendedor').checked;
+    const temPend = document.getElementById('gcPendencia').checked;
+    const emAnalise = document.getElementById('gcAnalise').checked;
+    const obsInterna = document.getElementById('gcObservacaoInterna').value.trim();
+    const limiteCredito = parseFloat(document.getElementById('gcLimiteCredito').value) || 0;
+    const proximoVencimento = document.getElementById('gcProximoVencimento').value || null;
+    const situacao = document.getElementById('gcSituacao').value;
+
+    let partes = [];
+    if (temPend) {
+        if (isRev) partes.push('REVENDA PENDENCIA'); else partes.push('PENDENCIA');
+    } else if (emAnalise) {
+        if (isRev) partes.push('REVENDA ANALISE'); else partes.push('ANALISE');
+    } else if (isRev) {
+        if (gcParcelasTemporarias.length > 0) {
+            const diasOrdenados = gcParcelasTemporarias.slice().sort((a, b) => a.dias - b.dias).map(p => p.dias);
+            partes.push('REVENDA-' + diasOrdenados.join('/'));
+        } else {
+            partes.push('REVENDA');
+        }
+    }
+    let observacaoFinal = partes.filter(p => p).join(' ');
+    if (obsInterna) {
+        if (observacaoFinal) observacaoFinal += ', ' + obsInterna;
+        else observacaoFinal = obsInterna;
+    }
+
+    const parcelasConfig = gcParcelasTemporarias.slice().sort((a, b) => a.dias - b.dias).map(p => ({ dias: p.dias, minimo: p.minimo }));
+
+    const clienteLocal = dados.clientes.find(c => parseInt(c.id_cliente) === idCliente);
+    const eraRevendedor = clienteLocal ? String(clienteLocal.observacoes || '').toUpperCase().startsWith('REVENDA') : false;
+    const agoraERevendedor = isRev && !temPend && !emAnalise;
+    
+    let avisoPendente = clienteLocal ? clienteLocal.aviso_aprovacao_pendente : false;
+    let dataAprovacao = clienteLocal ? clienteLocal.data_aprovacao_revenda : null;
+
+    if (agoraERevendedor && !eraRevendedor) {
+        avisoPendente = true;
+        dataAprovacao = new Date().toISOString();
+    }
+
+    const btn = document.getElementById('gcBtnSalvar');
+    const txtOriginal = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+    btn.disabled = true;
+
+    try {
+        const { error } = await supabaseClient
+            .from('clientes')
+            .update({
+                observacoes: observacaoFinal,
+                limite_credito: limiteCredito,
+                proximo_vencimento: proximoVencimento,
+                situacao_financeira: situacao,
+                parcelas_config: parcelasConfig,
+                aviso_aprovacao_pendente: avisoPendente,
+                data_aprovacao_revenda: dataAprovacao
+            })
+            .eq('id_cliente', idCliente);
+
+        if (error) throw error;
+
+        if (clienteLocal) {
+            clienteLocal.observacoes = observacaoFinal;
+            clienteLocal.limite_credito = limiteCredito;
+            clienteLocal.proximo_vencimento = proximoVencimento;
+            clienteLocal.situacao_financeira = situacao;
+            clienteLocal.parcelas_config = parcelasConfig;
+            clienteLocal.aviso_aprovacao_pendente = avisoPendente;
+            clienteLocal.data_aprovacao_revenda = dataAprovacao;
+        }
+
+        alert('✅ Cliente atualizado com sucesso!\n\n' + (agoraERevendedor && !eraRevendedor ? '🚀 O cliente foi notificado em tempo real!' : ''));
+
+        fecharModal('modalGerenciarCliente');
+        renderizarClientes();
+        renderizarRevendedores();
+        atualizarBages();
+
+    } catch (error) {
+        console.error('Erro ao salvar:', error);
+        alert('⚠️ Erro ao salvar: ' + error.message);
+    } finally {
+        btn.innerHTML = txtOriginal;
+        btn.disabled = false;
     }
 }
 
