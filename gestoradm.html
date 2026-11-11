@@ -2349,151 +2349,88 @@
     </div>
 </div>
 
-<!-- MODAL PEDIDO MANUAL -->
+<!-- MODAL PDV - PEDIDO MANUAL PROFISSIONAL -->
 <div class="modal-overlay" id="modalPedidoManual">
-    <div class="modal">
-        <div class="modal-header">
-            <h2><i class="fas fa-hand-holding"></i> Pedido Manual</h2>
-            <button class="modal-close" onclick="fecharModal('modalPedidoManual')">&times;</button>
+    <div class="modal" style="max-width:1100px; width:95%; max-height:95vh; display:flex; flex-direction:column; padding:0; overflow:hidden;">
+        
+        <!-- CABEÇALHO FIXO -->
+        <div class="modal-header" style="margin:0; padding:15px 25px; background:var(--primary-blue); color:white; border-radius:10px 10px 0 0; border:none; flex-shrink:0;">
+            <h2 style="color:white; margin:0;"><i class="fas fa-cash-register"></i> Novo Pedido (PDV)</h2>
+            <button class="modal-close" style="color:white; background:rgba(255,255,255,0.1); border-radius:50%; width:30px; height:30px;" onclick="fecharModal('modalPedidoManual')">&times;</button>
         </div>
-        <div id="pedidoManualContent">
+
+        <div style="display:flex; flex:1; overflow:hidden; background:#f0f2f5;">
             
-            <!-- 🔥 BUSCA DE CLIENTES -->
-            <div class="form-group" style="background:#f0f4f8;padding:12px;border-radius:8px;border:2px solid var(--primary-blue);margin-bottom:12px;">
-                <label style="font-weight:700;color:var(--primary-blue);">
-                    <i class="fas fa-user-search"></i> Buscar Cliente
-                </label>
-                <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                    <input type="text" id="buscaClienteManual" placeholder="Digite nome, email ou telefone..." 
-                           style="flex:1;min-width:180px;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;"
-                           oninput="buscarClientesManual()">
-                    <button onclick="buscarClientesManual()" class="btn-sm btn-edit" style="padding:8px 16px;">
-                        <i class="fas fa-search"></i> Buscar
-                    </button>
-                </div>
-                <div id="listaClientesManual" style="margin-top:8px;max-height:150px;overflow-y:auto;display:none;border:1px solid #ddd;border-radius:6px;background:white;">
-                    <!-- Resultados da busca -->
-                </div>
-                <div style="margin-top:6px;font-size:11px;color:#888;">
-                    <i class="fas fa-info-circle"></i> Digite para buscar clientes cadastrados
-                </div>
-            </div>
-            
-            <!-- DADOS DO CLIENTE -->
-            <div style="background:#f8f9fa;border-radius:8px;padding:12px;margin-bottom:12px;border:1px solid #e0e0e0;">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Cliente</label>
-                        <input type="text" id="visClienteNome" placeholder="Nome do cliente" 
-                               style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
-                    </div>
-                    <div class="form-group">
-                        <label>Telefone</label>
-                        <input type="text" id="visClienteTelefone" placeholder="(00) 00000-0000"
-                               style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" id="visClienteEmail" placeholder="email@exemplo.com"
-                               style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
-                    </div>
-                    <div class="form-group">
-                        <label>CPF/CNPJ</label>
-                        <input type="text" id="visClienteDocumento" placeholder="000.000.000-00"
-                               style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Endereço Completo</label>
-                    <input type="text" id="visClienteEndereco" placeholder="Rua, Número, Bairro, Cidade - UF"
-                           style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
-                </div>
-                <div class="form-group">
-                    <label>Forma de Pagamento</label>
-                    <select id="visPagamento" style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
-                        <option value="À vista">À vista</option>
-                        <option value="Pix">Pix</option>
-                        <option value="Cartão de Crédito">Cartão de Crédito</option>
-                        <option value="Boleto">Boleto</option>
-                        <option value="Depósito/Transferência">Depósito/Transferência</option>
-                    </select>
-                </div>
-
-                <!-- 🔥 NOVO: FRETE -->
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Frete</label>
-                        <input type="text" id="visFrete" placeholder="Ex: Entrega própria, PAC, Jadlog..." 
-                               style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
-                    </div>
-                    <div class="form-group">
-                        <label>Valor do Frete (R$)</label>
-                        <input type="number" id="visFreteValor" step="0.01" min="0" 
-                               placeholder="0,00" style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Prazo do Frete (dias úteis)</label>
-                    <input type="number" id="visFretePrazo" min="0" placeholder="Ex: 5" 
-                           style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
-                    <small style="color:#888;font-size:11px;">Dias úteis para entrega do frete (será somado ao prazo de produção)</small>
-                </div>
-
-                <div class="form-group">
-                    <label>Observações do Pedido</label>
-                    <textarea id="visObs" rows="2" placeholder="Informações internas sobre o pedido..." 
-                              style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;resize:vertical;"></textarea>
-                </div>
-            </div>
-            
-            <!-- BUSCA DE PRODUTOS -->
-            <div class="form-group">
-                <label>🔍 Buscar Produto</label>
-                <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                    <input type="text" id="buscaProdutoManual" placeholder="Digite o nome ou código do produto..." 
-                           style="flex:1;min-width:180px;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;"
-                           oninput="filtrarProdutosManual()">
-                    <select id="filtroCategoriaManual" style="padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;background:white;min-width:130px;" onchange="filtrarProdutosManual()">
-                        <option value="">Todas categorias</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="produto-lista-container">
-                <div id="listaProdutosManual">
-                    <div style="text-align:center;padding:15px;color:#999;">
-                        <i class="fas fa-spinner fa-spin"></i> Carregando produtos...
-                    </div>
-                </div>
-            </div>
-
-            <!-- CARRINHO -->
-            <div style="border-top:2px solid #eee;padding-top:12px;margin-top:8px;">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
-                    <h4 style="color:var(--primary-blue);font-size:14px;"><i class="fas fa-shopping-cart"></i> Itens do Pedido</h4>
-                    <div style="display:flex;gap:12px;align-items:center;">
-                        <span id="totalItensManual" style="font-size:12px;color:#888;">0 itens</span>
-                        <span id="totalManual" style="font-weight:700;color:var(--primary-blue);font-size:15px;">R$ 0,00</span>
-                    </div>
-                </div>
-                <div id="carrinhoManual" style="max-height:180px;overflow-y:auto;border:1px solid #eee;border-radius:6px;padding:8px;background:white;min-height:50px;">
-                    <div style="text-align:center;padding:12px;color:#999;font-size:12px;">
-                        Nenhum item adicionado
-                    </div>
-                </div>
+            <!-- COLUNA ESQUERDA: BUSCA E PRODUTOS -->
+            <div style="flex:1.5; display:flex; flex-direction:column; border-right:1px solid #ddd; overflow:hidden;">
                 
-                <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
-                    <button onclick="limparCarrinhoManual()" class="btn-sm" style="background:#e74c3c;color:white;padding:8px 14px;">
-                        <i class="fas fa-trash"></i> Limpar
-                    </button>
-                    <button onclick="visualizarPedidoManual()" class="btn-sm btn-view" style="padding:8px 16px;font-weight:600;">
-                        <i class="fas fa-eye"></i> Visualizar
-                    </button>
-                    <button onclick="finalizarPedidoManual()" class="btn-sm btn-success" style="padding:8px 16px;font-weight:600;">
-                        <i class="fas fa-save"></i> Salvar Pedido
-                    </button>
+                <!-- DADOS DO CLIENTE -->
+                <div style="padding:15px; background:white; border-bottom:1px solid #eee;">
+                    <div style="display:flex; gap:10px;">
+                        <div style="flex:2;">
+                            <label style="font-size:12px; font-weight:700; color:#555;">Buscar Cliente (Nome, Tel, CPF)</label>
+                            <input type="text" id="pdvBuscaCliente" placeholder="Digite para buscar..." oninput="pdvBuscarCliente()" style="width:100%; padding:10px; border:2px solid #ddd; border-radius:6px; font-size:14px;">
+                            <div id="pdvListaClientes" style="display:none; position:absolute; background:white; border:1px solid #ddd; border-radius:6px; box-shadow:0 4px 15px rgba(0,0,0,0.1); width:400px; max-height:200px; overflow-y:auto; z-index:100;"></div>
+                        </div>
+                        <div style="flex:1;">
+                            <label style="font-size:12px; font-weight:700; color:#555;">CPF/CNPJ</label>
+                            <input type="text" id="pdvClienteDocumento" placeholder="000.000.000-00" style="width:100%; padding:10px; border:2px solid #ddd; border-radius:6px; font-size:14px;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BUSCA DE PRODUTOS -->
+                <div style="padding:15px; background:#f8f9fa; border-bottom:1px solid #eee;">
+                    <label style="font-size:12px; font-weight:700; color:#555;"><i class="fas fa-search"></i> Adicionar Produto (Nome/Código)</label>
+                    <input type="text" id="pdvBuscaProduto" placeholder="Digite o nome ou código do produto..." oninput="pdvFiltrarProdutos()" style="width:100%; padding:10px; border:2px solid var(--primary-blue); border-radius:6px; font-size:15px; margin-top:5px;">
+                </div>
+
+                <!-- LISTA DE PRODUTOS -->
+                <div id="pdvListaProdutos" style="flex:1; overflow-y:auto; padding:10px; display:flex; flex-direction:column; gap:8px;">
+                    <!-- Produtos injetados via JS -->
+                </div>
+            </div>
+
+            <!-- COLUNA DIREITA: CARRINHO -->
+            <div style="flex:1; display:flex; flex-direction:column; background:white; overflow:hidden; max-width:450px;">
+                
+                <div style="padding:15px; background:var(--primary-dark); color:white; text-align:center;">
+                    <h3 style="margin:0; font-size:18px;">🛒 Carrinho</h3>
+                </div>
+
+                <div id="pdvCarrinho" style="flex:1; overflow-y:auto; padding:10px; background:#fafafa;">
+                    <!-- Itens do carrinho injetados via JS -->
+                </div>
+
+                <!-- RODAPÉ: TOTAIS E FINALIZAR -->
+                <div style="padding:15px; border-top:2px solid #eee; background:white; box-shadow:0 -4px 10px rgba(0,0,0,0.05);">
+                    
+                    <div style="display:flex; justify-content:space-between; font-size:14px; color:#555; margin-bottom:5px;">
+                        <span>Subtotal:</span>
+                        <span id="pdvSubtotal">R$ 0,00</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; font-size:14px; color:#555; margin-bottom:5px;">
+                        <span>Frete:</span>
+                        <input type="number" id="pdvFreteValor" placeholder="0,00" step="0.01" oninput="pdvCalcularTotais()" style="width:80px; text-align:right; padding:4px; border:1px solid #ddd; border-radius:4px;">
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; font-size:14px; color:var(--danger); margin-bottom:10px; font-weight:600;">
+                        <span>Desconto (R$):</span>
+                        <input type="number" id="pdvDescontoValor" placeholder="0,00" step="0.01" oninput="pdvCalcularTotais()" style="width:80px; text-align:right; padding:4px; border:1px solid #ddd; border-radius:4px; color:var(--danger);">
+                    </div>
+                    
+                    <div style="display:flex; justify-content:space-between; align-items:center; font-size:22px; font-weight:700; color:var(--primary-blue); border-top:2px solid #ddd; padding-top:10px; margin-bottom:15px;">
+                        <span>TOTAL:</span>
+                        <span id="pdvTotal">R$ 0,00</span>
+                    </div>
+
+                    <div style="display:flex; gap:10px;">
+                        <button onclick="limparPdv()" style="flex:1; background:#e0e0e0; color:#333; border:none; padding:12px; border-radius:6px; font-weight:700; cursor:pointer;">
+                            <i class="fas fa-trash"></i> Limpar
+                        </button>
+                        <button onclick="salvarPedidoPdv()" style="flex:2; background:var(--success); color:white; border:none; padding:12px; border-radius:6px; font-weight:700; cursor:pointer; font-size:16px; box-shadow:0 4px 10px rgba(39,174,96,0.3);">
+                            <i class="fas fa-check-circle"></i> Salvar Pedido
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -5898,929 +5835,322 @@ async function cancelarPedido(id) {
 // ============================================================
 // ABRIR PEDIDO MANUAL - COM VERIFICAÇÃO DE DADOS
 // ============================================================
+// ============================================================
+// SISTEMA PDV - PEDIDO MANUAL PROFISSIONAL (INTEGRADO SUPABASE)
+// ============================================================
+let pdvCarrinho = [];
+let pdvClienteSelecionado = null;
+
 function abrirPedidoManual() {
-    carrinhoManual = [];
-    idCounter = 0;
-    document.getElementById('carrinhoManual').innerHTML = `
-        <div style="text-align:center;padding:12px;color:#999;font-size:12px;">
-            Nenhum item adicionado
-        </div>
-    `;
-    document.getElementById('totalManual').textContent = 'R$ 0,00';
-    document.getElementById('totalItensManual').textContent = '0 itens';
     document.getElementById('modalPedidoManual').classList.add('open');
     
-    if (dados.produtos && dados.produtos.length > 0) {
-        console.log('📦 Dados já carregados, carregando produtos manual...');
-        carregarProdutosManual();
-        configurarBuscaManual();
-    } else {
-        console.log('⏳ Aguardando dados serem carregados...');
-        document.getElementById('listaProdutosManual').innerHTML = `
-            <div style="text-align:center;padding:15px;color:#999;">
-                <i class="fas fa-spinner fa-spin" style="font-size:18px;display:block;margin-bottom:5px;"></i>
-                Carregando produtos...
-            </div>
-        `;
-        
-        carregarDados().then(function() {
-            console.log('✅ Dados carregados, carregando produtos manual...');
-            carregarProdutosManual();
-            configurarBuscaManual();
-        }).catch(function() {
-            console.log('⚠️ Erro ao carregar dados, tentando novamente em 1s...');
-            setTimeout(function() {
-                carregarDados().then(function() {
-                    carregarProdutosManual();
-                    configurarBuscaManual();
-                });
-            }, 1000);
-        });
-    }
+    // Limpa os dados anteriores
+    pdvCarrinho = [];
+    pdvClienteSelecionado = null;
+    document.getElementById('pdvBuscaCliente').value = '';
+    document.getElementById('pdvClienteDocumento').value = '';
+    document.getElementById('pdvBuscaProduto').value = '';
+    document.getElementById('pdvDescontoValor').value = '';
+    document.getElementById('pdvFreteValor').value = '';
+    
+    pdvAtualizarCarrinho();
+    pdvFiltrarProdutos();
 }
 
-// ============================================================
-// CONFIGURAR BUSCA MANUAL
-// ============================================================
-function configurarBuscaManual() {
-    const buscaInput = document.getElementById('buscaProdutoManual');
-    const selectCat = document.getElementById('filtroCategoriaManual');
+// --- BUSCA DE CLIENTE ---
+function pdvBuscarCliente() {
+    const termo = document.getElementById('pdvBuscaCliente').value.toLowerCase();
+    const lista = document.getElementById('pdvListaClientes');
     
-    console.log('🔧 Configurando busca manual...');
-    
-    if (buscaInput) {
-        const novoInput = buscaInput.cloneNode(true);
-        buscaInput.parentNode.replaceChild(novoInput, buscaInput);
-        
-        novoInput.oninput = function(e) {
-            console.log('🔍 oninput:', this.value);
-            filtrarProdutosManual();
-        };
-        novoInput.onkeyup = function(e) {
-            console.log('🔍 onkeyup:', this.value);
-            filtrarProdutosManual();
-        };
-        novoInput.onkeydown = function(e) {
-            if (e.key === 'Enter') {
-                console.log('🔍 Enter:', this.value);
-                filtrarProdutosManual();
-            }
-        };
-        
-        novoInput.addEventListener('input', function(e) {
-            console.log('🔍 addEventListener input:', this.value);
-            filtrarProdutosManual();
-        });
-        novoInput.addEventListener('keyup', function(e) {
-            console.log('🔍 addEventListener keyup:', this.value);
-            filtrarProdutosManual();
-        });
-        
-        setTimeout(function() {
-            const event = new Event('input');
-            novoInput.dispatchEvent(event);
-            console.log('✅ Evento de input forçado!');
-        }, 200);
-        
-        console.log('✅ Busca configurada com sucesso!');
-    } else {
-        console.warn('⚠️ Elemento buscaProdutoManual não encontrado!');
-    }
-    
-    if (selectCat) {
-        const novoSelect = selectCat.cloneNode(true);
-        selectCat.parentNode.replaceChild(novoSelect, selectCat);
-        
-        novoSelect.onchange = function() {
-            console.log('📂 onchange:', this.value);
-            filtrarProdutosManual();
-        };
-        novoSelect.addEventListener('change', function() {
-            console.log('📂 addEventListener change:', this.value);
-            filtrarProdutosManual();
-        });
-    }
-    
-    setTimeout(function() {
-        filtrarProdutosManual();
-    }, 300);
-}
-
-// ============================================================
-// CARREGAR PRODUTOS MANUAL
-// ============================================================
-function carregarProdutosManual() {
-    const container = document.getElementById('listaProdutosManual');
-    
-    if (!dados.produtos || dados.produtos.length === 0) {
-        container.innerHTML = `
-            <div style="text-align:center;padding:15px;color:#999;">
-                <i class="fas fa-spinner fa-spin" style="font-size:18px;display:block;margin-bottom:5px;"></i>
-                Carregando produtos...
-            </div>
-        `;
+    if (termo.length < 2) {
+        lista.style.display = 'none';
         return;
     }
     
-    console.log('📦 Carregando produtos manual. Total:', dados.produtos.length);
+    const encontrados = dados.clientes.filter(c => 
+        String(c.nome || '').toLowerCase().includes(termo) || 
+        String(c.telefone || '').includes(termo) ||
+        String(c.cpf || '').includes(termo)
+    ).slice(0, 10); 
     
-    const selectCat = document.getElementById('filtroCategoriaManual');
-    const categorias = [...new Set(dados.produtos.map(p => p.categoria).filter(c => c))];
-    selectCat.innerHTML = `<option value="">Todas categorias</option>`;
-    categorias.sort().forEach(cat => {
-        selectCat.innerHTML += `<option value="${cat}">${cat}</option>`;
-    });
-    
-    filtrarProdutosManual();
-    
-    setTimeout(function() {
-        configurarBuscaManual();
-    }, 100);
-}
-
-// ============================================================
-// FILTRAR PRODUTOS MANUAL
-// ============================================================
-function filtrarProdutosManual() {
-    const container = document.getElementById('listaProdutosManual');
-    
-    const buscaInput = document.getElementById('buscaProdutoManual');
-    const categoriaSelect = document.getElementById('filtroCategoriaManual');
-    
-    let busca = '';
-    let categoria = '';
-    
-    if (buscaInput) {
-        busca = buscaInput.value ? buscaInput.value.toLowerCase().trim() : '';
-    }
-    if (categoriaSelect) {
-        categoria = categoriaSelect.value || '';
-    }
-    
-    console.log('🔍 FILTRANDO PRODUTOS: busca="' + busca + '" categoria="' + categoria + '"');
-    console.log('📦 Total de produtos disponíveis:', dados.produtos ? dados.produtos.length : 0);
-    
-    if (!dados.produtos || dados.produtos.length === 0) {
-        container.innerHTML = `
-            <div style="text-align:center;padding:15px;color:#999;">
-                <i class="fas fa-spinner fa-spin" style="font-size:18px;display:block;margin-bottom:5px;"></i>
-                Carregando produtos...
-            </div>
-        `;
+    if (encontrados.length === 0) {
+        lista.innerHTML = '<div style="padding:10px; color:#888;">Nenhum cliente encontrado</div>';
+        lista.style.display = 'block';
         return;
     }
     
-    let produtos = dados.produtos;
-    
-    if (busca) {
-        produtos = produtos.filter(function(p) {
-            const nome = String(p.nome || '').toLowerCase();
-            const codigo = String(p.codigo_produto || '').toLowerCase();
-            const descricao = String(p.descricao || '').toLowerCase();
-            const id = String(p.id || '');
-            return nome.includes(busca) || codigo.includes(busca) || descricao.includes(busca) || id.includes(busca);
-        });
-        console.log('📦 Após filtro de busca:', produtos.length, 'produtos');
-    }
-    
-    if (categoria) {
-        produtos = produtos.filter(function(p) {
-            return String(p.categoria || '') === categoria;
-        });
-        console.log('📦 Após filtro de categoria:', produtos.length, 'produtos');
-    }
-    
-    produtos.sort(function(a, b) {
-        const nomeA = String(a.nome || '').toLowerCase();
-        const nomeB = String(b.nome || '').toLowerCase();
-        return nomeA.localeCompare(nomeB, 'pt-BR');
-    });
-    
-    if (produtos.length === 0) {
-        container.innerHTML = `
-            <div style="text-align:center;padding:15px;color:#999;">
-                <i class="fas fa-search" style="font-size:18px;display:block;margin-bottom:5px;"></i>
-                Nenhum produto encontrado para: "${busca || 'vazio'}"
-            </div>
-        `;
-        return;
-    }
-    
-    container.innerHTML = produtos.map(function(p) {
-        const estoque = parseInt(p.estoque) || 0;
-        const podeVender = p.vender_zerado === 'SIM' || estoque > 0;
-        const corEstoque = estoque === 0 ? '#e74c3c' : (estoque < 10 ? '#f39c12' : '#27ae60');
-        const qtds = p.quantidades ? String(p.quantidades).split(',').map(function(q) { return q.trim(); }) : ['1'];
-        
-        let optionsHtml = '<option value="">Selecione</option>';
-        qtds.forEach(function(q) {
-            optionsHtml += '<option value="' + q + '">' + q + ' un</option>';
-        });
-        
-        let temBerco = '';
-        if (p.descricao && String(p.descricao).toLowerCase().includes('berços')) {
-            temBerco = ' 🧩';
-        }
-        
-        return `
-            <div class="produto-item" style="${!podeVender ? 'opacity:0.5;' : ''}">
-                <div class="info">
-                    <div class="nome">${p.nome || 'Sem nome'}${temBerco}</div>
-                    <div class="detalhes">
-                        Cód: ${p.codigo_produto || '---'} | Estoque: <span style="color:${corEstoque};font-weight:600;">${estoque}</span>
-                        ${p.vender_zerado === 'SIM' ? ' | 🔄 Vende zerado' : ''}
-                        ${p.prazo_producao > 0 ? ' | ⏱️ ' + p.prazo_producao + 'dias' : ''}
-                    </div>
-                </div>
-                <div class="acoes">
-                    <select onchange="adicionarSelectManual(${p.id}, this.value)" ${!podeVender ? 'disabled' : ''}>
-                        ${optionsHtml}
-                    </select>
-                    <input type="number" id="qtdCustom_${p.id}" placeholder="Qtd" min="1" 
-                           style="width:45px;" ${!podeVender ? 'disabled' : ''}>
-                    <input type="number" id="precoCustom_${p.id}" placeholder="Preço" step="0.01" min="0"
-                           style="width:60px;" class="preco-custom" ${!podeVender ? 'disabled' : ''}>
-                    <button onclick="adicionarQtdCustomManual(${p.id})" class="btn-sm btn-success" ${!podeVender ? 'disabled' : ''} style="padding:2px 6px;font-size:10px;">
-                        <i class="fas fa-plus"></i>
-                    </button>
-                </div>
-            </div>
-        `;
-    }).join('');
-    
-    console.log('✅ Filtragem concluída!', produtos.length, 'produtos exibidos');
-}
-
-function adicionarSelectManual(productId, quantidade) {
-    if (!quantidade) return;
-    adicionarAoCarrinhoManual(productId, parseInt(quantidade), null);
-    const select = document.querySelector(`#listaProdutosManual .produto-item .acoes select`);
-    if (select) select.value = '';
-}
-
-function adicionarQtdCustomManual(productId) {
-    const inputQtd = document.getElementById(`qtdCustom_${productId}`);
-    const inputPreco = document.getElementById(`precoCustom_${productId}`);
-    const qtd = parseInt(inputQtd.value);
-    const precoUnitario = parseFloat(inputPreco.value);
-    
-    if (!qtd || qtd <= 0) {
-        alert('⚠️ Digite uma quantidade válida.');
-        return;
-    }
-    
-    if (isNaN(precoUnitario) || precoUnitario < 0) {
-        alert('⚠️ Digite um preço válido (pode ser 0,00).');
-        return;
-    }
-    
-    adicionarAoCarrinhoManual(productId, qtd, precoUnitario);
-    inputQtd.value = '';
-    inputPreco.value = '';
-}
-
-function adicionarAoCarrinhoManual(productId, quantidade, precoCustom = null) {
-    const product = dados.produtos.find(p => parseInt(p.id) === productId);
-    if (!product) {
-        alert('Produto não encontrado!');
-        return;
-    }
-    
-    const qtd = parseInt(quantidade);
-    if (!qtd || qtd <= 0) {
-        alert('⚠️ Quantidade inválida.');
-        return;
-    }
-    
-    if (product.vender_zerado !== 'SIM') {
-        const estoque = parseInt(product.estoque) || 0;
-        if (estoque < qtd) {
-            alert(`⚠️ Estoque insuficiente!\nDisponível: ${estoque} unidades\nSolicitado: ${qtd} unidades`);
-            return;
-        }
-    }
-    
-    let precoTotal = 0;
-    let precoUnitario = 0;
-    
-    if (precoCustom !== null) {
-        precoUnitario = precoCustom;
-        precoTotal = precoCustom * qtd;
-    } else {
-        const precoVenda = product.preco_venda || '';
-        let precoEncontrado = 0;
-        
-        precoVenda.split(';').forEach(p => {
-            const parts = p.trim().split(':');
-            if (parts.length === 2) {
-                const qtdOpcao = parseInt(parts[0]);
-                if (qtdOpcao === qtd) {
-                    precoEncontrado = parseFloat(parts[1]) || 0;
-                }
-            }
-        });
-        
-        if (precoEncontrado === 0) {
-            const precos = precoVenda.split(';').map(p => {
-                const parts = p.trim().split(':');
-                return { qtd: parseInt(parts[0]) || 0, preco: parseFloat(parts[1]) || 0 };
-            });
-            precos.sort((a, b) => a.qtd - b.qtd);
-            for (const p of precos) {
-                if (p.qtd > 0 && p.preco >= 0) {
-                    precoEncontrado = p.preco;
-                    break;
-                }
-            }
-        }
-        
-        precoTotal = precoEncontrado;
-        precoUnitario = qtd > 0 ? precoEncontrado / qtd : 0;
-    }
-    
-    if (precoTotal < 0) {
-        alert('⚠️ Preço inválido.');
-        return;
-    }
-    
-    idCounter++;
-    carrinhoManual.push({
-        id: idCounter,
-        productId: productId,
-        nome: product.nome || 'Produto',
-        quantidade: qtd,
-        precoUnitario: precoUnitario,
-        preco: precoTotal,
-        estoque: parseInt(product.estoque) || 0,
-        vender_zerado: product.vender_zerado === 'SIM',
-        isCustom: precoCustom !== null,
-        prazoProducao: parseInt(product.prazo_producao) || 0,
-        descricao: product.descricao || '',
-        pacote_tamanho: 1
-    });
-    
-    recalcularProducao();
-    atualizarCarrinhoManual();
-}
-
-function recalcularProducao() {
-    const grupos = {};
-    carrinhoManual.forEach(item => {
-        if (!grupos[item.productId]) {
-            grupos[item.productId] = {
-                total: 0,
-                estoque: item.estoque,
-                vender_zerado: item.vender_zerado,
-                prazoProducao: item.prazoProducao,
-                itens: []
-            };
-        }
-        grupos[item.productId].total += item.quantidade;
-        grupos[item.productId].itens.push(item);
-    });
-    
-    Object.values(grupos).forEach(grupo => {
-        const isProducao = grupo.vender_zerado && grupo.total > grupo.estoque;
-        grupo.itens.forEach(item => {
-            item.isProducao = isProducao;
-            if (isProducao) {
-                item.prazoProducao = grupo.prazoProducao;
-            }
-        });
-    });
-}
-
-function atualizarCarrinhoManual() {
-    const container = document.getElementById('carrinhoManual');
-    let total = 0;
-    let totalItens = 0;
-    
-    if (carrinhoManual.length === 0) {
-        container.innerHTML = `
-            <div style="text-align:center;padding:12px;color:#999;font-size:12px;">
-                Nenhum item adicionado
-            </div>
-        `;
-        document.getElementById('totalManual').textContent = 'R$ 0,00';
-        document.getElementById('totalItensManual').textContent = '0 itens';
-        return;
-    }
-    
-    container.innerHTML = carrinhoManual.map((item, index) => {
-        total += item.preco || 0;
-        totalItens += item.quantidade || 0;
-        
-        const nomeExibicao = item.isCustom ? `${item.nome} (personalizado)` : item.nome;
-        const isProducao = item.isProducao || false;
-        const prazo = isProducao ? item.prazoProducao : 0;
-        const statusLabel = isProducao ? `🔨 Produção ${prazo}d` : '✅ Disponível';
-        const statusClass = isProducao ? 'badge-producao' : 'badge-disponivel';
-        
-        return `
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 6px;border-bottom:1px solid #f0f0f0;font-size:12px;">
-                <div style="flex:1;min-width:0;">
-                    <span style="font-weight:600;">${nomeExibicao}</span>
-                    <span style="color:#888;font-size:11px;">x${item.quantidade}</span>
-                    <span style="color:#666;font-size:10px;">R$ ${(item.precoUnitario || 0).toFixed(2)}/un</span>
-                    <span class="${statusClass}" style="font-size:8px;padding:1px 5px;border-radius:8px;margin-left:3px;">${statusLabel}</span>
-                    ${item.isCustom ? ' <span style="color:#6c5ce7;font-size:9px;">📝</span>' : ''}
-                </div>
-                <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
-                    <div class="carrinho-item-actions">
-                        <button class="btn-minus" onclick="alterarQtdCarrinho(${index}, -1)">−</button>
-                        <span style="font-weight:600;min-width:18px;text-align:center;font-size:12px;">${item.quantidade}</span>
-                        <button class="btn-plus" onclick="alterarQtdCarrinho(${index}, 1)">+</button>
-                        <button class="btn-remove-item" onclick="removerDoCarrinhoManual(${index})" title="Remover item">
-                            <i class="fas fa-times" style="font-size:10px;"></i>
-                        </button>
-                    </div>
-                    <span style="font-weight:600;color:var(--primary-blue);min-width:60px;text-align:right;font-size:12px;">R$ ${(item.preco || 0).toFixed(2)}</span>
-                </div>
-            </div>
-        `;
-    }).join('');
-    
-    document.getElementById('totalManual').textContent = `R$ ${total.toFixed(2)}`;
-    document.getElementById('totalItensManual').textContent = `${totalItens} itens`;
-}
-
-function alterarQtdCarrinho(index, delta) {
-    const item = carrinhoManual[index];
-    if (!item) return;
-    
-    const novaQtd = item.quantidade + delta;
-    if (novaQtd < 1) {
-        if (confirm(`Remover "${item.nome}" do carrinho?`)) {
-            removerDoCarrinhoManual(index);
-        }
-        return;
-    }
-    
-    if (item.vender_zerado !== 'SIM') {
-        const totalNoCarrinho = carrinhoManual
-            .filter(i => i.productId === item.productId && i.id !== item.id)
-            .reduce((sum, i) => sum + i.quantidade, 0);
-        const totalSolicitado = totalNoCarrinho + novaQtd;
-        
-        if (item.estoque < totalSolicitado) {
-            alert(`⚠️ Estoque insuficiente!\nDisponível: ${item.estoque} unidades\nTotal solicitado: ${totalSolicitado} unidades`);
-            return;
-        }
-    }
-    
-    item.quantidade = novaQtd;
-    item.preco = item.precoUnitario * novaQtd;
-    
-    recalcularProducao();
-    atualizarCarrinhoManual();
-}
-
-function removerDoCarrinhoManual(index) {
-    carrinhoManual.splice(index, 1);
-    recalcularProducao();
-    atualizarCarrinhoManual();
-}
-
-function limparCarrinhoManual() {
-    if (carrinhoManual.length === 0) return;
-    if (confirm('Deseja limpar todos os itens do carrinho?')) {
-        carrinhoManual = [];
-        idCounter = 0;
-        atualizarCarrinhoManual();
-    }
-}
-
-// ============================================================
-// VISUALIZAR PEDIDO MANUAL - COM FRETE E PRAZO
-// ============================================================
-function visualizarPedidoManual() {
-    if (carrinhoManual.length === 0) {
-        alert('⚠️ Adicione pelo menos um item ao pedido.');
-        return;
-    }
-    
-    const clienteNome = document.getElementById('visClienteNome').value.trim();
-    const clienteTelefone = document.getElementById('visClienteTelefone').value.trim();
-    const clienteEmail = document.getElementById('visClienteEmail').value.trim();
-    const clienteDocumento = document.getElementById('visClienteDocumento').value.trim();
-    const clienteEndereco = document.getElementById('visClienteEndereco').value.trim();
-    const pagamento = document.getElementById('visPagamento').value || 'À vista';
-    
-    const freteNome = document.getElementById('visFrete').value.trim() || 'Retirada na Loja';
-    const freteValor = parseFloat(document.getElementById('visFreteValor').value) || 0;
-    const fretePrazo = parseInt(document.getElementById('visFretePrazo').value) || 0;
-    
-    let maiorPrazoProducao = 0;
-    carrinhoManual.forEach(item => {
-        if (item.isProducao && item.prazoProducao > maiorPrazoProducao) {
-            maiorPrazoProducao = item.prazoProducao;
-        }
-    });
-    
-    const prazoTotal = maiorPrazoProducao + fretePrazo;
-    
-    const temCliente = clienteNome && clienteNome !== '' && clienteNome !== 'Cliente não identificado';
-    
-    const container = document.getElementById('visItensContainer');
-    let subtotal = 0;
-    let itensHtml = '';
-    
-    let dadosClienteHtml = '';
-    
-    if (temCliente) {
-        dadosClienteHtml = `
-            <div style="background:#f8f9fa;padding:10px;border-radius:6px;margin-bottom:10px;border:1px solid #e0e0e0;">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;">
-                    <div style="grid-column:1/-1;font-weight:700;color:var(--primary-blue);margin-bottom:4px;">
-                        <i class="fas fa-user-check"></i> Dados do Cliente
-                    </div>
-                    <div><strong>Nome:</strong> ${clienteNome}</div>
-                    <div><strong>Telefone:</strong> ${clienteTelefone || '-'}</div>
-                    <div><strong>Email:</strong> ${clienteEmail || '-'}</div>
-                    <div><strong>CPF/CNPJ:</strong> ${clienteDocumento || '-'}</div>
-                    <div style="grid-column:1/-1;"><strong>Endereço:</strong> ${clienteEndereco || '-'}</div>
-                    <div><strong>Pagamento:</strong> ${pagamento}</div>
-                    <div><strong>Frete:</strong> ${freteNome}</div>
-                    <div><strong>Valor Frete:</strong> R$ ${freteValor.toFixed(2)}</div>
-                    ${fretePrazo > 0 ? `<div><strong>Prazo Frete:</strong> ${fretePrazo} dias</div>` : ''}
-                    ${prazoTotal > 0 ? `<div><strong>Prazo Total:</strong> ${prazoTotal} dias</div>` : ''}
-                </div>
-            </div>
-        `;
-    } else {
-        dadosClienteHtml = `
-            <div style="background:#fff3cd;padding:10px;border-radius:6px;margin-bottom:10px;border:1px solid #f39c12;">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;">
-                    <div style="grid-column:1/-1;font-weight:700;color:#856404;margin-bottom:4px;">
-                        <i class="fas fa-user-slash"></i> Cliente não identificado
-                    </div>
-                    <div><strong>Nome:</strong> Cliente não identificado</div>
-                    <div><strong>Telefone:</strong> -</div>
-                    <div><strong>Email:</strong> -</div>
-                    <div><strong>CPF/CNPJ:</strong> -</div>
-                    <div style="grid-column:1/-1;"><strong>Endereço:</strong> -</div>
-                    <div><strong>Pagamento:</strong> ${pagamento}</div>
-                    <div><strong>Frete:</strong> ${freteNome}</div>
-                    <div><strong>Valor Frete:</strong> R$ ${freteValor.toFixed(2)}</div>
-                    ${fretePrazo > 0 ? `<div><strong>Prazo Frete:</strong> ${fretePrazo} dias</div>` : ''}
-                    ${prazoTotal > 0 ? `<div><strong>Prazo Total:</strong> ${prazoTotal} dias</div>` : ''}
-                </div>
-            </div>
-        `;
-    }
-    
-    carrinhoManual.forEach(item => {
-        const subtotalItem = item.preco || 0;
-        subtotal += subtotalItem;
-        const nomeExibicao = item.isCustom ? `${item.nome} (personalizado)` : item.nome;
-        const isProducao = item.isProducao || false;
-        const prazo = isProducao ? item.prazoProducao : 0;
-        const statusLabel = isProducao ? `🔨 Produção ${prazo}d` : '✅ Disponível';
-        
-        itensHtml += `
-            <div class="item-resumo">
-                <span>${nomeExibicao} <span style="font-size:10px;color:#888;">${statusLabel}</span></span>
-                <span>${item.quantidade}x R$ ${(item.precoUnitario || 0).toFixed(2)} = <strong>R$ ${subtotalItem.toFixed(2)}</strong></span>
-            </div>
-        `;
-    });
-    
-    const total = subtotal + freteValor;
-    
-    let freteHtml = '';
-    if (freteValor > 0 || freteNome !== 'Retirada na Loja') {
-        freteHtml = `
-            <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px dotted #ccc;font-size:13px;">
-                <span>Frete: ${freteNome}</span>
-                <span>R$ ${freteValor.toFixed(2)}</span>
-            </div>
-        `;
-    }
-    
-    container.innerHTML = `
-        ${dadosClienteHtml}
-        ${itensHtml}
-        ${freteHtml}
-        <div style="display:flex;justify-content:space-between;padding:5px 0;border-top:2px solid #eee;font-size:14px;font-weight:700;color:var(--primary-blue);">
-            <span>SUBTOTAL</span>
-            <span>R$ ${subtotal.toFixed(2)}</span>
+    lista.innerHTML = encontrados.map(c => `
+        <div onclick="pdvSelecionarCliente(${c.id_cliente}, '${c.nome.replace(/'/g, "\\'")}', '${c.cpf || ''}')" style="padding:10px; border-bottom:1px solid #eee; cursor:pointer;" onmouseover="this.style.background='#f0f4f8'" onmouseout="this.style.background='white'">
+            <strong>${c.nome}</strong>
+            <div style="font-size:11px; color:#888;">${c.telefone || ''} | CPF: ${formatarDocumento(c.cpf)}</div>
         </div>
-        ${fretePrazo > 0 ? `<div style="display:flex;justify-content:flex-end;font-size:12px;color:#888;padding:2px 0;">⏱️ Prazo do frete: ${fretePrazo} dias úteis</div>` : ''}
-        ${prazoTotal > 0 ? `<div style="display:flex;justify-content:flex-end;font-size:12px;color:#888;padding:2px 0;">📅 Prazo total (produção + frete): ${prazoTotal} dias úteis</div>` : ''}
-        <div style="display:flex;justify-content:space-between;padding:5px 0;border-top:2px solid var(--primary-blue);font-size:16px;font-weight:700;color:var(--primary-blue);">
-            <span>TOTAL COM FRETE</span>
-            <span>R$ ${total.toFixed(2)}</span>
-        </div>
-    `;
-    
-    document.getElementById('visTotalGeral').textContent = `R$ ${total.toFixed(2)}`;
-    
-    if (total === 0) {
-        container.innerHTML += `
-            <div style="padding:8px;margin-top:8px;background:#fff3cd;border-radius:4px;text-align:center;font-size:12px;color:#856404;">
-                ⚠️ Total: R$ 0,00 - Apenas baixa de estoque
-            </div>
-        `;
-    }
-    
-    document.getElementById('visClienteNome').value = clienteNome;
-    document.getElementById('visClienteTelefone').value = clienteTelefone;
-    document.getElementById('visClienteEmail').value = clienteEmail;
-    document.getElementById('visPagamento').value = pagamento;
-    
-    document.getElementById('modalVisualizacaoPedido').classList.add('open');
+    `).join('');
+    lista.style.display = 'block';
 }
 
-// Fecha a lista de clientes ao clicar fora
+function pdvSelecionarCliente(id, nome, cpf) {
+    pdvClienteSelecionado = { id, nome, cpf };
+    document.getElementById('pdvBuscaCliente').value = nome;
+    document.getElementById('pdvClienteDocumento').value = formatarDocumento(cpf);
+    document.getElementById('pdvListaClientes').style.display = 'none';
+}
+
 document.addEventListener('click', function(e) {
-    const lista = document.getElementById('listaClientesManual');
-    const busca = document.getElementById('buscaClienteManual');
-    if (lista && busca && !lista.contains(e.target) && e.target !== busca) {
+    const lista = document.getElementById('pdvListaClientes');
+    const input = document.getElementById('pdvBuscaCliente');
+    if (lista && input && !lista.contains(e.target) && e.target !== input) {
         lista.style.display = 'none';
     }
 });
 
-function imprimirVisualizacaoPedido() {
-    const printArea = document.getElementById('printArea');
-    const clienteNome = document.getElementById('visClienteNome').value || 'Cliente não identificado';
-    const clienteTelefone = document.getElementById('visClienteTelefone').value || '';
-    const clienteEmail = document.getElementById('visClienteEmail').value || '';
-    const pagamento = document.getElementById('visPagamento').value || 'À vista';
+// --- BUSCA E LISTAGEM DE PRODUTOS ---
+function pdvFiltrarProdutos() {
+    const termo = document.getElementById('pdvBuscaProduto').value.toLowerCase();
+    const container = document.getElementById('pdvListaProdutos');
     
-    let itensHtml = '';
-    let subtotal = 0;
+    let produtos = dados.produtos;
+    if (termo) {
+        produtos = produtos.filter(p => 
+            String(p.nome || '').toLowerCase().includes(termo) || 
+            String(p.codigo_produto || '').toLowerCase().includes(termo)
+        );
+    }
     
-    carrinhoManual.forEach(item => {
-        const preco = item.preco || 0;
-        subtotal += preco;
-        const nome = (item.nome || 'Produto').substring(0, 14);
-        const qtd = item.quantidade || 0;
-        const isCustom = item.isCustom ? '*' : '';
-        const isProducao = item.isProducao ? ' 🔨' : '';
-        const prazo = item.isProducao ? ` ${item.prazoProducao}d` : '';
-        
-        itensHtml += `
-            <div class="print-item">
-                <span class="nome">${qtd}x ${nome}${isCustom}${isProducao}${prazo}</span>
-                <span class="valor">R$ ${preco.toFixed(2)}</span>
-            </div>
-        `;
-    });
+    produtos.sort((a, b) => String(a.nome).localeCompare(String(b.nome)));
     
-    const total = subtotal;
-    const data = new Date().toLocaleString();
-    
-    printArea.innerHTML = `
-        <div class="print-header">
-            <h2>EMBALAGENS EXPRESS</h2>
-            <p>Pç Santuário S Geraldo,46 - BH/MG</p>
-            <p>CEP:31050-650 | Tel:(31)3487-5905</p>
-            <div class="hr"></div>
-            <p><strong>ORÇAMENTO - VISUALIZAÇÃO</strong></p>
-            <div class="print-info"><span>${data}</span></div>
-            <div class="print-info"><span>Cliente: ${clienteNome.substring(0, 18)}</span></div>
-            ${clienteTelefone ? `<div class="print-info"><span>Tel: ${clienteTelefone}</span></div>` : ''}
-            ${clienteEmail ? `<div class="print-info"><span>Email: ${clienteEmail.substring(0, 20)}</span></div>` : ''}
-            <div class="print-info"><span>Pag: ${pagamento}</span></div>
-            <div class="hr"></div>
-        </div>
-        
-        <div style="margin:1px 0;">
-            <div style="font-weight:bold;border-bottom:1px solid #000;padding-bottom:0.5px;margin-bottom:0.5px;display:flex;justify-content:space-between;font-size:8px;">
-                <span>ITEM</span>
-                <span>VALOR</span>
-            </div>
-            ${itensHtml}
-        </div>
-        
-        <div class="print-total">
-            <span>TOTAL</span>
-            <span>R$ ${total.toFixed(2)}</span>
-        </div>
-        
-        <div class="print-footer">
-            <p>*** ORÇAMENTO ***</p>
-            <p>@mcembalagens.bh</p>
-            <p>${new Date().toLocaleString()}</p>
-        </div>
-    `;
-    
-    printArea.style.display = 'block';
-    window.print();
-    
-    setTimeout(() => {
-        printArea.style.display = 'none';
-    }, 1500);
-}
-
-function salvarVisualizacaoPedido() {
-    fecharModal('modalVisualizacaoPedido');
-    finalizarPedidoManual();
-}
-
-// ============================================================
-// FINALIZAR PEDIDO MANUAL - COM FRETE E PRAZO
-// ============================================================
-async function finalizarPedidoManual() {
-    if (carrinhoManual.length === 0) {
-        alert('⚠️ Adicione pelo menos um item ao pedido.');
+    if (produtos.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:20px; color:#999;">Nenhum produto encontrado.</div>';
         return;
     }
     
-    let clienteNome = document.getElementById('visClienteNome').value.trim();
-    const clienteTelefone = document.getElementById('visClienteTelefone').value.trim();
-    const clienteEmail = document.getElementById('visClienteEmail').value.trim();
-    const clienteDocumento = document.getElementById('visClienteDocumento').value.trim();
-    const clienteEndereco = document.getElementById('visClienteEndereco').value.trim();
-    const pagamento = document.getElementById('visPagamento').value || 'À vista';
-    const observacoesPedido = document.getElementById('visObs').value || '';
+    container.innerHTML = produtos.map(p => {
+        const preco = parseFloat(p.preco_venda?.split(';')[0]?.split(':')[1]) || 0;
+        return `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:white; border:1px solid #eee; border-radius:6px;">
+            <div style="flex:1; cursor:pointer;" onclick="pdvAdicionarAoCarrinho(${p.id})">
+                <div style="font-weight:600; color:var(--primary-dark); font-size:13px;">${p.nome}</div>
+                <div style="font-size:11px; color:#888;">Cód: ${p.codigo_produto || '---'} | Estoque: ${p.estoque}</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <span style="font-weight:700; color:var(--primary-blue);">R$ ${preco.toFixed(2)}</span>
+                <button onclick="pdvAdicionarAoCarrinho(${p.id})" style="background:var(--primary-blue); color:white; border:none; width:30px; height:30px; border-radius:50%; cursor:pointer; font-size:16px;">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+        </div>
+        `;
+    }).join('');
+}
+
+// --- CARRINHO ---
+function pdvAdicionarAoCarrinho(productId) {
+    const produto = dados.produtos.find(p => parseInt(p.id) === productId);
+    if (!produto) return;
     
-    const freteNome = document.getElementById('visFrete').value.trim() || 'Retirada na Loja';
-    const freteValor = parseFloat(document.getElementById('visFreteValor').value) || 0;
-    const fretePrazo = parseInt(document.getElementById('visFretePrazo').value) || 0;
+    const itemExistente = pdvCarrinho.find(i => i.productId === productId);
+    if (itemExistente) {
+        itemExistente.quantidade++;
+    } else {
+        let precoBase = 0;
+        if (produto.preco_venda) {
+            const precos = produto.preco_venda.split(';');
+            if (precos.length > 0) {
+                precoBase = parseFloat(precos[0].split(':')[1]) || 0;
+            }
+        }
+        
+        pdvCarrinho.push({
+            productId: produto.id,
+            nome: produto.nome,
+            precoUnitario: precoBase,
+            quantidade: 1,
+            estoque: parseInt(produto.estoque) || 0
+        });
+    }
+    pdvAtualizarCarrinho();
+}
+
+function pdvAtualizarCarrinho() {
+    const container = document.getElementById('pdvCarrinho');
     
-    if (!clienteNome || clienteNome === '' || clienteNome === 'Cliente não identificado') {
-        clienteNome = 'Cliente não identificado';
+    if (pdvCarrinho.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:30px; color:#ccc;"><i class="fas fa-shopping-basket" style="font-size:40px; margin-bottom:10px;"></i><br>Nenhum item adicionado</div>';
+        pdvCalcularTotais();
+        return;
     }
     
-    const subtotal = carrinhoManual.reduce((sum, item) => sum + (item.preco || 0), 0);
-    const total = subtotal + freteValor;
+    container.innerHTML = pdvCarrinho.map((item, index) => `
+        <div style="padding:10px; border-bottom:1px solid #eee; background:white; margin-bottom:5px; border-radius:6px; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                <strong style="font-size:13px; color:var(--primary-dark);">${item.nome}</strong>
+                <button onclick="pdvRemoverDoCarrinho(${index})" style="background:none; border:none; color:#e74c3c; cursor:pointer;"><i class="fas fa-trash"></i></button>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div style="display:flex; align-items:center; border:1px solid #ddd; border-radius:4px; overflow:hidden;">
+                    <button onclick="pdvAlterarQtd(${index}, -1)" style="background:#f0f0f0; border:none; padding:5px 10px; cursor:pointer;">-</button>
+                    <input type="number" value="${item.quantidade}" onchange="pdvMudarQtdInput(${index}, this.value)" style="width:40px; text-align:center; border:none; padding:5px;">
+                    <button onclick="pdvAlterarQtd(${index}, 1)" style="background:#f0f0f0; border:none; padding:5px 10px; cursor:pointer;">+</button>
+                </div>
+                <div style="display:flex; align-items:center; gap:5px;">
+                    <span style="font-size:12px; color:#888;">R$</span>
+                    <input type="number" value="${item.precoUnitario.toFixed(2)}" onchange="pdvMudarPrecoInput(${index}, this.value)" style="width:70px; padding:5px; border:1px solid #ddd; border-radius:4px; text-align:right; font-weight:600;">
+                </div>
+            </div>
+        </div>
+    `).join('');
     
-    let maiorPrazoProducao = 0;
-    carrinhoManual.forEach(item => {
-        if (item.isProducao && item.prazoProducao > maiorPrazoProducao) {
-            maiorPrazoProducao = item.prazoProducao;
-        }
-    });
+    pdvCalcularTotais();
+}
+
+function pdvAlterarQtd(index, delta) {
+    pdvCarrinho[index].quantidade += delta;
+    if (pdvCarrinho[index].quantidade < 1) pdvCarrinho[index].quantidade = 1;
+    pdvAtualizarCarrinho();
+}
+
+function pdvMudarQtdInput(index, val) {
+    const qtd = parseInt(val);
+    if (qtd > 0) pdvCarrinho[index].quantidade = qtd;
+    else pdvCarrinho[index].quantidade = 1;
+    pdvAtualizarCarrinho();
+}
+
+function pdvMudarPrecoInput(index, val) {
+    const preco = parseFloat(val);
+    if (preco >= 0) pdvCarrinho[index].precoUnitario = preco;
+    pdvCalcularTotais(); 
+}
+
+function pdvRemoverDoCarrinho(index) {
+    pdvCarrinho.splice(index, 1);
+    pdvAtualizarCarrinho();
+}
+
+function pdvCalcularTotais() {
+    const subtotal = pdvCarrinho.reduce((acc, item) => acc + (item.precoUnitario * item.quantidade), 0);
+    const frete = parseFloat(document.getElementById('pdvFreteValor').value) || 0;
+    const desconto = parseFloat(document.getElementById('pdvDescontoValor').value) || 0;
+    const total = subtotal + frete - desconto;
     
-    const prazoTotal = maiorPrazoProducao + fretePrazo;
-    
-    if (total === 0) {
-        if (!confirm(`⚠️ O valor total do pedido é R$ 0,00.\n\nDeseja continuar mesmo assim?\n\nIsso dará baixa no estoque sem custo.`)) {
-            return;
-        }
-    }
-    
-    mostrarSpinner('Criando pedido...');
-    
-    try {
-        const responseBusca = await fetch(API_URL);
-        const dataBusca = await responseBusca.json();
-        const pedidos = dataBusca.pedidos || [];
-        let ultimoId = 0;
-        pedidos.forEach(p => {
-            const id = parseInt(p.id_pedido) || 0;
-            if (id > ultimoId) ultimoId = id;
-        });
-        const novoId = ultimoId + 1;
-        
-        recalcularProducao();
-        
-        const itensPedido = carrinhoManual.map(item => {
-            const isProducao = item.isProducao || false;
-            const prazoProducao = isProducao ? (item.prazoProducao || 3) : 0;
-            const nomeBase = item.isCustom ? `${item.nome} (personalizado)` : item.nome;
-            
-            let nomeComStatus = nomeBase;
-            if (isProducao && prazoProducao > 0) {
-                nomeComStatus = `${nomeBase} (Produção ${prazoProducao} dias)`;
-            } else if (isProducao) {
-                nomeComStatus = `${nomeBase} (Produção)`;
-            } else {
-                nomeComStatus = `${nomeBase} (Disponível)`;
-            }
-            
-            return {
-                nome: nomeComStatus,
-                quantidade: item.quantidade,
-                price: item.preco || 0,
-                unit_price: item.precoUnitario || 0,
-                isCustom: item.isCustom || false,
-                isProducao: isProducao,
-                prazoProducao: prazoProducao,
-                productId: item.productId || null,
-                descricao: item.descricao || ''
-            };
-        });
-        
-        let observacoesFormatadas = `Pedido realizado manualmente pelo gestor.`;
-        
-        if (freteNome !== 'Retirada na Loja' || freteValor > 0) {
-            observacoesFormatadas += ` | Frete: ${freteNome}`;
-            if (freteValor > 0) {
-                observacoesFormatadas += ` (R$ ${freteValor.toFixed(2).replace('.', ',')})`;
-            }
-        } else {
-            observacoesFormatadas += ` | Frete: Retirada na Loja`;
-        }
-        
-        observacoesFormatadas += ` | Pagamento: ${pagamento}`;
-        
-        if (prazoTotal > 0) {
-            observacoesFormatadas += ` | Prazo: ${prazoTotal} dias`;
-        }
-        
-        if (observacoesPedido.trim()) {
-            observacoesFormatadas += ` | ${observacoesPedido.trim()}`;
-        }
-        
-        console.log('📝 Observações formatadas:', observacoesFormatadas);
-        
-        const pedidoData = {
-            id: novoId,
-            cliente_nome: clienteNome,
-            cliente_email: clienteEmail || 'pedido_manual@embalagens.com',
-            cliente_telefone: clienteTelefone || '',
-            itens: itensPedido,
-            total: total,
-            endereco_entrega: clienteEndereco || 'Pedido manual - retirada na loja',
-            observacoes: observacoesFormatadas,
-            frete: freteNome,
-            frete_valor: freteValor,
-            prazo_entrega: prazoTotal,
-            pagamento: pagamento,
-            status: 'Pendente',
-            data_pedido: new Date().toLocaleString('pt-BR', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: false
-            }),
-            cliente_documento: clienteDocumento,
-            cliente_endereco: clienteEndereco
-        };
-        
-        console.log('📤 Enviando pedido manual:', pedidoData);
-        
-        await fetch(API_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                acao: 'salvar_pedido',
-                pedido: pedidoData
-            })
-        });
-        
-        const atualizacoes = {};
-        carrinhoManual.forEach(item => {
-            const isProducao = item.isProducao || false;
-            if (!isProducao && item.vender_zerado !== 'SIM' && item.productId) {
-                const product = dados.produtos.find(p => parseInt(p.id) === item.productId);
-                if (product) {
-                    const novoEstoque = Math.max(0, (product.estoque || 0) - item.quantidade);
-                    atualizacoes[item.productId] = { 
-                        estoque: novoEstoque
-                    };
-                }
-            }
-        });
-        
-        if (Object.keys(atualizacoes).length > 0) {
-            await fetch(API_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    acao: 'atualizar_estoque_multiplo',
-                    itens: atualizacoes,
-                    manter_data_estoque: true
-                })
-            });
-        }
-        
-        await new Promise(resolve => setTimeout(resolve, 3000));
-        await carregarDados();
-        
-        esconderSpinner();
-        
-        const mensagemCliente = clienteNome === 'Cliente não identificado' ? 
-            '⚠️ Cliente não identificado' : 
-            `👤 Cliente: ${clienteNome}`;
-        
-        const mensagemFrete = freteValor > 0 ? `\n📦 Frete: ${freteNome} - R$ ${freteValor.toFixed(2)}` : '';
-        const mensagemPrazo = fretePrazo > 0 ? `\n⏱️ Prazo do frete: ${fretePrazo} dias úteis` : '';
-        const mensagemPrazoTotal = prazoTotal > 0 ? `\n📅 Prazo total: ${prazoTotal} dias úteis` : '';
-        
-        if (total === 0) {
-            alert(`✅ Pedido #${novoId} criado com sucesso!\n\n📦 ESTOQUE BAIXADO: ${carrinhoManual.length} produto(s)\n💰 Valor: R$ 0,00\n${mensagemCliente}${mensagemFrete}${mensagemPrazo}${mensagemPrazoTotal}`);
-        } else {
-            alert(`✅ Pedido #${novoId} criado com sucesso!\n💰 Total: R$ ${total.toFixed(2)} (Produtos: R$ ${subtotal.toFixed(2)} + Frete: R$ ${freteValor.toFixed(2)})\n${mensagemCliente}${mensagemFrete}${mensagemPrazo}${mensagemPrazoTotal}`);
-        }
-        
-        fecharModal('modalPedidoManual');
-        fecharModal('modalVisualizacaoPedido');
-        carrinhoManual = [];
-        idCounter = 0;
-        
-    } catch (error) {
-        console.error('❌ Erro ao criar pedido manual:', error);
-        esconderSpinner();
-        alert('⚠️ Erro ao criar pedido. Tente novamente.');
+    document.getElementById('pdvSubtotal').textContent = `R$ ${subtotal.toFixed(2)}`;
+    document.getElementById('pdvTotal').textContent = `R$ ${total > 0 ? total.toFixed(2) : '0,00'}`;
+}
+
+function limparPdv() {
+    if (confirm('Tem certeza que deseja limpar todo o pedido?')) {
+        pdvCarrinho = [];
+        pdvClienteSelecionado = null;
+        document.getElementById('pdvBuscaCliente').value = '';
+        document.getElementById('pdvClienteDocumento').value = '';
+        document.getElementById('pdvDescontoValor').value = '';
+        document.getElementById('pdvFreteValor').value = '';
+        pdvAtualizarCarrinho();
     }
 }
+
+// --- SALVAR PEDIDO (DIRETO NO SUPABASE) ---
+async function salvarPedidoPdv() {
+    if (pdvCarrinho.length === 0) {
+        alert('⚠️ Adicione pelo menos um produto ao carrinho.');
+        return;
+    }
+    
+    if (!pdvClienteSelecionado) {
+        alert('⚠️ Selecione um cliente na barra de busca acima para vincular o CPF/CNPJ ao pedido.');
+        return;
+    }
+
+    const btn = document.querySelector('button[onclick="salvarPedidoPdv()"]');
+    const txtOriginal = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+    btn.disabled = true;
+
+    try {
+        const subtotal = pdvCarrinho.reduce((acc, item) => acc + (item.precoUnitario * item.quantidade), 0);
+        const frete = parseFloat(document.getElementById('pdvFreteValor').value) || 0;
+        const desconto = parseFloat(document.getElementById('pdvDescontoValor').value) || 0;
+        const total = subtotal + frete - desconto;
+
+        const itensParaSalvar = pdvCarrinho.map(item => ({
+            nome: item.nome,
+            quantidade: item.quantidade,
+            pacote_tamanho: 1,
+            totalUnidades: item.quantidade,
+            price: item.precoUnitario * item.quantidade,
+            isProducao: false
+        }));
+
+        const novoPedido = {
+            cliente_nome: pdvClienteSelecionado.nome,
+            cliente_email: 'pedido_manual@mcembalagens.com',
+            cliente_telefone: '',
+            cliente_documento: document.getElementById('pdvClienteDocumento').value.replace(/\D/g,''), // CPF/CNPJ limpo
+            itens: JSON.stringify(itensParaSalvar),
+            total: total.toFixed(2),
+            total_produtos: subtotal.toFixed(2),
+            desconto: desconto.toFixed(2),
+            frete: frete > 0 ? 'Frete Manual' : 'Retirada na Loja',
+            frete_valor: frete.toFixed(2),
+            pagamento: 'Pedido Manual (PDV)',
+            status: 'Pendente',
+            data_pedido: new Date().toLocaleString('pt-BR'),
+            observacoes: 'Venda realizada presencialmente via PDV.'
+        };
+
+        const { data: pedidoSalvo, error } = await supabaseClient
+            .from('pedidos')
+            .insert([novoPedido])
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        // Baixa de Estoque no Supabase
+        for (const item of pdvCarrinho) {
+            const prod = dados.produtos.find(p => p.id === item.productId);
+            if (prod) {
+                const novoEstoque = Math.max(0, prod.estoque - item.quantidade);
+                await supabaseClient.from('produtos').update({ estoque: novoEstoque }).eq('id', item.productId);
+            }
+        }
+
+        alert(`✅ Pedido #${pedidoSalvo.id_pedido} salvo com sucesso!\n\nO estoque foi atualizado.`);
+        
+        if (confirm('Deseja imprimir o cupom agora?')) {
+            carregarDados().then(() => {
+                imprimirCupom(pedidoSalvo.id_pedido);
+            });
+        } else {
+            carregarDados();
+        }
+
+        fecharModal('modalPedidoManual');
+
+    } catch (error) {
+        console.error('Erro ao salvar PDV:', error);
+        alert('❌ Erro ao salvar: ' + error.message);
+    } finally {
+        btn.innerHTML = txtOriginal;
+        btn.disabled = false;
+    }
+}
+
+// ============================================================
+// FUNÇÕES AUXILIARES PRESERVADAS (Não apague)
+// ============================================================
+function formatarDocumento(doc) {
+    if (!doc) return '---';
+    const limpo = String(doc).replace(/\D/g, '');
+    if (limpo.length === 11) {
+        return limpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+    } else if (limpo.length === 14) {
+        return limpo.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+    }
+    return doc;
+}
+
+function buscarClientesManual() {} // Mantida por compatibilidade
+function selecionarClienteManual(id) {} // Mantida por compatibilidade
 
 function imprimirCupom(idPedido) {
     if (window._imprimindo) return;
@@ -6973,7 +6303,8 @@ function imprimirCupom(idPedido) {
     const telefone = pedido.cliente_telefone || '';
     const pagamento = pedido.pagamento || 'Não informado';
     
-    let documentoCliente = pedido.cliente_documento || '';
+    // Puxa o documento de várias formas possíveis para garantir que imprima
+let documentoCliente = pedido.cliente_documento || pedido.cliente_cpf || pedido.cpf || pedido.clienteDocumento || '';
     let tipoDocumento = 'DOC';
     if (documentoCliente) {
         const docLimpo = documentoCliente.replace(/\D/g, '');
