@@ -5942,24 +5942,40 @@ function pdvAdicionarAoCarrinho(productId) {
     const produto = dados.produtos.find(p => parseInt(p.id) === productId);
     if (!produto) return;
     
+    // Verifica se o produto já está no carrinho
     const itemExistente = pdvCarrinho.find(i => i.productId === productId);
+    
     if (itemExistente) {
         itemExistente.quantidade++;
     } else {
-        let precoBase = 0;
+        // Pega as quantidades e preços reais do banco
+        const qtds = produto.quantidades ? String(produto.quantidades).split(',').map(q => q.trim()) : [];
+        const precos = {};
         if (produto.preco_venda) {
-            const precos = produto.preco_venda.split(';');
-            if (precos.length > 0) {
-                precoBase = parseFloat(precos[0].split(':')[1]) || 0;
-            }
+            produto.preco_venda.split(';').forEach(item => {
+                const parts = item.trim().split(':');
+                if (parts.length === 2) precos[parts[0]] = parseFloat(parts[1]) || 0;
+            });
+        }
+        
+        // Pega o primeiro pacote configurado como padrão (geralmente o menor, ex: 10 un)
+        let stepPadrao = 1;
+        let precoPadrao = 0;
+        
+        if (qtds.length > 0) {
+            stepPadrao = parseInt(qtds[0]);
+            precoPadrao = precos[stepPadrao] || 0;
         }
         
         pdvCarrinho.push({
             productId: produto.id,
             nome: produto.nome,
-            precoUnitario: precoBase,
-            quantidade: 1,
-            estoque: parseInt(produto.estoque) || 0
+            step: stepPadrao, // Tamanho do pacote (ex: 10)
+            precoPacote: precoPadrao, // Preço total do pacote (ex: 24,56)
+            quantidade: 1, // Quantidade de pacotes (padrão: 1 pacote)
+            estoque: parseInt(produto.estoque) || 0,
+            qtds_disponiveis: qtds, // Salva todas as opções de quantidade do produto
+            precos_disponiveis: precos // Salva todos os preços
         });
     }
     pdvAtualizarCarrinho();
@@ -5974,27 +5990,58 @@ function pdvAtualizarCarrinho() {
         return;
     }
     
-    container.innerHTML = pdvCarrinho.map((item, index) => `
+    container.innerHTML = pdvCarrinho.map((item, index) => {
+        // Cria o select para trocar o tamanho do pacote
+        let optionsHtml = '';
+        item.qtds_disponiveis.forEach(q => {
+            const sel = parseInt(q) === parseInt(item.step) ? 'selected' : '';
+            optionsHtml += `<option value="${q}" ${sel}>${q} un</option>`;
+        });
+
+        return `
         <div style="padding:10px; border-bottom:1px solid #eee; background:white; margin-bottom:5px; border-radius:6px; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
             <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
                 <strong style="font-size:13px; color:var(--primary-dark);">${item.nome}</strong>
                 <button onclick="pdvRemoverDoCarrinho(${index})" style="background:none; border:none; color:#e74c3c; cursor:pointer;"><i class="fas fa-trash"></i></button>
             </div>
-            <div style="display:flex; justify-content:space-between; align-items:center;">
+            
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                
+                <div style="display:flex; align-items:center; gap:5px;">
+                    <span style="font-size:11px; color:#555; font-weight:600;">Tamanho:</span>
+                    <select onchange="pdvMudarPacote(${index}, this.value)" style="padding:4px; border:1px solid #ddd; border-radius:4px; font-size:12px; background:#f8f9fa;">
+                        ${optionsHtml}
+                    </select>
+                </div>
+
                 <div style="display:flex; align-items:center; border:1px solid #ddd; border-radius:4px; overflow:hidden;">
                     <button onclick="pdvAlterarQtd(${index}, -1)" style="background:#f0f0f0; border:none; padding:5px 10px; cursor:pointer;">-</button>
-                    <input type="number" value="${item.quantidade}" onchange="pdvMudarQtdInput(${index}, this.value)" style="width:40px; text-align:center; border:none; padding:5px;">
+                    <input type="number" value="${item.quantidade}" onchange="pdvMudarQtdInput(${index}, this.value)" style="width:40px; text-align:center; border:none; padding:5px; font-weight:700;">
                     <button onclick="pdvAlterarQtd(${index}, 1)" style="background:#f0f0f0; border:none; padding:5px 10px; cursor:pointer;">+</button>
                 </div>
-                <div style="display:flex; align-items:center; gap:5px;">
-                    <span style="font-size:12px; color:#888;">R$</span>
-                    <input type="number" value="${item.precoUnitario.toFixed(2)}" onchange="pdvMudarPrecoInput(${index}, this.value)" style="width:70px; padding:5px; border:1px solid #ddd; border-radius:4px; text-align:right; font-weight:600;">
+                
+                <div style="display:flex; align-items:center; gap:5px; width:100%; justify-content:space-between; margin-top:5px; border-top:1px dashed #eee; padding-top:5px;">
+                    <span style="font-size:11px; color:#888;">Preço/Pacote:</span>
+                    <input type="number" step="0.01" value="${item.precoPacote.toFixed(2)}" onchange="pdvMudarPrecoInput(${index}, this.value)" style="width:80px; padding:5px; border:1px solid #ddd; border-radius:4px; text-align:right; font-weight:700; color:var(--primary-blue);">
                 </div>
             </div>
         </div>
-    `).join('');
+        `;
+    }).join('');
     
     pdvCalcularTotais();
+}
+
+    function pdvMudarPacote(index, novoStep) {
+    const item = pdvCarrinho[index];
+    if (!item) return;
+    
+    const step = parseInt(novoStep);
+    // Atualiza o tamanho do pacote e busca o novo preço no banco de dados local
+    item.step = step;
+    item.precoPacote = item.precos_disponiveis[step] || 0;
+    
+    pdvAtualizarCarrinho();
 }
 
 function pdvAlterarQtd(index, delta) {
@@ -6012,17 +6059,13 @@ function pdvMudarQtdInput(index, val) {
 
 function pdvMudarPrecoInput(index, val) {
     const preco = parseFloat(val);
-    if (preco >= 0) pdvCarrinho[index].precoUnitario = preco;
+    if (preco >= 0) pdvCarrinho[index].precoPacote = preco;
     pdvCalcularTotais(); 
 }
 
-function pdvRemoverDoCarrinho(index) {
-    pdvCarrinho.splice(index, 1);
-    pdvAtualizarCarrinho();
-}
-
 function pdvCalcularTotais() {
-    const subtotal = pdvCarrinho.reduce((acc, item) => acc + (item.precoUnitario * item.quantidade), 0);
+    // Agora o cálculo é: Quantidade de Pacotes × Preço do Pacote
+    const subtotal = pdvCarrinho.reduce((acc, item) => acc + (item.precoPacote * item.quantidade), 0);
     const frete = parseFloat(document.getElementById('pdvFreteValor').value) || 0;
     const desconto = parseFloat(document.getElementById('pdvDescontoValor').value) || 0;
     const total = subtotal + frete - desconto;
@@ -6055,28 +6098,24 @@ async function salvarPedidoPdv() {
         return;
     }
 
-    // 🔥 CORREÇÃO: Busca o botão pelo ID (mais seguro)
     const btn = document.getElementById('btnSalvarPdv');
-    if (!btn) {
-        alert('Erro interno: Botão de salvar não encontrado.');
-        return;
-    }
     const txtOriginal = btn.innerHTML;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
     btn.disabled = true;
 
     try {
-        const subtotal = pdvCarrinho.reduce((acc, item) => acc + (item.precoUnitario * item.quantidade), 0);
+        const subtotal = pdvCarrinho.reduce((acc, item) => acc + (item.precoPacote * item.quantidade), 0);
         const frete = parseFloat(document.getElementById('pdvFreteValor').value) || 0;
         const desconto = parseFloat(document.getElementById('pdvDescontoValor').value) || 0;
         const total = subtotal + frete - desconto;
 
+        // 🔥 CORREÇÃO: Salva no formato JSON compatível com o site para o cupom
         const itensParaSalvar = pdvCarrinho.map(item => ({
             nome: item.nome,
-            quantidade: item.quantidade,
-            pacote_tamanho: 1,
-            totalUnidades: item.quantidade,
-            price: item.precoUnitario * item.quantidade,
+            quantidade: item.quantidade, // Ex: 2 pacotes
+            pacote_tamanho: item.step,   // Ex: 10 unidades
+            totalUnidades: item.quantidade * item.step, // Ex: 20 unidades reais
+            price: item.precoPacote * item.quantidade, // Ex: Preço total da linha
             isProducao: false
         }));
 
@@ -6085,7 +6124,7 @@ async function salvarPedidoPdv() {
             cliente_email: 'pedido_manual@mcembalagens.com',
             cliente_telefone: '',
             cliente_documento: document.getElementById('pdvClienteDocumento').value.replace(/\D/g,''),
-            itens: JSON.stringify(itensParaSalvar),
+            itens: JSON.stringify(itensParaSalvar), // Passa o JSON estruturado
             total: total.toFixed(2),
             total_produtos: subtotal.toFixed(2),
             desconto: desconto.toFixed(2),
@@ -6105,11 +6144,11 @@ async function salvarPedidoPdv() {
 
         if (error) throw error;
 
-        // Baixa de Estoque no Supabase
         for (const item of pdvCarrinho) {
             const prod = dados.produtos.find(p => p.id === item.productId);
             if (prod) {
-                const novoEstoque = Math.max(0, prod.estoque - item.quantidade);
+                const qtdTotalUnidades = item.quantidade * item.step;
+                const novoEstoque = Math.max(0, prod.estoque - qtdTotalUnidades);
                 await supabaseClient.from('produtos').update({ estoque: novoEstoque }).eq('id', item.productId);
             }
         }
