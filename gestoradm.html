@@ -2349,117 +2349,150 @@
     </div>
 </div>
 
-<!-- MODAL PDV - PROFISSIONAL E CORRIGIDO -->
+<!-- MODAL PEDIDO MANUAL -->
 <div class="modal-overlay" id="modalPedidoManual">
-    <div class="modal" style="max-width:98%; width:98%; height:95vh; display:flex; flex-direction:column; padding:0; overflow:hidden; border-radius:12px;">
-        
-        <!-- CABEÇALHO -->
-        <div class="modal-header" style="margin:0; padding:15px 25px; background:var(--primary-blue); color:white; border-radius:12px 12px 0 0; border:none; flex-shrink:0; display:flex; justify-content:space-between; align-items:center;">
-            <h2 style="color:white; margin:0; font-size:20px;"><i class="fas fa-cash-register"></i> Novo Pedido (PDV)</h2>
-            <button class="modal-close" style="color:white; background:rgba(255,255,255,0.15); border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; font-size:22px; border:none;" onclick="fecharModal('modalPedidoManual')">&times;</button>
+    <div class="modal">
+        <div class="modal-header">
+            <h2><i class="fas fa-hand-holding"></i> Pedido Manual</h2>
+            <button class="modal-close" onclick="fecharModal('modalPedidoManual')">&times;</button>
         </div>
-
-        <!-- CORPO: PRODUTOS (ESQUERDA) E CARRINHO (DIREITA) -->
-        <div style="display:flex; flex:1; overflow:hidden; background:#f0f2f5;">
+        <div id="pedidoManualContent">
             
-            <!-- COLUNA ESQUERDA: PRODUTOS -->
-            <div style="flex:1.4; display:flex; flex-direction:column; border-right:2px solid #ddd; overflow:hidden; background:white;">
-                
-                <div style="padding:15px; border-bottom:1px solid #eee; display:flex; gap:15px; flex-shrink:0;">
-                    <div style="flex:2; position:relative;">
-                        <label style="font-size:12px; font-weight:700; color:#555; display:block; margin-bottom:5px;">Buscar Cliente</label>
-                        <input type="text" id="pdvBuscaCliente" placeholder="Nome, CPF/CNPJ ou Telefone..." oninput="pdvBuscarCliente()" onfocus="pdvBuscarCliente()" style="width:100%; padding:12px; border:2px solid #ccc; border-radius:6px; font-size:15px;">
-                        <div id="pdvListaClientes" style="display:none; position:absolute; background:white; border:1px solid #ddd; border-radius:6px; box-shadow:0 4px 15px rgba(0,0,0,0.15); width:100%; max-height:250px; overflow-y:auto; z-index:100; top:100%; left:0;"></div>
-                    </div>
-                    <div style="flex:1;">
-                        <label style="font-size:12px; font-weight:700; color:#555; display:block; margin-bottom:5px;">CPF/CNPJ</label>
-                        <input type="text" id="pdvClienteDocumento" readonly style="width:100%; padding:12px; border:2px solid #eee; border-radius:6px; font-size:15px; background:#f8f9fa;">
-                    </div>
+            <!-- 🔥 BUSCA DE CLIENTES -->
+            <div class="form-group" style="background:#f0f4f8;padding:12px;border-radius:8px;border:2px solid var(--primary-blue);margin-bottom:12px;">
+                <label style="font-weight:700;color:var(--primary-blue);">
+                    <i class="fas fa-user-search"></i> Buscar Cliente
+                </label>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <input type="text" id="buscaClienteManual" placeholder="Digite nome, email ou telefone..." 
+                           style="flex:1;min-width:180px;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;"
+                           oninput="buscarClientesManual()">
+                    <button onclick="buscarClientesManual()" class="btn-sm btn-edit" style="padding:8px 16px;">
+                        <i class="fas fa-search"></i> Buscar
+                    </button>
                 </div>
-
-                <div style="padding:15px; background:#f8f9fa; border-bottom:2px solid #ddd; flex-shrink:0;">
-                    <label style="font-size:13px; font-weight:700; color:var(--primary-blue); display:block; margin-bottom:5px;"><i class="fas fa-search"></i> Adicionar Produto</label>
-                    <input type="text" id="pdvBuscaProduto" placeholder="Nome ou código do produto..." oninput="pdvFiltrarProdutos()" style="width:100%; padding:14px; border:2px solid var(--primary-blue); border-radius:8px; font-size:16px;">
+                <div id="listaClientesManual" style="margin-top:8px;max-height:150px;overflow-y:auto;display:none;border:1px solid #ddd;border-radius:6px;background:white;">
+                    <!-- Resultados da busca -->
                 </div>
-
-                <div id="pdvListaProdutos" style="flex:1; overflow-y:auto; padding:10px; display:flex; flex-direction:column; gap:10px;"></div>
+                <div style="margin-top:6px;font-size:11px;color:#888;">
+                    <i class="fas fa-info-circle"></i> Digite para buscar clientes cadastrados
+                </div>
             </div>
-
-            <!-- COLUNA DIREITA: CARRINHO -->
-            <div style="flex:1; display:flex; flex-direction:column; background:#fff; overflow:hidden;">
-                <div style="display:flex; padding:15px; background:#f8f9fa; gap:10px; border-bottom:2px solid #ddd; flex-shrink:0;">
-                    <button id="tabPdvAtacado" onclick="mudarModoPdv('ATACADO')" style="flex:1; padding:15px; border:none; border-radius:8px; font-weight:700; cursor:pointer; background:var(--primary-blue); color:white; font-size:16px;">📦 Atacado</button>
-                    <button id="tabPdvVarejo" onclick="mudarModoPdv('VAREJO')" style="flex:1; padding:15px; border:none; border-radius:8px; font-weight:700; cursor:pointer; background:#e0e0e0; color:#333; font-size:16px;">🏪 Varejo</button>
-                </div>
-                <div id="pdvCarrinho" style="flex:1; overflow-y:auto; padding:15px; background:#fafafa;"></div>
-            </div>
-        </div>
-
-        <!-- RODAPÉ -->
-        <div style="padding:15px 25px; border-top:2px solid #ddd; background:white; flex-shrink:0; display:flex; flex-wrap:wrap; gap:20px; align-items:flex-end; box-shadow:0 -4px 10px rgba(0,0,0,0.05);">
             
-            <!-- FRETE E OPÇÕES -->
-            <div style="flex:1; min-width:300px; display:flex; flex-direction:column; gap:10px;">
-                <div style="display:flex; gap:10px; align-items:center;">
-                    <label style="background:#e8f5e9; padding:8px 12px; border-radius:6px; border:1px solid #c8e6c9; cursor:pointer; display:flex; align-items:center; gap:8px; font-size:13px; font-weight:700; color:#155724;">
-                        <input type="checkbox" id="pdvCheckboxRevenda" onchange="pdvAtualizarCarrinho()" style="width:18px; height:18px;"> 👑 Revenda
-                    </label>
-                    <label style="background:#fff3cd; padding:8px 12px; border-radius:6px; border:1px solid #ffeeba; cursor:pointer; display:flex; align-items:center; gap:8px; font-size:13px; font-weight:700; color:#856404;">
-                        <input type="checkbox" id="pdvCheckboxMisto" style="width:18px; height:18px;"> 🔄 Misto
-                    </label>
-                </div>
-                
-                <div style="background:#f8f9fa; padding:10px; border-radius:8px; border:1px solid #eee;">
-                    <div style="display:flex; gap:8px;">
-                        <input type="text" id="pdvCepDestino" placeholder="CEP" maxlength="8" oninput="this.value=this.value.replace(/\D/g,'')" style="flex:1; padding:10px; border:1px solid #ccc; border-radius:4px; font-size:14px;">
-                        <button onclick="calcularFretePdv()" id="btnCalcularFretePdv" style="padding:10px 15px; background:var(--primary-blue); color:white; border:none; border-radius:4px; cursor:pointer; font-weight:600; font-size:13px;">
-                            <i class="fas fa-search"></i> Buscar
-                        </button>
+            <!-- DADOS DO CLIENTE -->
+            <div style="background:#f8f9fa;border-radius:8px;padding:12px;margin-bottom:12px;border:1px solid #e0e0e0;">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Cliente</label>
+                        <input type="text" id="visClienteNome" placeholder="Nome do cliente" 
+                               style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
                     </div>
-                    <div id="pdvOpcoesFrete" style="display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-top:8px;"></div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; border-top:1px dashed #ccc; padding-top:8px;">
-                        <span style="font-size:12px; font-weight:700; color:var(--primary-blue);">R$</span>
-                        <input type="number" id="pdvFreteValor" placeholder="0,00" step="0.01" oninput="pdvCalcularTotais()" style="width:80px; text-align:right; padding:6px; border:2px solid var(--primary-blue); border-radius:4px; font-size:14px; font-weight:bold;">
+                    <div class="form-group">
+                        <label>Telefone</label>
+                        <input type="text" id="visClienteTelefone" placeholder="(00) 00000-0000"
+                               style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
                     </div>
-                    <div id="pdvFreteNome" style="font-size:11px; color:#888; margin-top:5px; text-align:right;">Selecione o frete</div>
                 </div>
-            </div>
-
-            <!-- PAGAMENTO E DESCONTO -->
-            <div style="flex:1; min-width:250px; display:flex; flex-direction:column; gap:8px;">
-                <div style="display:flex; justify-content:space-between; font-size:14px;">
-                    <span>Subtotal:</span>
-                    <span id="pdvSubtotal" style="font-weight:700;">R$ 0,00</span>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="visClienteEmail" placeholder="email@exemplo.com"
+                               style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
+                    </div>
+                    <div class="form-group">
+                        <label>CPF/CNPJ</label>
+                        <input type="text" id="visClienteDocumento" placeholder="000.000.000-00"
+                               style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
+                    </div>
                 </div>
-                <div style="display:flex; justify-content:space-between; align-items:center; font-size:14px; color:var(--danger);">
-                    <span>Desconto R$:</span>
-                    <input type="number" id="pdvDescontoValor" placeholder="0,00" step="0.01" oninput="pdvCalcularTotais()" style="width:80px; text-align:right; padding:6px; border:1px solid #ccc; border-radius:4px; color:var(--danger);">
+                <div class="form-group">
+                    <label>Endereço Completo</label>
+                    <input type="text" id="visClienteEndereco" placeholder="Rua, Número, Bairro, Cidade - UF"
+                           style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
                 </div>
-                <div style="display:flex; justify-content:space-between; align-items:center; font-size:14px;">
-                    <span>Pagamento:</span>
-                    <select id="pdvPagamento" style="padding:6px; border:1px solid #ccc; border-radius:4px; width:140px; font-weight:bold; font-size:13px;">
-                        <option value="">Selecione...</option>
-                        <option value="PIX">PIX</option>
+                <div class="form-group">
+                    <label>Forma de Pagamento</label>
+                    <select id="visPagamento" style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
+                        <option value="À vista">À vista</option>
+                        <option value="Pix">Pix</option>
                         <option value="Cartão de Crédito">Cartão de Crédito</option>
-                        <option value="Cartão de Débito">Cartão de Débito</option>
-                        <option value="Dinheiro">Dinheiro</option>
                         <option value="Boleto">Boleto</option>
+                        <option value="Depósito/Transferência">Depósito/Transferência</option>
+                    </select>
+                </div>
+
+                <!-- 🔥 NOVO: FRETE -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Frete</label>
+                        <input type="text" id="visFrete" placeholder="Ex: Entrega própria, PAC, Jadlog..." 
+                               style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
+                    </div>
+                    <div class="form-group">
+                        <label>Valor do Frete (R$)</label>
+                        <input type="number" id="visFreteValor" step="0.01" min="0" 
+                               placeholder="0,00" style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Prazo do Frete (dias úteis)</label>
+                    <input type="number" id="visFretePrazo" min="0" placeholder="Ex: 5" 
+                           style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
+                    <small style="color:#888;font-size:11px;">Dias úteis para entrega do frete (será somado ao prazo de produção)</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Observações do Pedido</label>
+                    <textarea id="visObs" rows="2" placeholder="Informações internas sobre o pedido..." 
+                              style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;resize:vertical;"></textarea>
+                </div>
+            </div>
+            
+            <!-- BUSCA DE PRODUTOS -->
+            <div class="form-group">
+                <label>🔍 Buscar Produto</label>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <input type="text" id="buscaProdutoManual" placeholder="Digite o nome ou código do produto..." 
+                           style="flex:1;min-width:180px;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;"
+                           oninput="filtrarProdutosManual()">
+                    <select id="filtroCategoriaManual" style="padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;background:white;min-width:130px;" onchange="filtrarProdutosManual()">
+                        <option value="">Todas categorias</option>
                     </select>
                 </div>
             </div>
 
-            <!-- TOTAL E BOTÕES -->
-            <div style="flex:1.2; min-width:280px; display:flex; flex-direction:column; gap:10px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; font-size:28px; font-weight:700; color:var(--primary-blue);">
-                    <span>TOTAL:</span>
-                    <span id="pdvTotal">R$ 0,00</span>
+            <div class="produto-lista-container">
+                <div id="listaProdutosManual">
+                    <div style="text-align:center;padding:15px;color:#999;">
+                        <i class="fas fa-spinner fa-spin"></i> Carregando produtos...
+                    </div>
                 </div>
-                <div style="display:flex; gap:10px;">
-                    <button onclick="imprimirOrcamentoPdv()" style="flex:1; background:#6c757d; color:white; border:none; padding:12px; border-radius:6px; font-weight:700; cursor:pointer; font-size:14px;">
-                        <i class="fas fa-print"></i> Orçamento
+            </div>
+
+            <!-- CARRINHO -->
+            <div style="border-top:2px solid #eee;padding-top:12px;margin-top:8px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
+                    <h4 style="color:var(--primary-blue);font-size:14px;"><i class="fas fa-shopping-cart"></i> Itens do Pedido</h4>
+                    <div style="display:flex;gap:12px;align-items:center;">
+                        <span id="totalItensManual" style="font-size:12px;color:#888;">0 itens</span>
+                        <span id="totalManual" style="font-weight:700;color:var(--primary-blue);font-size:15px;">R$ 0,00</span>
+                    </div>
+                </div>
+                <div id="carrinhoManual" style="max-height:180px;overflow-y:auto;border:1px solid #eee;border-radius:6px;padding:8px;background:white;min-height:50px;">
+                    <div style="text-align:center;padding:12px;color:#999;font-size:12px;">
+                        Nenhum item adicionado
+                    </div>
+                </div>
+                
+                <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+                    <button onclick="limparCarrinhoManual()" class="btn-sm" style="background:#e74c3c;color:white;padding:8px 14px;">
+                        <i class="fas fa-trash"></i> Limpar
                     </button>
-                    <button id="btnSalvarPdv" onclick="salvarPedidoPdv()" style="flex:2; background:var(--success); color:white; border:none; padding:12px; border-radius:6px; font-weight:700; cursor:pointer; font-size:16px; box-shadow:0 4px 10px rgba(39,174,96,0.3);">
-                        <i class="fas fa-check-circle"></i> Salvar Pedido
+                    <button onclick="visualizarPedidoManual()" class="btn-sm btn-view" style="padding:8px 16px;font-weight:600;">
+                        <i class="fas fa-eye"></i> Visualizar
+                    </button>
+                    <button onclick="finalizarPedidoManual()" class="btn-sm btn-success" style="padding:8px 16px;font-weight:600;">
+                        <i class="fas fa-save"></i> Salvar Pedido
                     </button>
                 </div>
             </div>
@@ -2545,147 +2578,158 @@
     </div>
 </div>
 
-<!-- MODAL GERENCIAR CLIENTE (NOVO) -->
-<div class="modal-overlay" id="modalGerenciarCliente">
-    <div class="modal" style="max-width:750px;max-height:92vh;overflow-y:auto;">
-        <div class="modal-header">
-            <h2><i class="fas fa-user-cog"></i> Gerenciar Cliente</h2>
-            <button class="modal-close" onclick="fecharModal('modalGerenciarCliente')">&times;</button>
-        </div>
-
-        <input type="hidden" id="gcIdCliente" value="">
-
-        <div style="background:#f0f4f8;padding:12px 15px;border-radius:8px;margin-bottom:15px;">
-            <div style="font-size:16px;font-weight:700;color:var(--primary-blue);" id="gcNomeCliente">---</div>
-            <div style="font-size:12px;color:#888;" id="gcInfoCliente">---</div>
-        </div>
-
-        <div style="border:1px solid #e0e0e0;border-radius:8px;padding:15px;margin-bottom:15px;">
-            <h4 style="color:var(--primary-blue);margin-bottom:12px;font-size:14px;">
-                <i class="fas fa-flag"></i> Status do Cliente
-            </h4>
-            
-            <div class="checkbox-group" style="margin-bottom:10px;">
-                <input type="checkbox" id="gcIsRevendedor" onchange="gcAtualizarPreview()">
-                <label for="gcIsRevendedor">
-                    <strong>É Revendedor</strong> — libera acesso com preços exclusivos (10% desconto)
-                </label>
+      <!-- ============================================================ -->
+    <!-- MODAL GERENCIAR CLIENTE (NOVO) -->
+    <!-- ============================================================ -->
+    <div class="modal-overlay" id="modalGerenciarCliente">
+        <div class="modal" style="max-width:750px;max-height:92vh;overflow-y:auto;">
+            <div class="modal-header">
+                <h2><i class="fas fa-user-cog"></i> Gerenciar Cliente</h2>
+                <button class="modal-close" onclick="fecharModal('modalGerenciarCliente')">&times;</button>
             </div>
-            
-            <div class="checkbox-group" style="margin-bottom:10px;">
-                <input type="checkbox" id="gcPendencia" onchange="gcAtualizarPreview()">
-                <label for="gcPendencia">
-                    <strong>Bloqueado por Pendência</strong> — cliente <u>não consegue logar</u> no revenda
-                </label>
-            </div>
-            
-            <div class="checkbox-group">
-                <input type="checkbox" id="gcAnalise" onchange="gcAtualizarPreview()">
-                <label for="gcAnalise">
-                    <strong>Em Análise</strong> — cliente vê "aguardando liberação" ao tentar logar
-                </label>
-            </div>
-        </div>
 
-        <div id="gcAreaParcelas" style="border:1px solid #e0e0e0;border-radius:8px;padding:15px;margin-bottom:15px;display:none;">
-            <h4 style="color:var(--primary-blue);margin-bottom:12px;font-size:14px;">
-                <i class="fas fa-calendar-alt"></i> Opções de Parcelamento (Boleto Faturado)
-            </h4>
-            <p style="font-size:12px;color:#888;margin-bottom:12px;">
-                Adicione as parcelas que este revendedor poderá escolher no checkout. 
-                <strong>Ele verá exatamente essas opções.</strong>
-            </p>
-            
-            <div id="gcListaParcelas" style="margin-bottom:12px;"></div>
-            
-            <div style="display:flex;gap:8px;flex-wrap:wrap;background:#f8f9fa;padding:10px;border-radius:6px;">
-                <div style="flex:1;min-width:100px;">
-                    <label style="display:block;font-size:11px;font-weight:600;color:#666;margin-bottom:3px;">Dias para vencimento</label>
-                    <input type="number" id="gcNovaParcelaDias" placeholder="Ex: 7" min="1" 
-                           style="width:100%;padding:6px 10px;border:2px solid #ddd;border-radius:5px;font-size:13px;">
-                </div>
-                <div style="flex:1;min-width:100px;">
-                    <label style="display:block;font-size:11px;font-weight:600;color:#666;margin-bottom:3px;">Valor mínimo (R$)</label>
-                    <input type="number" id="gcNovaParcelaMinimo" placeholder="Ex: 100" min="0" step="0.01"
-                           style="width:100%;padding:6px 10px;border:2px solid #ddd;border-radius:5px;font-size:13px;">
-                </div>
-                <div style="display:flex;align-items:flex-end;">
-                    <button type="button" onclick="gcAdicionarParcela()" 
-                            style="padding:8px 16px;background:var(--primary-blue);color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:13px;white-space:nowrap;">
-                        <i class="fas fa-plus"></i> Adicionar
-                    </button>
-                </div>
-            </div>
-        </div>
+            <input type="hidden" id="gcIdCliente" value="">
 
-        <div style="border:1px solid #e0e0e0;border-radius:8px;padding:15px;margin-bottom:15px;">
-            <h4 style="color:var(--primary-blue);margin-bottom:12px;font-size:14px;">
-                <i class="fas fa-dollar-sign"></i> Controle Financeiro
-            </h4>
-            
-            <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                <div class="form-group">
-                    <label style="display:block;font-size:12px;font-weight:600;color:#333;margin-bottom:4px;">
-                        Limite de Crédito (R$)
+            <!-- CABEÇALHO DO CLIENTE -->
+            <div style="background:#f0f4f8;padding:12px 15px;border-radius:8px;margin-bottom:15px;">
+                <div style="font-size:16px;font-weight:700;color:var(--primary-blue);" id="gcNomeCliente">---</div>
+                <div style="font-size:12px;color:#888;" id="gcInfoCliente">---</div>
+            </div>
+
+            <!-- STATUS DO CLIENTE -->
+            <div style="border:1px solid #e0e0e0;border-radius:8px;padding:15px;margin-bottom:15px;">
+                <h4 style="color:var(--primary-blue);margin-bottom:12px;font-size:14px;">
+                    <i class="fas fa-flag"></i> Status do Cliente
+                </h4>
+                
+                <div class="checkbox-group" style="margin-bottom:10px;">
+                    <input type="checkbox" id="gcIsRevendedor" onchange="gcAtualizarPreview()">
+                    <label for="gcIsRevendedor">
+                        <strong>É Revendedor</strong> — libera acesso com preços exclusivos (10% desconto)
                     </label>
-                    <input type="number" id="gcLimiteCredito" min="0" step="0.01" placeholder="0,00"
-                           style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
                 </div>
-                <div class="form-group">
-                    <label style="display:block;font-size:12px;font-weight:600;color:#333;margin-bottom:4px;">
-                        Próximo Vencimento
+                
+                <div class="checkbox-group" style="margin-bottom:10px;">
+                    <input type="checkbox" id="gcPendencia" onchange="gcAtualizarPreview()">
+                    <label for="gcPendencia">
+                        <strong>Bloqueado por Pendência</strong> — cliente <u>não consegue logar</u> no revenda
                     </label>
-                    <input type="date" id="gcProximoVencimento"
-                           style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
+                </div>
+                
+                <div class="checkbox-group">
+                    <input type="checkbox" id="gcAnalise" onchange="gcAtualizarPreview()">
+                    <label for="gcAnalise">
+                        <strong>Em Análise</strong> — cliente vê "aguardando liberação" ao tentar logar
+                    </label>
                 </div>
             </div>
-            
-            <div class="form-group" style="margin-top:10px;">
-                <label style="display:block;font-size:12px;font-weight:600;color:#333;margin-bottom:4px;">
-                    Situação Financeira
-                </label>
-                <select id="gcSituacao" style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
-                    <option value="Em dia">✅ Em dia</option>
-                    <option value="Devendo">⚠️ Devendo</option>
-                    <option value="Negativado">🚫 Negativado</option>
-                </select>
-            </div>
-        </div>
 
-        <div style="border:1px solid #e0e0e0;border-radius:8px;padding:15px;margin-bottom:15px;">
-            <h4 style="color:var(--primary-blue);margin-bottom:12px;font-size:14px;">
-                <i class="fas fa-sticky-note"></i> Observação Interna (aparece só no gestor)
-            </h4>
-            <textarea id="gcObservacaoInterna" rows="3" 
-                      placeholder="Ex: cliente prefere entrega à tarde, sempre compra caixas kraft..."
-                      style="width:100%;padding:10px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;resize:vertical;"></textarea>
-        </div>
-
-        <div style="border:2px solid var(--primary-blue);border-radius:8px;padding:15px;margin-bottom:15px;background:#f0f4f8;">
-            <h4 style="color:var(--primary-blue);margin-bottom:8px;font-size:13px;">
-                <i class="fas fa-eye"></i> Preview (o que será salvo no banco)
-            </h4>
-            <div style="font-size:12px;color:#555;margin-bottom:6px;">
-                <strong>Campo observacoes:</strong>
+            <!-- PARCELAMENTO (só aparece se for revendedor) -->
+            <div id="gcAreaParcelas" style="border:1px solid #e0e0e0;border-radius:8px;padding:15px;margin-bottom:15px;display:none;">
+                <h4 style="color:var(--primary-blue);margin-bottom:12px;font-size:14px;">
+                    <i class="fas fa-calendar-alt"></i> Opções de Parcelamento (Boleto Faturado)
+                </h4>
+                <p style="font-size:12px;color:#888;margin-bottom:12px;">
+                    Adicione as parcelas que este revendedor poderá escolher no checkout. 
+                    <strong>Ele verá exatamente essas opções.</strong>
+                </p>
+                
+                <!-- LISTA DE PARCELAS ADICIONADAS -->
+                <div id="gcListaParcelas" style="margin-bottom:12px;"></div>
+                
+                <!-- ADICIONAR NOVA PARCELA -->
+                <div style="display:flex;gap:8px;flex-wrap:wrap;background:#f8f9fa;padding:10px;border-radius:6px;">
+                    <div style="flex:1;min-width:100px;">
+                        <label style="display:block;font-size:11px;font-weight:600;color:#666;margin-bottom:3px;">Dias para vencimento</label>
+                        <input type="number" id="gcNovaParcelaDias" placeholder="Ex: 7" min="1" 
+                               style="width:100%;padding:6px 10px;border:2px solid #ddd;border-radius:5px;font-size:13px;">
+                    </div>
+                    <div style="flex:1;min-width:100px;">
+                        <label style="display:block;font-size:11px;font-weight:600;color:#666;margin-bottom:3px;">Valor mínimo (R$)</label>
+                        <input type="number" id="gcNovaParcelaMinimo" placeholder="Ex: 100" min="0" step="0.01"
+                               style="width:100%;padding:6px 10px;border:2px solid #ddd;border-radius:5px;font-size:13px;">
+                    </div>
+                    <div style="display:flex;align-items:flex-end;">
+                        <button type="button" onclick="gcAdicionarParcela()" 
+                                style="padding:8px 16px;background:var(--primary-blue);color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:13px;white-space:nowrap;">
+                            <i class="fas fa-plus"></i> Adicionar
+                        </button>
+                    </div>
+                </div>
             </div>
-            <div id="gcPreviewObservacoes" 
-                 style="background:white;padding:10px;border-radius:6px;font-family:monospace;font-size:13px;color:var(--primary-blue);word-break:break-all;min-height:36px;border:1px solid #ddd;">
-                REVENDA
-            </div>
-        </div>
 
-        <div class="form-actions" style="justify-content:center;gap:10px;flex-wrap:wrap;">
-            <button class="btn-cancel" onclick="fecharModal('modalGerenciarCliente')" style="padding:10px 25px;">
-                <i class="fas fa-times"></i> Cancelar
-            </button>
-            <button class="btn-save" onclick="gcSalvarCliente()" id="gcBtnSalvar" style="padding:10px 25px;">
-                <i class="fas fa-save"></i> Salvar Alterações
-            </button>
+            <!-- CONTROLE FINANCEIRO -->
+            <div style="border:1px solid #e0e0e0;border-radius:8px;padding:15px;margin-bottom:15px;">
+                <h4 style="color:var(--primary-blue);margin-bottom:12px;font-size:14px;">
+                    <i class="fas fa-dollar-sign"></i> Controle Financeiro
+                </h4>
+                
+                <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                    <div class="form-group">
+                        <label style="display:block;font-size:12px;font-weight:600;color:#333;margin-bottom:4px;">
+                            Limite de Crédito (R$)
+                        </label>
+                        <input type="number" id="gcLimiteCredito" min="0" step="0.01" placeholder="0,00"
+                               style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
+                    </div>
+                    <div class="form-group">
+                        <label style="display:block;font-size:12px;font-weight:600;color:#333;margin-bottom:4px;">
+                            Próximo Vencimento
+                        </label>
+                        <input type="date" id="gcProximoVencimento"
+                               style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
+                    </div>
+                </div>
+                
+                <div class="form-group" style="margin-top:10px;">
+                    <label style="display:block;font-size:12px;font-weight:600;color:#333;margin-bottom:4px;">
+                        Situação Financeira
+                    </label>
+                    <select id="gcSituacao" style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
+                        <option value="Em dia">✅ Em dia</option>
+                        <option value="Devendo">⚠️ Devendo</option>
+                        <option value="Negativado">🚫 Negativado</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- OBSERVAÇÃO INTERNA -->
+            <div style="border:1px solid #e0e0e0;border-radius:8px;padding:15px;margin-bottom:15px;">
+                <h4 style="color:var(--primary-blue);margin-bottom:12px;font-size:14px;">
+                    <i class="fas fa-sticky-note"></i> Observação Interna (aparece só no gestor)
+                </h4>
+                <textarea id="gcObservacaoInterna" rows="3" 
+                          placeholder="Ex: cliente prefere entrega à tarde, sempre compra caixas kraft..."
+                          style="width:100%;padding:10px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;resize:vertical;"></textarea>
+            </div>
+
+            <!-- PREVIEW DO QUE SERÁ SALVO -->
+            <div style="border:2px solid var(--primary-blue);border-radius:8px;padding:15px;margin-bottom:15px;background:#f0f4f8;">
+                <h4 style="color:var(--primary-blue);margin-bottom:8px;font-size:13px;">
+                    <i class="fas fa-eye"></i> Preview (o que será salvo no banco)
+                </h4>
+                <div style="font-size:12px;color:#555;margin-bottom:6px;">
+                    <strong>Campo observacoes:</strong>
+                </div>
+                <div id="gcPreviewObservacoes" 
+                     style="background:white;padding:10px;border-radius:6px;font-family:monospace;font-size:13px;color:var(--primary-blue);word-break:break-all;min-height:36px;border:1px solid #ddd;">
+                    REVENDA
+                </div>
+            </div>
+
+            <!-- AÇÕES -->
+            <div class="form-actions" style="justify-content:center;gap:10px;flex-wrap:wrap;">
+                <button class="btn-cancel" onclick="fecharModal('modalGerenciarCliente')" style="padding:10px 25px;">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button class="btn-save" onclick="gcSalvarCliente()" id="gcBtnSalvar" style="padding:10px 25px;">
+                    <i class="fas fa-save"></i> Salvar Alterações
+                </button>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- MODAL SIMULAÇÃO DE FRETES -->
+<!-- 🔥 NOVO: MODAL SIMULAÇÃO DE FRETES -->
 <div class="modal-overlay" id="modalFretes">
     <div class="modal" style="max-width:1100px;">
         <div class="modal-header">
@@ -3176,12 +3220,6 @@ function renderizarRevendedores() {
         const obs = String(c.observacoes || '').toUpperCase().trim();
         return obs.startsWith('REVENDA');
     });
-    // 🔥 ORDENAÇÃO: Revendedores mais recentes no topo
-revendedores.sort((a, b) => {
-    const dataA = a.data_cadastro ? new Date(a.data_cadastro.split('/').reverse().join('/')) : new Date(0);
-    const dataB = b.data_cadastro ? new Date(b.data_cadastro.split('/').reverse().join('/')) : new Date(0);
-    return dataB - dataA;
-});
     
     // Aplica filtro de busca
     if (busca) {
@@ -4022,8 +4060,6 @@ function renderizarTodosPedidos() {
     const filtroRastreio = document.getElementById('filtroRastreioPedido')?.value?.toLowerCase() || '';
     
     let pedidos = [...dados.pedidos];
-    // 🔥 ORDENAÇÃO: Mais recentes no topo
-pedidos.sort((a, b) => (parseInt(b.id_pedido) || 0) - (parseInt(a.id_pedido) || 0));
     
     // Filtro de busca
     if (busca) {
@@ -4530,8 +4566,6 @@ function renderizarPendentes() {
     
     // 🔥 ALTERADO: Filtra Pendentes e Pagos
     const pendentes = dados.pedidos.filter(p => p.status === 'Pendente' || p.status === 'Pago' || !p.status);
-    // 🔥 ORDENAÇÃO: Mais recentes no topo
-pendentes.sort((a, b) => (parseInt(b.id_pedido) || 0) - (parseInt(a.id_pedido) || 0));
     
     let filtrados = pendentes;
     if (busca) {
@@ -4869,12 +4903,6 @@ function renderizarClientes() {
     const busca = document.getElementById('buscaClientes')?.value?.toLowerCase() || '';
     
     let clientes = [...dados.clientes];
-    // 🔥 ORDENAÇÃO: Cadastros mais recentes no topo
-clientes.sort((a, b) => {
-    const dataA = a.data_cadastro ? new Date(a.data_cadastro.split('/').reverse().join('/')) : new Date(0);
-    const dataB = b.data_cadastro ? new Date(b.data_cadastro.split('/').reverse().join('/')) : new Date(0);
-    return dataB - dataA;
-});
     
     if (busca) {
         clientes = clientes.filter(c => {
@@ -5111,21 +5139,26 @@ async function executarSalvarCliente() {
                 dadosCliente[campo] = el.value;
             }
         });
+        dadosCliente.id_cliente = clienteEditando.id_cliente;
         
         if (dadosCliente.documento) {
             dadosCliente.cpf = dadosCliente.documento;
         }
         
-        // 🔥 CORREÇÃO: Salva direto no Supabase em vez de usar a API antiga
-        const { error } = await supabaseClient
-            .from('clientes')
-            .update(dadosCliente)
-            .eq('id_cliente', clienteEditando.id_cliente);
-            
-        if (error) throw error;
+        await fetch(API_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                acao: 'atualizar_cliente',
+                cliente: dadosCliente
+            })
+        });
         
         Object.keys(dadosCliente).forEach(key => {
-            clienteEditando[key] = dadosCliente[key];
+            if (key !== 'id_cliente') {
+                clienteEditando[key] = dadosCliente[key];
+            }
         });
         
         esconderSpinner();
@@ -5136,7 +5169,7 @@ async function executarSalvarCliente() {
     } catch (error) {
         console.error('Erro ao salvar cliente:', error);
         esconderSpinner();
-        alert('⚠️ Erro ao salvar cliente: ' + error.message);
+        alert('⚠️ Erro ao salvar cliente.');
     }
 }
 
@@ -5669,44 +5702,31 @@ function fecharModal(id) {
 // ============================================================
 // PROCESSAR ITENS DO PEDIDO
 // ============================================================
-// ============================================================
-// PROCESSAR ITENS DO PEDIDO (ATUALIZADO PARA PEDIDO MISTO)
-// ============================================================
 function processarItensPedido(textoItens) {
     const itens = [];
     if (!textoItens) return itens;
     
     try {
-        // 1. Lê o formato novo (JSON) gerado pelo site ou pelo PDV atualizado
+        // 1. Lê o formato novo (JSON) gerado pelo site Supabase
         if (typeof textoItens === 'string' && textoItens.trim().startsWith('[')) {
             try {
                 const parsed = JSON.parse(textoItens);
                 if (Array.isArray(parsed)) {
                     return parsed.map(item => {
-                        // Verifica se é do PDV novo (tem qtdProducao) ou do site antigo
-                        const isMistoPdv = item.qtdProducao !== undefined;
-                        
+                        // O site novo manda o total de unidades compradas
                         const totalUnidades = parseInt(item.quantidade) || parseInt(item.totalUnidades) || 1;
                         const tamanhoPacote = parseInt(item.pacote_tamanho) || 1;
-                        const qtdPacotes = tamanhoPacote > 0 ? Math.ceil(totalUnidades / tamanhoPacote) : 1;
-                        
-                        // Define o status de produção
-                        const isProducao = item.isProducao || false;
-                        const qtdProducao = isMistoPdv ? parseInt(item.qtdProducao) : (isProducao ? totalUnidades : 0);
-                        const qtdEstoque = isMistoPdv ? parseInt(item.qtdEstoque) : (isProducao ? 0 : totalUnidades);
+                        const qtdPacotes = Math.ceil(totalUnidades / tamanhoPacote);
                         
                         return {
                             nome: item.nome || 'Produto',
-                            quantidade: totalUnidades,
-                            qtdPacotes: qtdPacotes,
-                            tamanhoPacote: tamanhoPacote,
-                            isProducao: isProducao,
+                            quantidade: totalUnidades, // Ex: 20
+                            qtdPacotes: qtdPacotes,    // Ex: 1
+                            tamanhoPacote: tamanhoPacote, // Ex: 20
+                            isProducao: item.isProducao || false,
                             productId: item.productId || null,
-                            prazoProducao: item.prazoProducao || item.producao_dias || 7,
-                            price: parseFloat(item.price) || 0,
-                            // Novos campos para o Pedido Misto
-                            qtdProducao: qtdProducao,
-                            qtdEstoque: qtdEstoque
+                            prazoProducao: item.prazoProducao || 0,
+                            price: parseFloat(item.price) || 0
                         };
                     });
                 }
@@ -5715,7 +5735,7 @@ function processarItensPedido(textoItens) {
             }
         }
         
-        // 2. Lê o formato antigo (texto separado por |) - MANTIDO PARA COMPATIBILIDADE
+        // 2. Lê o formato antigo (texto separado por |)
         if (typeof textoItens === 'string') {
             let partes = [];
             if (textoItens.includes(' | ')) {
@@ -5789,9 +5809,7 @@ function processarItensPedido(textoItens) {
                     prazoProducao: prazoProducao,
                     productId: productId,
                     price: price,
-                    textoOriginal: part.trim(),
-                    qtdProducao: isProducao ? quantidade : 0,
-                    qtdEstoque: isProducao ? 0 : quantidade
+                    textoOriginal: part.trim()
                 });
             });
         }
@@ -5878,8 +5896,931 @@ async function cancelarPedido(id) {
 }
 
 // ============================================================
-// IMPRESSÃO: CUPOM NORMAL, MISTO E ORÇAMENTO
+// ABRIR PEDIDO MANUAL - COM VERIFICAÇÃO DE DADOS
 // ============================================================
+function abrirPedidoManual() {
+    carrinhoManual = [];
+    idCounter = 0;
+    document.getElementById('carrinhoManual').innerHTML = `
+        <div style="text-align:center;padding:12px;color:#999;font-size:12px;">
+            Nenhum item adicionado
+        </div>
+    `;
+    document.getElementById('totalManual').textContent = 'R$ 0,00';
+    document.getElementById('totalItensManual').textContent = '0 itens';
+    document.getElementById('modalPedidoManual').classList.add('open');
+    
+    if (dados.produtos && dados.produtos.length > 0) {
+        console.log('📦 Dados já carregados, carregando produtos manual...');
+        carregarProdutosManual();
+        configurarBuscaManual();
+    } else {
+        console.log('⏳ Aguardando dados serem carregados...');
+        document.getElementById('listaProdutosManual').innerHTML = `
+            <div style="text-align:center;padding:15px;color:#999;">
+                <i class="fas fa-spinner fa-spin" style="font-size:18px;display:block;margin-bottom:5px;"></i>
+                Carregando produtos...
+            </div>
+        `;
+        
+        carregarDados().then(function() {
+            console.log('✅ Dados carregados, carregando produtos manual...');
+            carregarProdutosManual();
+            configurarBuscaManual();
+        }).catch(function() {
+            console.log('⚠️ Erro ao carregar dados, tentando novamente em 1s...');
+            setTimeout(function() {
+                carregarDados().then(function() {
+                    carregarProdutosManual();
+                    configurarBuscaManual();
+                });
+            }, 1000);
+        });
+    }
+}
+
+// ============================================================
+// CONFIGURAR BUSCA MANUAL
+// ============================================================
+function configurarBuscaManual() {
+    const buscaInput = document.getElementById('buscaProdutoManual');
+    const selectCat = document.getElementById('filtroCategoriaManual');
+    
+    console.log('🔧 Configurando busca manual...');
+    
+    if (buscaInput) {
+        const novoInput = buscaInput.cloneNode(true);
+        buscaInput.parentNode.replaceChild(novoInput, buscaInput);
+        
+        novoInput.oninput = function(e) {
+            console.log('🔍 oninput:', this.value);
+            filtrarProdutosManual();
+        };
+        novoInput.onkeyup = function(e) {
+            console.log('🔍 onkeyup:', this.value);
+            filtrarProdutosManual();
+        };
+        novoInput.onkeydown = function(e) {
+            if (e.key === 'Enter') {
+                console.log('🔍 Enter:', this.value);
+                filtrarProdutosManual();
+            }
+        };
+        
+        novoInput.addEventListener('input', function(e) {
+            console.log('🔍 addEventListener input:', this.value);
+            filtrarProdutosManual();
+        });
+        novoInput.addEventListener('keyup', function(e) {
+            console.log('🔍 addEventListener keyup:', this.value);
+            filtrarProdutosManual();
+        });
+        
+        setTimeout(function() {
+            const event = new Event('input');
+            novoInput.dispatchEvent(event);
+            console.log('✅ Evento de input forçado!');
+        }, 200);
+        
+        console.log('✅ Busca configurada com sucesso!');
+    } else {
+        console.warn('⚠️ Elemento buscaProdutoManual não encontrado!');
+    }
+    
+    if (selectCat) {
+        const novoSelect = selectCat.cloneNode(true);
+        selectCat.parentNode.replaceChild(novoSelect, selectCat);
+        
+        novoSelect.onchange = function() {
+            console.log('📂 onchange:', this.value);
+            filtrarProdutosManual();
+        };
+        novoSelect.addEventListener('change', function() {
+            console.log('📂 addEventListener change:', this.value);
+            filtrarProdutosManual();
+        });
+    }
+    
+    setTimeout(function() {
+        filtrarProdutosManual();
+    }, 300);
+}
+
+// ============================================================
+// CARREGAR PRODUTOS MANUAL
+// ============================================================
+function carregarProdutosManual() {
+    const container = document.getElementById('listaProdutosManual');
+    
+    if (!dados.produtos || dados.produtos.length === 0) {
+        container.innerHTML = `
+            <div style="text-align:center;padding:15px;color:#999;">
+                <i class="fas fa-spinner fa-spin" style="font-size:18px;display:block;margin-bottom:5px;"></i>
+                Carregando produtos...
+            </div>
+        `;
+        return;
+    }
+    
+    console.log('📦 Carregando produtos manual. Total:', dados.produtos.length);
+    
+    const selectCat = document.getElementById('filtroCategoriaManual');
+    const categorias = [...new Set(dados.produtos.map(p => p.categoria).filter(c => c))];
+    selectCat.innerHTML = `<option value="">Todas categorias</option>`;
+    categorias.sort().forEach(cat => {
+        selectCat.innerHTML += `<option value="${cat}">${cat}</option>`;
+    });
+    
+    filtrarProdutosManual();
+    
+    setTimeout(function() {
+        configurarBuscaManual();
+    }, 100);
+}
+
+// ============================================================
+// FILTRAR PRODUTOS MANUAL
+// ============================================================
+function filtrarProdutosManual() {
+    const container = document.getElementById('listaProdutosManual');
+    
+    const buscaInput = document.getElementById('buscaProdutoManual');
+    const categoriaSelect = document.getElementById('filtroCategoriaManual');
+    
+    let busca = '';
+    let categoria = '';
+    
+    if (buscaInput) {
+        busca = buscaInput.value ? buscaInput.value.toLowerCase().trim() : '';
+    }
+    if (categoriaSelect) {
+        categoria = categoriaSelect.value || '';
+    }
+    
+    console.log('🔍 FILTRANDO PRODUTOS: busca="' + busca + '" categoria="' + categoria + '"');
+    console.log('📦 Total de produtos disponíveis:', dados.produtos ? dados.produtos.length : 0);
+    
+    if (!dados.produtos || dados.produtos.length === 0) {
+        container.innerHTML = `
+            <div style="text-align:center;padding:15px;color:#999;">
+                <i class="fas fa-spinner fa-spin" style="font-size:18px;display:block;margin-bottom:5px;"></i>
+                Carregando produtos...
+            </div>
+        `;
+        return;
+    }
+    
+    let produtos = dados.produtos;
+    
+    if (busca) {
+        produtos = produtos.filter(function(p) {
+            const nome = String(p.nome || '').toLowerCase();
+            const codigo = String(p.codigo_produto || '').toLowerCase();
+            const descricao = String(p.descricao || '').toLowerCase();
+            const id = String(p.id || '');
+            return nome.includes(busca) || codigo.includes(busca) || descricao.includes(busca) || id.includes(busca);
+        });
+        console.log('📦 Após filtro de busca:', produtos.length, 'produtos');
+    }
+    
+    if (categoria) {
+        produtos = produtos.filter(function(p) {
+            return String(p.categoria || '') === categoria;
+        });
+        console.log('📦 Após filtro de categoria:', produtos.length, 'produtos');
+    }
+    
+    produtos.sort(function(a, b) {
+        const nomeA = String(a.nome || '').toLowerCase();
+        const nomeB = String(b.nome || '').toLowerCase();
+        return nomeA.localeCompare(nomeB, 'pt-BR');
+    });
+    
+    if (produtos.length === 0) {
+        container.innerHTML = `
+            <div style="text-align:center;padding:15px;color:#999;">
+                <i class="fas fa-search" style="font-size:18px;display:block;margin-bottom:5px;"></i>
+                Nenhum produto encontrado para: "${busca || 'vazio'}"
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = produtos.map(function(p) {
+        const estoque = parseInt(p.estoque) || 0;
+        const podeVender = p.vender_zerado === 'SIM' || estoque > 0;
+        const corEstoque = estoque === 0 ? '#e74c3c' : (estoque < 10 ? '#f39c12' : '#27ae60');
+        const qtds = p.quantidades ? String(p.quantidades).split(',').map(function(q) { return q.trim(); }) : ['1'];
+        
+        let optionsHtml = '<option value="">Selecione</option>';
+        qtds.forEach(function(q) {
+            optionsHtml += '<option value="' + q + '">' + q + ' un</option>';
+        });
+        
+        let temBerco = '';
+        if (p.descricao && String(p.descricao).toLowerCase().includes('berços')) {
+            temBerco = ' 🧩';
+        }
+        
+        return `
+            <div class="produto-item" style="${!podeVender ? 'opacity:0.5;' : ''}">
+                <div class="info">
+                    <div class="nome">${p.nome || 'Sem nome'}${temBerco}</div>
+                    <div class="detalhes">
+                        Cód: ${p.codigo_produto || '---'} | Estoque: <span style="color:${corEstoque};font-weight:600;">${estoque}</span>
+                        ${p.vender_zerado === 'SIM' ? ' | 🔄 Vende zerado' : ''}
+                        ${p.prazo_producao > 0 ? ' | ⏱️ ' + p.prazo_producao + 'dias' : ''}
+                    </div>
+                </div>
+                <div class="acoes">
+                    <select onchange="adicionarSelectManual(${p.id}, this.value)" ${!podeVender ? 'disabled' : ''}>
+                        ${optionsHtml}
+                    </select>
+                    <input type="number" id="qtdCustom_${p.id}" placeholder="Qtd" min="1" 
+                           style="width:45px;" ${!podeVender ? 'disabled' : ''}>
+                    <input type="number" id="precoCustom_${p.id}" placeholder="Preço" step="0.01" min="0"
+                           style="width:60px;" class="preco-custom" ${!podeVender ? 'disabled' : ''}>
+                    <button onclick="adicionarQtdCustomManual(${p.id})" class="btn-sm btn-success" ${!podeVender ? 'disabled' : ''} style="padding:2px 6px;font-size:10px;">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    console.log('✅ Filtragem concluída!', produtos.length, 'produtos exibidos');
+}
+
+function adicionarSelectManual(productId, quantidade) {
+    if (!quantidade) return;
+    adicionarAoCarrinhoManual(productId, parseInt(quantidade), null);
+    const select = document.querySelector(`#listaProdutosManual .produto-item .acoes select`);
+    if (select) select.value = '';
+}
+
+function adicionarQtdCustomManual(productId) {
+    const inputQtd = document.getElementById(`qtdCustom_${productId}`);
+    const inputPreco = document.getElementById(`precoCustom_${productId}`);
+    const qtd = parseInt(inputQtd.value);
+    const precoUnitario = parseFloat(inputPreco.value);
+    
+    if (!qtd || qtd <= 0) {
+        alert('⚠️ Digite uma quantidade válida.');
+        return;
+    }
+    
+    if (isNaN(precoUnitario) || precoUnitario < 0) {
+        alert('⚠️ Digite um preço válido (pode ser 0,00).');
+        return;
+    }
+    
+    adicionarAoCarrinhoManual(productId, qtd, precoUnitario);
+    inputQtd.value = '';
+    inputPreco.value = '';
+}
+
+function adicionarAoCarrinhoManual(productId, quantidade, precoCustom = null) {
+    const product = dados.produtos.find(p => parseInt(p.id) === productId);
+    if (!product) {
+        alert('Produto não encontrado!');
+        return;
+    }
+    
+    const qtd = parseInt(quantidade);
+    if (!qtd || qtd <= 0) {
+        alert('⚠️ Quantidade inválida.');
+        return;
+    }
+    
+    if (product.vender_zerado !== 'SIM') {
+        const estoque = parseInt(product.estoque) || 0;
+        if (estoque < qtd) {
+            alert(`⚠️ Estoque insuficiente!\nDisponível: ${estoque} unidades\nSolicitado: ${qtd} unidades`);
+            return;
+        }
+    }
+    
+    let precoTotal = 0;
+    let precoUnitario = 0;
+    
+    if (precoCustom !== null) {
+        precoUnitario = precoCustom;
+        precoTotal = precoCustom * qtd;
+    } else {
+        const precoVenda = product.preco_venda || '';
+        let precoEncontrado = 0;
+        
+        precoVenda.split(';').forEach(p => {
+            const parts = p.trim().split(':');
+            if (parts.length === 2) {
+                const qtdOpcao = parseInt(parts[0]);
+                if (qtdOpcao === qtd) {
+                    precoEncontrado = parseFloat(parts[1]) || 0;
+                }
+            }
+        });
+        
+        if (precoEncontrado === 0) {
+            const precos = precoVenda.split(';').map(p => {
+                const parts = p.trim().split(':');
+                return { qtd: parseInt(parts[0]) || 0, preco: parseFloat(parts[1]) || 0 };
+            });
+            precos.sort((a, b) => a.qtd - b.qtd);
+            for (const p of precos) {
+                if (p.qtd > 0 && p.preco >= 0) {
+                    precoEncontrado = p.preco;
+                    break;
+                }
+            }
+        }
+        
+        precoTotal = precoEncontrado;
+        precoUnitario = qtd > 0 ? precoEncontrado / qtd : 0;
+    }
+    
+    if (precoTotal < 0) {
+        alert('⚠️ Preço inválido.');
+        return;
+    }
+    
+    idCounter++;
+    carrinhoManual.push({
+        id: idCounter,
+        productId: productId,
+        nome: product.nome || 'Produto',
+        quantidade: qtd,
+        precoUnitario: precoUnitario,
+        preco: precoTotal,
+        estoque: parseInt(product.estoque) || 0,
+        vender_zerado: product.vender_zerado === 'SIM',
+        isCustom: precoCustom !== null,
+        prazoProducao: parseInt(product.prazo_producao) || 0,
+        descricao: product.descricao || '',
+        pacote_tamanho: 1
+    });
+    
+    recalcularProducao();
+    atualizarCarrinhoManual();
+}
+
+function recalcularProducao() {
+    const grupos = {};
+    carrinhoManual.forEach(item => {
+        if (!grupos[item.productId]) {
+            grupos[item.productId] = {
+                total: 0,
+                estoque: item.estoque,
+                vender_zerado: item.vender_zerado,
+                prazoProducao: item.prazoProducao,
+                itens: []
+            };
+        }
+        grupos[item.productId].total += item.quantidade;
+        grupos[item.productId].itens.push(item);
+    });
+    
+    Object.values(grupos).forEach(grupo => {
+        const isProducao = grupo.vender_zerado && grupo.total > grupo.estoque;
+        grupo.itens.forEach(item => {
+            item.isProducao = isProducao;
+            if (isProducao) {
+                item.prazoProducao = grupo.prazoProducao;
+            }
+        });
+    });
+}
+
+function atualizarCarrinhoManual() {
+    const container = document.getElementById('carrinhoManual');
+    let total = 0;
+    let totalItens = 0;
+    
+    if (carrinhoManual.length === 0) {
+        container.innerHTML = `
+            <div style="text-align:center;padding:12px;color:#999;font-size:12px;">
+                Nenhum item adicionado
+            </div>
+        `;
+        document.getElementById('totalManual').textContent = 'R$ 0,00';
+        document.getElementById('totalItensManual').textContent = '0 itens';
+        return;
+    }
+    
+    container.innerHTML = carrinhoManual.map((item, index) => {
+        total += item.preco || 0;
+        totalItens += item.quantidade || 0;
+        
+        const nomeExibicao = item.isCustom ? `${item.nome} (personalizado)` : item.nome;
+        const isProducao = item.isProducao || false;
+        const prazo = isProducao ? item.prazoProducao : 0;
+        const statusLabel = isProducao ? `🔨 Produção ${prazo}d` : '✅ Disponível';
+        const statusClass = isProducao ? 'badge-producao' : 'badge-disponivel';
+        
+        return `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 6px;border-bottom:1px solid #f0f0f0;font-size:12px;">
+                <div style="flex:1;min-width:0;">
+                    <span style="font-weight:600;">${nomeExibicao}</span>
+                    <span style="color:#888;font-size:11px;">x${item.quantidade}</span>
+                    <span style="color:#666;font-size:10px;">R$ ${(item.precoUnitario || 0).toFixed(2)}/un</span>
+                    <span class="${statusClass}" style="font-size:8px;padding:1px 5px;border-radius:8px;margin-left:3px;">${statusLabel}</span>
+                    ${item.isCustom ? ' <span style="color:#6c5ce7;font-size:9px;">📝</span>' : ''}
+                </div>
+                <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
+                    <div class="carrinho-item-actions">
+                        <button class="btn-minus" onclick="alterarQtdCarrinho(${index}, -1)">−</button>
+                        <span style="font-weight:600;min-width:18px;text-align:center;font-size:12px;">${item.quantidade}</span>
+                        <button class="btn-plus" onclick="alterarQtdCarrinho(${index}, 1)">+</button>
+                        <button class="btn-remove-item" onclick="removerDoCarrinhoManual(${index})" title="Remover item">
+                            <i class="fas fa-times" style="font-size:10px;"></i>
+                        </button>
+                    </div>
+                    <span style="font-weight:600;color:var(--primary-blue);min-width:60px;text-align:right;font-size:12px;">R$ ${(item.preco || 0).toFixed(2)}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    document.getElementById('totalManual').textContent = `R$ ${total.toFixed(2)}`;
+    document.getElementById('totalItensManual').textContent = `${totalItens} itens`;
+}
+
+function alterarQtdCarrinho(index, delta) {
+    const item = carrinhoManual[index];
+    if (!item) return;
+    
+    const novaQtd = item.quantidade + delta;
+    if (novaQtd < 1) {
+        if (confirm(`Remover "${item.nome}" do carrinho?`)) {
+            removerDoCarrinhoManual(index);
+        }
+        return;
+    }
+    
+    if (item.vender_zerado !== 'SIM') {
+        const totalNoCarrinho = carrinhoManual
+            .filter(i => i.productId === item.productId && i.id !== item.id)
+            .reduce((sum, i) => sum + i.quantidade, 0);
+        const totalSolicitado = totalNoCarrinho + novaQtd;
+        
+        if (item.estoque < totalSolicitado) {
+            alert(`⚠️ Estoque insuficiente!\nDisponível: ${item.estoque} unidades\nTotal solicitado: ${totalSolicitado} unidades`);
+            return;
+        }
+    }
+    
+    item.quantidade = novaQtd;
+    item.preco = item.precoUnitario * novaQtd;
+    
+    recalcularProducao();
+    atualizarCarrinhoManual();
+}
+
+function removerDoCarrinhoManual(index) {
+    carrinhoManual.splice(index, 1);
+    recalcularProducao();
+    atualizarCarrinhoManual();
+}
+
+function limparCarrinhoManual() {
+    if (carrinhoManual.length === 0) return;
+    if (confirm('Deseja limpar todos os itens do carrinho?')) {
+        carrinhoManual = [];
+        idCounter = 0;
+        atualizarCarrinhoManual();
+    }
+}
+
+// ============================================================
+// VISUALIZAR PEDIDO MANUAL - COM FRETE E PRAZO
+// ============================================================
+function visualizarPedidoManual() {
+    if (carrinhoManual.length === 0) {
+        alert('⚠️ Adicione pelo menos um item ao pedido.');
+        return;
+    }
+    
+    const clienteNome = document.getElementById('visClienteNome').value.trim();
+    const clienteTelefone = document.getElementById('visClienteTelefone').value.trim();
+    const clienteEmail = document.getElementById('visClienteEmail').value.trim();
+    const clienteDocumento = document.getElementById('visClienteDocumento').value.trim();
+    const clienteEndereco = document.getElementById('visClienteEndereco').value.trim();
+    const pagamento = document.getElementById('visPagamento').value || 'À vista';
+    
+    const freteNome = document.getElementById('visFrete').value.trim() || 'Retirada na Loja';
+    const freteValor = parseFloat(document.getElementById('visFreteValor').value) || 0;
+    const fretePrazo = parseInt(document.getElementById('visFretePrazo').value) || 0;
+    
+    let maiorPrazoProducao = 0;
+    carrinhoManual.forEach(item => {
+        if (item.isProducao && item.prazoProducao > maiorPrazoProducao) {
+            maiorPrazoProducao = item.prazoProducao;
+        }
+    });
+    
+    const prazoTotal = maiorPrazoProducao + fretePrazo;
+    
+    const temCliente = clienteNome && clienteNome !== '' && clienteNome !== 'Cliente não identificado';
+    
+    const container = document.getElementById('visItensContainer');
+    let subtotal = 0;
+    let itensHtml = '';
+    
+    let dadosClienteHtml = '';
+    
+    if (temCliente) {
+        dadosClienteHtml = `
+            <div style="background:#f8f9fa;padding:10px;border-radius:6px;margin-bottom:10px;border:1px solid #e0e0e0;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;">
+                    <div style="grid-column:1/-1;font-weight:700;color:var(--primary-blue);margin-bottom:4px;">
+                        <i class="fas fa-user-check"></i> Dados do Cliente
+                    </div>
+                    <div><strong>Nome:</strong> ${clienteNome}</div>
+                    <div><strong>Telefone:</strong> ${clienteTelefone || '-'}</div>
+                    <div><strong>Email:</strong> ${clienteEmail || '-'}</div>
+                    <div><strong>CPF/CNPJ:</strong> ${clienteDocumento || '-'}</div>
+                    <div style="grid-column:1/-1;"><strong>Endereço:</strong> ${clienteEndereco || '-'}</div>
+                    <div><strong>Pagamento:</strong> ${pagamento}</div>
+                    <div><strong>Frete:</strong> ${freteNome}</div>
+                    <div><strong>Valor Frete:</strong> R$ ${freteValor.toFixed(2)}</div>
+                    ${fretePrazo > 0 ? `<div><strong>Prazo Frete:</strong> ${fretePrazo} dias</div>` : ''}
+                    ${prazoTotal > 0 ? `<div><strong>Prazo Total:</strong> ${prazoTotal} dias</div>` : ''}
+                </div>
+            </div>
+        `;
+    } else {
+        dadosClienteHtml = `
+            <div style="background:#fff3cd;padding:10px;border-radius:6px;margin-bottom:10px;border:1px solid #f39c12;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;">
+                    <div style="grid-column:1/-1;font-weight:700;color:#856404;margin-bottom:4px;">
+                        <i class="fas fa-user-slash"></i> Cliente não identificado
+                    </div>
+                    <div><strong>Nome:</strong> Cliente não identificado</div>
+                    <div><strong>Telefone:</strong> -</div>
+                    <div><strong>Email:</strong> -</div>
+                    <div><strong>CPF/CNPJ:</strong> -</div>
+                    <div style="grid-column:1/-1;"><strong>Endereço:</strong> -</div>
+                    <div><strong>Pagamento:</strong> ${pagamento}</div>
+                    <div><strong>Frete:</strong> ${freteNome}</div>
+                    <div><strong>Valor Frete:</strong> R$ ${freteValor.toFixed(2)}</div>
+                    ${fretePrazo > 0 ? `<div><strong>Prazo Frete:</strong> ${fretePrazo} dias</div>` : ''}
+                    ${prazoTotal > 0 ? `<div><strong>Prazo Total:</strong> ${prazoTotal} dias</div>` : ''}
+                </div>
+            </div>
+        `;
+    }
+    
+    carrinhoManual.forEach(item => {
+        const subtotalItem = item.preco || 0;
+        subtotal += subtotalItem;
+        const nomeExibicao = item.isCustom ? `${item.nome} (personalizado)` : item.nome;
+        const isProducao = item.isProducao || false;
+        const prazo = isProducao ? item.prazoProducao : 0;
+        const statusLabel = isProducao ? `🔨 Produção ${prazo}d` : '✅ Disponível';
+        
+        itensHtml += `
+            <div class="item-resumo">
+                <span>${nomeExibicao} <span style="font-size:10px;color:#888;">${statusLabel}</span></span>
+                <span>${item.quantidade}x R$ ${(item.precoUnitario || 0).toFixed(2)} = <strong>R$ ${subtotalItem.toFixed(2)}</strong></span>
+            </div>
+        `;
+    });
+    
+    const total = subtotal + freteValor;
+    
+    let freteHtml = '';
+    if (freteValor > 0 || freteNome !== 'Retirada na Loja') {
+        freteHtml = `
+            <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px dotted #ccc;font-size:13px;">
+                <span>Frete: ${freteNome}</span>
+                <span>R$ ${freteValor.toFixed(2)}</span>
+            </div>
+        `;
+    }
+    
+    container.innerHTML = `
+        ${dadosClienteHtml}
+        ${itensHtml}
+        ${freteHtml}
+        <div style="display:flex;justify-content:space-between;padding:5px 0;border-top:2px solid #eee;font-size:14px;font-weight:700;color:var(--primary-blue);">
+            <span>SUBTOTAL</span>
+            <span>R$ ${subtotal.toFixed(2)}</span>
+        </div>
+        ${fretePrazo > 0 ? `<div style="display:flex;justify-content:flex-end;font-size:12px;color:#888;padding:2px 0;">⏱️ Prazo do frete: ${fretePrazo} dias úteis</div>` : ''}
+        ${prazoTotal > 0 ? `<div style="display:flex;justify-content:flex-end;font-size:12px;color:#888;padding:2px 0;">📅 Prazo total (produção + frete): ${prazoTotal} dias úteis</div>` : ''}
+        <div style="display:flex;justify-content:space-between;padding:5px 0;border-top:2px solid var(--primary-blue);font-size:16px;font-weight:700;color:var(--primary-blue);">
+            <span>TOTAL COM FRETE</span>
+            <span>R$ ${total.toFixed(2)}</span>
+        </div>
+    `;
+    
+    document.getElementById('visTotalGeral').textContent = `R$ ${total.toFixed(2)}`;
+    
+    if (total === 0) {
+        container.innerHTML += `
+            <div style="padding:8px;margin-top:8px;background:#fff3cd;border-radius:4px;text-align:center;font-size:12px;color:#856404;">
+                ⚠️ Total: R$ 0,00 - Apenas baixa de estoque
+            </div>
+        `;
+    }
+    
+    document.getElementById('visClienteNome').value = clienteNome;
+    document.getElementById('visClienteTelefone').value = clienteTelefone;
+    document.getElementById('visClienteEmail').value = clienteEmail;
+    document.getElementById('visPagamento').value = pagamento;
+    
+    document.getElementById('modalVisualizacaoPedido').classList.add('open');
+}
+
+// Fecha a lista de clientes ao clicar fora
+document.addEventListener('click', function(e) {
+    const lista = document.getElementById('listaClientesManual');
+    const busca = document.getElementById('buscaClienteManual');
+    if (lista && busca && !lista.contains(e.target) && e.target !== busca) {
+        lista.style.display = 'none';
+    }
+});
+
+function imprimirVisualizacaoPedido() {
+    const printArea = document.getElementById('printArea');
+    const clienteNome = document.getElementById('visClienteNome').value || 'Cliente não identificado';
+    const clienteTelefone = document.getElementById('visClienteTelefone').value || '';
+    const clienteEmail = document.getElementById('visClienteEmail').value || '';
+    const pagamento = document.getElementById('visPagamento').value || 'À vista';
+    
+    let itensHtml = '';
+    let subtotal = 0;
+    
+    carrinhoManual.forEach(item => {
+        const preco = item.preco || 0;
+        subtotal += preco;
+        const nome = (item.nome || 'Produto').substring(0, 14);
+        const qtd = item.quantidade || 0;
+        const isCustom = item.isCustom ? '*' : '';
+        const isProducao = item.isProducao ? ' 🔨' : '';
+        const prazo = item.isProducao ? ` ${item.prazoProducao}d` : '';
+        
+        itensHtml += `
+            <div class="print-item">
+                <span class="nome">${qtd}x ${nome}${isCustom}${isProducao}${prazo}</span>
+                <span class="valor">R$ ${preco.toFixed(2)}</span>
+            </div>
+        `;
+    });
+    
+    const total = subtotal;
+    const data = new Date().toLocaleString();
+    
+    printArea.innerHTML = `
+        <div class="print-header">
+            <h2>EMBALAGENS EXPRESS</h2>
+            <p>Pç Santuário S Geraldo,46 - BH/MG</p>
+            <p>CEP:31050-650 | Tel:(31)3487-5905</p>
+            <div class="hr"></div>
+            <p><strong>ORÇAMENTO - VISUALIZAÇÃO</strong></p>
+            <div class="print-info"><span>${data}</span></div>
+            <div class="print-info"><span>Cliente: ${clienteNome.substring(0, 18)}</span></div>
+            ${clienteTelefone ? `<div class="print-info"><span>Tel: ${clienteTelefone}</span></div>` : ''}
+            ${clienteEmail ? `<div class="print-info"><span>Email: ${clienteEmail.substring(0, 20)}</span></div>` : ''}
+            <div class="print-info"><span>Pag: ${pagamento}</span></div>
+            <div class="hr"></div>
+        </div>
+        
+        <div style="margin:1px 0;">
+            <div style="font-weight:bold;border-bottom:1px solid #000;padding-bottom:0.5px;margin-bottom:0.5px;display:flex;justify-content:space-between;font-size:8px;">
+                <span>ITEM</span>
+                <span>VALOR</span>
+            </div>
+            ${itensHtml}
+        </div>
+        
+        <div class="print-total">
+            <span>TOTAL</span>
+            <span>R$ ${total.toFixed(2)}</span>
+        </div>
+        
+        <div class="print-footer">
+            <p>*** ORÇAMENTO ***</p>
+            <p>@mcembalagens.bh</p>
+            <p>${new Date().toLocaleString()}</p>
+        </div>
+    `;
+    
+    printArea.style.display = 'block';
+    window.print();
+    
+    setTimeout(() => {
+        printArea.style.display = 'none';
+    }, 1500);
+}
+
+function salvarVisualizacaoPedido() {
+    fecharModal('modalVisualizacaoPedido');
+    finalizarPedidoManual();
+}
+
+// ============================================================
+// FINALIZAR PEDIDO MANUAL - COM FRETE E PRAZO
+// ============================================================
+async function finalizarPedidoManual() {
+    if (carrinhoManual.length === 0) {
+        alert('⚠️ Adicione pelo menos um item ao pedido.');
+        return;
+    }
+    
+    let clienteNome = document.getElementById('visClienteNome').value.trim();
+    const clienteTelefone = document.getElementById('visClienteTelefone').value.trim();
+    const clienteEmail = document.getElementById('visClienteEmail').value.trim();
+    const clienteDocumento = document.getElementById('visClienteDocumento').value.trim();
+    const clienteEndereco = document.getElementById('visClienteEndereco').value.trim();
+    const pagamento = document.getElementById('visPagamento').value || 'À vista';
+    const observacoesPedido = document.getElementById('visObs').value || '';
+    
+    const freteNome = document.getElementById('visFrete').value.trim() || 'Retirada na Loja';
+    const freteValor = parseFloat(document.getElementById('visFreteValor').value) || 0;
+    const fretePrazo = parseInt(document.getElementById('visFretePrazo').value) || 0;
+    
+    if (!clienteNome || clienteNome === '' || clienteNome === 'Cliente não identificado') {
+        clienteNome = 'Cliente não identificado';
+    }
+    
+    const subtotal = carrinhoManual.reduce((sum, item) => sum + (item.preco || 0), 0);
+    const total = subtotal + freteValor;
+    
+    let maiorPrazoProducao = 0;
+    carrinhoManual.forEach(item => {
+        if (item.isProducao && item.prazoProducao > maiorPrazoProducao) {
+            maiorPrazoProducao = item.prazoProducao;
+        }
+    });
+    
+    const prazoTotal = maiorPrazoProducao + fretePrazo;
+    
+    if (total === 0) {
+        if (!confirm(`⚠️ O valor total do pedido é R$ 0,00.\n\nDeseja continuar mesmo assim?\n\nIsso dará baixa no estoque sem custo.`)) {
+            return;
+        }
+    }
+    
+    mostrarSpinner('Criando pedido...');
+    
+    try {
+        const responseBusca = await fetch(API_URL);
+        const dataBusca = await responseBusca.json();
+        const pedidos = dataBusca.pedidos || [];
+        let ultimoId = 0;
+        pedidos.forEach(p => {
+            const id = parseInt(p.id_pedido) || 0;
+            if (id > ultimoId) ultimoId = id;
+        });
+        const novoId = ultimoId + 1;
+        
+        recalcularProducao();
+        
+        const itensPedido = carrinhoManual.map(item => {
+            const isProducao = item.isProducao || false;
+            const prazoProducao = isProducao ? (item.prazoProducao || 3) : 0;
+            const nomeBase = item.isCustom ? `${item.nome} (personalizado)` : item.nome;
+            
+            let nomeComStatus = nomeBase;
+            if (isProducao && prazoProducao > 0) {
+                nomeComStatus = `${nomeBase} (Produção ${prazoProducao} dias)`;
+            } else if (isProducao) {
+                nomeComStatus = `${nomeBase} (Produção)`;
+            } else {
+                nomeComStatus = `${nomeBase} (Disponível)`;
+            }
+            
+            return {
+                nome: nomeComStatus,
+                quantidade: item.quantidade,
+                price: item.preco || 0,
+                unit_price: item.precoUnitario || 0,
+                isCustom: item.isCustom || false,
+                isProducao: isProducao,
+                prazoProducao: prazoProducao,
+                productId: item.productId || null,
+                descricao: item.descricao || ''
+            };
+        });
+        
+        let observacoesFormatadas = `Pedido realizado manualmente pelo gestor.`;
+        
+        if (freteNome !== 'Retirada na Loja' || freteValor > 0) {
+            observacoesFormatadas += ` | Frete: ${freteNome}`;
+            if (freteValor > 0) {
+                observacoesFormatadas += ` (R$ ${freteValor.toFixed(2).replace('.', ',')})`;
+            }
+        } else {
+            observacoesFormatadas += ` | Frete: Retirada na Loja`;
+        }
+        
+        observacoesFormatadas += ` | Pagamento: ${pagamento}`;
+        
+        if (prazoTotal > 0) {
+            observacoesFormatadas += ` | Prazo: ${prazoTotal} dias`;
+        }
+        
+        if (observacoesPedido.trim()) {
+            observacoesFormatadas += ` | ${observacoesPedido.trim()}`;
+        }
+        
+        console.log('📝 Observações formatadas:', observacoesFormatadas);
+        
+        const pedidoData = {
+            id: novoId,
+            cliente_nome: clienteNome,
+            cliente_email: clienteEmail || 'pedido_manual@embalagens.com',
+            cliente_telefone: clienteTelefone || '',
+            itens: itensPedido,
+            total: total,
+            endereco_entrega: clienteEndereco || 'Pedido manual - retirada na loja',
+            observacoes: observacoesFormatadas,
+            frete: freteNome,
+            frete_valor: freteValor,
+            prazo_entrega: prazoTotal,
+            pagamento: pagamento,
+            status: 'Pendente',
+            data_pedido: new Date().toLocaleString('pt-BR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            }),
+            cliente_documento: clienteDocumento,
+            cliente_endereco: clienteEndereco
+        };
+        
+        console.log('📤 Enviando pedido manual:', pedidoData);
+        
+        await fetch(API_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                acao: 'salvar_pedido',
+                pedido: pedidoData
+            })
+        });
+        
+        const atualizacoes = {};
+        carrinhoManual.forEach(item => {
+            const isProducao = item.isProducao || false;
+            if (!isProducao && item.vender_zerado !== 'SIM' && item.productId) {
+                const product = dados.produtos.find(p => parseInt(p.id) === item.productId);
+                if (product) {
+                    const novoEstoque = Math.max(0, (product.estoque || 0) - item.quantidade);
+                    atualizacoes[item.productId] = { 
+                        estoque: novoEstoque
+                    };
+                }
+            }
+        });
+        
+        if (Object.keys(atualizacoes).length > 0) {
+            await fetch(API_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    acao: 'atualizar_estoque_multiplo',
+                    itens: atualizacoes,
+                    manter_data_estoque: true
+                })
+            });
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        await carregarDados();
+        
+        esconderSpinner();
+        
+        const mensagemCliente = clienteNome === 'Cliente não identificado' ? 
+            '⚠️ Cliente não identificado' : 
+            `👤 Cliente: ${clienteNome}`;
+        
+        const mensagemFrete = freteValor > 0 ? `\n📦 Frete: ${freteNome} - R$ ${freteValor.toFixed(2)}` : '';
+        const mensagemPrazo = fretePrazo > 0 ? `\n⏱️ Prazo do frete: ${fretePrazo} dias úteis` : '';
+        const mensagemPrazoTotal = prazoTotal > 0 ? `\n📅 Prazo total: ${prazoTotal} dias úteis` : '';
+        
+        if (total === 0) {
+            alert(`✅ Pedido #${novoId} criado com sucesso!\n\n📦 ESTOQUE BAIXADO: ${carrinhoManual.length} produto(s)\n💰 Valor: R$ 0,00\n${mensagemCliente}${mensagemFrete}${mensagemPrazo}${mensagemPrazoTotal}`);
+        } else {
+            alert(`✅ Pedido #${novoId} criado com sucesso!\n💰 Total: R$ ${total.toFixed(2)} (Produtos: R$ ${subtotal.toFixed(2)} + Frete: R$ ${freteValor.toFixed(2)})\n${mensagemCliente}${mensagemFrete}${mensagemPrazo}${mensagemPrazoTotal}`);
+        }
+        
+        fecharModal('modalPedidoManual');
+        fecharModal('modalVisualizacaoPedido');
+        carrinhoManual = [];
+        idCounter = 0;
+        
+    } catch (error) {
+        console.error('❌ Erro ao criar pedido manual:', error);
+        esconderSpinner();
+        alert('⚠️ Erro ao criar pedido. Tente novamente.');
+    }
+}
 
 function imprimirCupom(idPedido) {
     if (window._imprimindo) return;
@@ -5887,48 +6828,10 @@ function imprimirCupom(idPedido) {
     const pedido = dados.pedidos.find(p => parseInt(p.id_pedido) === parseInt(idPedido));
     if (!pedido) { alert('Pedido não encontrado!'); return; }
     
-    const printArea = document.getElementById('printArea');
-    printArea.innerHTML = gerarHtmlCupom(pedido, false);
-    printArea.style.display = 'block';
-    window._imprimindo = true;
-    
-    setTimeout(function() {
-        try { window.print(); } 
-        catch (e) { console.error('Erro ao imprimir:', e); } 
-        finally {
-            setTimeout(function() {
-                printArea.style.display = 'none';
-                window._imprimindo = false;
-            }, 1000);
-        }
-    }, 100);
-}
-
-function imprimirCupomObjeto(pedidoFake) {
-    if (window._imprimindo) return;
-    
-    const printArea = document.getElementById('printArea');
-    printArea.innerHTML = gerarHtmlCupom(pedidoFake, true);
-    printArea.style.display = 'block';
-    window._imprimindo = true;
-    
-    setTimeout(function() {
-        try { window.print(); } 
-        catch (e) { console.error('Erro ao imprimir:', e); } 
-        finally {
-            setTimeout(function() {
-                printArea.style.display = 'none';
-                window._imprimindo = false;
-            }, 1000);
-        }
-    }, 100);
-}
-
-function gerarHtmlCupom(pedido, isOrcamento) {
-    const isRevendedor = !isOrcamento && isClienteRevendedor(pedido);
+    const isRevendedor = isClienteRevendedor(pedido);
     const badgeRevendedor = isRevendedor ? ' 👑 REVENDEDOR' : '';
-    const tituloCupom = isOrcamento ? 'ORÇAMENTO' : 'CUPOM NAO FISCAL';
     
+    const printArea = document.getElementById('printArea');
     let itensHtml = '';
     let subtotal = 0;
     let maiorPrazoProducao = 0;
@@ -5962,9 +6865,6 @@ function gerarHtmlCupom(pedido, isOrcamento) {
     
     const itens = processarItensPedido(pedido.itens);
     
-    const itensDisponiveis = [];
-    const itensProducao = [];
-    
     itens.forEach((item, index) => {
         const preco = parseFloat(item.price) || 0;
         const qtdPacotes = parseInt(item.qtdPacotes) || 1;
@@ -5977,23 +6877,36 @@ function gerarHtmlCupom(pedido, isOrcamento) {
         if (item.isProducao) isProducaoGeral = true;
         
         let codigoProduto = '';
+        
+        // 🔥 CORREÇÃO: Remove o sufixo "(Produção X dias)" do nome para achar o produto certo no banco
         let nomeBusca = item.nome.split(' (Produção')[0].trim();
+        
         const produtoEncontrado = dados.produtos.find(p => p.nome && p.nome.toLowerCase() === nomeBusca.toLowerCase());
         
         if (produtoEncontrado) {
             codigoProduto = produtoEncontrado.codigo_produto || '';
-            if (produtoEncontrado.descricao) extrairESomarBerços(produtoEncontrado.descricao, totalUnidades);
-            if (produtoEncontrado.nome) extrairESomarBerços(produtoEncontrado.nome, totalUnidades);
+            
+            // 🔥 CORREÇÃO: Busca berços na descrição E no nome do produto
+            if (produtoEncontrado.descricao) {
+                extrairESomarBerços(produtoEncontrado.descricao, totalUnidades);
+            }
+            if (produtoEncontrado.nome) {
+                extrairESomarBerços(produtoEncontrado.nome, totalUnidades);
+            }
         }
         
-        let statusEstoque = item.isProducao ? 'PRODUCAO' : 'DISPONIVEL';
+        let statusEstoque = '';
+        if (item.isProducao && item.prazoProducao > 0) statusEstoque = `PRODUCAO ${item.prazoProducao} DIAS`;
+        else if (item.isProducao) statusEstoque = 'PRODUCAO';
+        else statusEstoque = 'DISPONIVEL';
+        
         const codigoExibicao = codigoProduto ? `- Cod ${codigoProduto}` : '';
         
-        const htmlItem = `
-            <div style="display:flex;flex-direction:column;padding:2px 0;border-bottom:1px dotted #000;width:100%;">
+        itensHtml += `
+            <div style="display:flex;flex-direction:column;padding:2px 0;border-bottom:1px dotted #000;width:100%;max-width:100%;">
                 <div style="display:flex;justify-content:space-between;width:100%;align-items:flex-start;">
                     <div style="flex:1;min-width:0;padding-right:6px;">
-                        <span style="font-size:9px;font-weight:bold;color:#000;display:block;word-wrap:break-word;line-height:1.3;">
+                        <span style="font-size:9px;font-weight:bold;color:#000;display:block;word-wrap:break-word;white-space:normal;line-height:1.3;">
                             ${index+1}. ${item.nome} ${codigoExibicao}
                         </span>
                         <span style="font-size:8px;font-weight:bold;color:#000;display:block;">
@@ -6007,33 +6920,42 @@ function gerarHtmlCupom(pedido, isOrcamento) {
                 </div>
             </div>
         `;
-        
-        if (item.isProducao) {
-            itensProducao.push(htmlItem);
-        } else {
-            itensDisponiveis.push(htmlItem);
-        }
     });
     
-    if (itensDisponiveis.length > 0) {
-        itensHtml += `<div style="font-size:8px;font-weight:bold;background:#e8f5e9;color:#155724;padding:2px;text-align:center;margin-bottom:2px;">✅ ITENS DISPONÍVEIS (LEVAR AGORA)</div>`;
-        itensHtml += itensDisponiveis.join('');
-    }
-    
-    if (itensProducao.length > 0) {
-        itensHtml += `<div style="font-size:8px;font-weight:bold;background:#fff3cd;color:#856404;padding:2px;text-align:center;margin-top:4px;margin-bottom:2px;">🏭 ITENS EM PRODUÇÃO (RETIRAR DEPOIS)</div>`;
-        itensHtml += itensProducao.join('');
-    }
-    
     const gomosOrdenados = Object.keys(totalBerçosPorGomos).map(Number).sort((a, b) => a - b);
+    
     if (gomosOrdenados.length > 0) {
-        itensHtml += `<div style="border-top:1px dashed #000;margin:3px 0;width:100%;"></div>
-                      <div style="font-size:7px;font-weight:bold;text-align:center;padding:2px 0;background:#f5f5f5;">📦 BERÇOS PARA SEPARAÇÃO</div>`;
+        let itemIndex = itens.length + 1;
+        itensHtml += `
+            <div style="border-top:1px dashed #000;margin:3px 0;width:100%;"></div>
+            <div style="font-size:7px;font-weight:bold;color:#000;text-align:center;padding:2px 0;background:#f5f5f5;width:100%;">
+                📦 BERÇOS PARA SEPARAÇÃO
+            </div>
+        `;
         gomosOrdenados.forEach(gomos => {
-            itensHtml += `<div style="font-size:8px;padding:2px 0;border-bottom:1px dotted #000;">🧩 BERÇO ${gomos} GOMOS: ${totalBerçosPorGomos[gomos]} unidades</div>`;
+            const totalBerços = totalBerçosPorGomos[gomos];
+            itensHtml += `
+                <div style="display:flex;flex-direction:column;padding:2px 0;border-bottom:1px dotted #000;width:100%;max-width:100%;background:#fafffa;">
+                    <div style="display:flex;justify-content:space-between;width:100%;align-items:flex-start;">
+                        <div style="flex:1;min-width:0;padding-right:6px;">
+                            <span style="font-size:9px;font-weight:bold;color:#000;display:block;word-wrap:break-word;white-space:normal;line-height:1.3;">
+                                ${itemIndex}. 🧩 BERÇO ${gomos} GOMOS
+                            </span>
+                            <span style="font-size:8px;font-weight:bold;color:#000;display:block;">
+                                ${totalBerços} unidades
+                            </span>
+                        </div>
+                        <span style="font-size:9px;font-weight:bold;color:#000;flex-shrink:0;white-space:nowrap;">R$ 0,00</span>
+                    </div>
+                </div>
+            `;
+            itemIndex++;
         });
     }
     
+    // ============================================================
+    // LEITURA DAS COLUNAS DO SUPABASE
+    // ============================================================
     let freteNome = pedido.frete || 'Retirada na Loja';
     let freteValor = parseFloat(pedido.frete_valor) || 0;
     let prazoTotal = parseInt(pedido.prazo_entrega) || 0;
@@ -6051,7 +6973,7 @@ function gerarHtmlCupom(pedido, isOrcamento) {
     const telefone = pedido.cliente_telefone || '';
     const pagamento = pedido.pagamento || 'Não informado';
     
-    let documentoCliente = pedido.cliente_documento || pedido.cliente_cpf || pedido.cpf || '';
+    let documentoCliente = pedido.cliente_documento || '';
     let tipoDocumento = 'DOC';
     if (documentoCliente) {
         const docLimpo = documentoCliente.replace(/\D/g, '');
@@ -6064,34 +6986,43 @@ function gerarHtmlCupom(pedido, isOrcamento) {
         }
     }
     
+    // Monta a string de observações igual ao modelo antigo, puxando as colunas do banco
     let obsLimpa = pedido.observacoes || '';
+    obsLimpa = obsLimpa.replace(/Prazo:\s*undefined\s*dias/gi, '').trim();
+    
+    // Se a observação não tiver o texto de Frete e Pagamento, adiciona
     if (!obsLimpa.includes('Frete:') && !obsLimpa.includes('Pagamento:')) {
         let textoObs = `Frete: ${freteNome} (R$ ${freteValor.toFixed(2)}) | Pagamento: ${pagamento}`;
-        if (parseInt(pedido.desconto) > 0) textoObs += ` | Desconto: R$ ${parseFloat(pedido.desconto).toFixed(2)}`;
+        if (parseInt(pedido.desconto) > 0) textoObs += ` | Desconto PIX: R$ ${parseFloat(pedido.desconto).toFixed(2)}`;
         textoObs += ` | Prazo: ${prazoTotal} dias`;
         obsLimpa = textoObs;
     }
 
-    return `
+    printArea.innerHTML = `
         <div style="text-align:center;border-bottom:2px solid #000;padding-bottom:4px;margin-bottom:4px;width:100%;">
             <h2 style="font-size:13px;margin:0;letter-spacing:0.5px;font-weight:bold;color:#000;">MC EMBALAGENS BH</h2>
             <p style="font-size:8px;margin:0.3px 0;font-weight:bold;color:#000;">Pç Santuário S Geraldo,46 - BH/MG</p>
             <p style="font-size:8px;margin:0.3px 0;font-weight:bold;color:#000;">CEP:31050-650 | Tel:(31)3487-5905</p>
             <div style="border-top:1px dashed #000;margin:2px 0;"></div>
-            <p style="font-size:9px;font-weight:bold;margin:0.3px 0;color:#000;">${tituloCupom}</p>
+            <p style="font-size:9px;font-weight:bold;margin:0.3px 0;color:#000;">CUPOM NAO FISCAL</p>
+            
             <div style="display:flex;justify-content:space-between;font-size:9px;font-weight:bold;padding:1.5px 0;width:100%;margin-top:2px;border-bottom:1px dotted #000;padding-bottom:2px;color:#000;">
                 <span>Pedido #${pedido.id_pedido}</span>
                 <span>${data}</span>
             </div>
+            
             <div style="display:flex;justify-content:space-between;font-size:9px;font-weight:bold;padding:1.5px 0;width:100%;color:#000;">
                 <span>Cliente: ${cliente}${badgeRevendedor}</span>
             </div>
-            ${documentoCliente ? `<div style="display:flex;font-size:8px;font-weight:bold;padding:0.5px 0;color:#000;"><span>${tipoDocumento}: ${documentoCliente}</span></div>` : ''}
-            ${telefone ? `<div style="display:flex;font-size:8px;font-weight:bold;padding:0.5px 0;color:#000;"><span>Telefone: ${telefone}</span></div>` : ''}
+            
+            ${documentoCliente ? `<div style="display:flex;justify-content:space-between;font-size:8px;font-weight:bold;padding:0.5px 0;width:100%;color:#000;"><span>${tipoDocumento}: ${documentoCliente}</span></div>` : ''}
+            ${telefone ? `<div style="display:flex;justify-content:flex-start;font-size:8px;font-weight:bold;padding:0.5px 0;width:100%;color:#000;"><span>Telefone: ${telefone}</span></div>` : ''}
+            
             <div style="display:flex;justify-content:space-between;font-size:8px;font-weight:bold;padding:0.5px 0;width:100%;color:#000;">
                 <span>Status: ${status}</span>
                 <span>Pagamento: ${pagamento}</span>
             </div>
+            
             <div style="border-top:1px dashed #000;margin:2px 0;"></div>
         </div>
         
@@ -6108,13 +7039,16 @@ function gerarHtmlCupom(pedido, isOrcamento) {
                 <span>Subtotal</span>
                 <span>R$ ${subtotal.toFixed(2)}</span>
             </div>
+            
             <div style="display:flex;justify-content:space-between;padding:1.5px 0;font-size:9px;font-weight:bold;width:100%;border-bottom:1px dotted #000;padding-bottom:2px;color:#000;">
                 <span>Frete: ${freteNome}</span>
                 <span>${freteValor === 0 ? 'Grátis' : 'R$ ' + freteValor.toFixed(2)}</span>
             </div>
+            
             <div style="display:flex;justify-content:space-between;padding:1px 0;font-size:8px;font-weight:bold;width:100%;background:#f5f5f5;padding:2px 4px;margin-top:1px;color:#000;">
                 <span>Prazo total: ${prazoTotal} dias uteis</span>
             </div>
+            
             <div style="display:flex;justify-content:space-between;font-weight:bold;padding:3px 0;border-top:3px double #000;margin-top:2px;font-size:12px;width:100%;background:#f9f9f9;padding:3px 4px;color:#000;">
                 <span>TOTAL</span>
                 <span>R$ ${total.toFixed(2)}</span>
@@ -6123,10 +7057,14 @@ function gerarHtmlCupom(pedido, isOrcamento) {
         
         <div style="margin:4px 0;border-top:1px dashed #000;padding-top:3px;">
             <div style="font-size:8px;font-weight:bold;color:#000;margin-bottom:2px;">ENDERECO DE ENTREGA</div>
-            <div style="font-size:8px;font-weight:bold;padding:0.3px 0;width:100%;word-wrap:break-word;line-height:1.4;color:#000;">
+            <div style="font-size:8px;font-weight:bold;padding:0.3px 0;width:100%;word-wrap:break-word;white-space:normal;line-height:1.4;color:#000;">
                 ${endereco}
             </div>
-            ${obsLimpa ? `<div style="font-size:7px;font-weight:bold;padding:0.3px 0;width:100%;margin-top:2px;border-top:1px dotted #000;padding-top:2px;color:#000;">Obs: ${obsLimpa}</div>` : ''}
+            
+            ${obsLimpa ? `
+            <div style="font-size:7px;font-weight:bold;padding:0.3px 0;width:100%;margin-top:2px;border-top:1px dotted #000;padding-top:2px;color:#000;">
+                Obs: ${obsLimpa}
+            </div>` : ''}
         </div>
         
         <div style="text-align:center;border-top:2px solid #000;padding-top:3px;margin-top:3px;font-size:7px;width:100%;">
@@ -6135,10 +7073,24 @@ function gerarHtmlCupom(pedido, isOrcamento) {
             <p style="margin:0.2px 0;font-size:6px;font-weight:bold;color:#000;">Emissao: ${formatarDataHoraBR(new Date())}</p>
         </div>
     `;
+    
+    printArea.style.display = 'block';
+    window._imprimindo = true;
+    
+    setTimeout(function() {
+        try { window.print(); } 
+        catch (e) { console.error('Erro ao imprimir:', e); } 
+        finally {
+            setTimeout(function() {
+                printArea.style.display = 'none';
+                window._imprimindo = false;
+            }, 1000);
+        }
+    }, 100);
 }
 
 // ============================================================
-// 🔥 SIMULAÇÃO DE FRETES (CORRIGIDA PARA SUPABASE)
+// 🔥 SIMULAÇÃO DE FRETES
 // ============================================================
 var fretesSimulados = [];
 
@@ -6149,51 +7101,33 @@ function abrirModalFretes() {
 
 async function carregarFretes() {
     var container = document.getElementById('listaFretes');
-    if (!container) return;
-
-    container.innerHTML = '<div style="text-align:center;padding:25px;color:#999;"><i class="fas fa-spinner fa-spin" style="font-size:24px;display:block;margin-bottom:8px;"></i>Buscando simulações...</div>';
+    container.innerHTML = '<div style="text-align:center;padding:25px;color:#999;"><i class="fas fa-spinner fa-spin" style="font-size:24px;display:block;margin-bottom:8px;"></i>Carregando fretes...</div>';
     
     try {
-        // Tenta buscar da tabela 'fretes_simulados' no Supabase
-        // (O site do cliente deve salvar as simulações nessa tabela para o gestor ler)
-        const { data, error } = await supabaseClient
-            .from('fretes_simulados')
-            .select('*')
-            .order('timestamp', { ascending: false })
-            .limit(100);
-            
-        if (error && error.code !== '42P01') { // Ignora erro se a tabela não existir
-            throw error;
-        }
+        var response = await fetch(API_URL + '?acao=buscar_fretes_simulados');
+        var data = await response.json();
         
-        fretesSimulados = data || [];
+        fretesSimulados = data.fretes || [];
         renderizarFretes();
         
     } catch (error) {
         console.error('Erro ao carregar fretes:', error);
-        // Se a tabela não existir, exibe uma mensagem amigável
-        container.innerHTML = `
-            <div style="text-align:center;padding:25px;color:#999;">
-                <i class="fas fa-truck" style="font-size:32px;display:block;margin-bottom:10px;color:#00b894;"></i>
-                <strong style="font-size:14px;color:#00b894;">Nenhuma simulação salva ainda</strong><br>
-                <span style="font-size:12px;">As simulações de frete feitas pelos clientes no site aparecerão aqui.</span>
-            </div>
-        `;
+        container.innerHTML = '<div style="text-align:center;padding:25px;color:#e74c3c;"><i class="fas fa-exclamation-circle" style="font-size:24px;display:block;margin-bottom:8px;"></i>Erro ao carregar fretes. Verifique se a ação "buscar_fretes_simulados" existe no Apps Script.</div>';
     }
 }
 
 function renderizarFretes() {
     var container = document.getElementById('listaFretes');
-    if (!container) return;
-
     var busca = (document.getElementById('buscaFretes')?.value || '').toLowerCase();
+    
     var fretes = fretesSimulados.slice();
     
     if (busca) {
         fretes = fretes.filter(function(f) {
             var cep = String(f.cep_destino || '').toLowerCase();
             var produtos = String(f.produtos_carrinho || '').toLowerCase();
-            return cep.indexOf(busca) !== -1 || produtos.indexOf(busca) !== -1;
+            var valor = String(f.opcao_1_valor || '').toLowerCase();
+            return cep.indexOf(busca) !== -1 || produtos.indexOf(busca) !== -1 || valor.indexOf(busca) !== -1;
         });
     }
     
@@ -6206,24 +7140,17 @@ function renderizarFretes() {
     }
     
     container.innerHTML = fretes.map(function(f) {
-        var dataFormatada = formatarDataHoraBR(f.timestamp || f.data_simulacao);
+        var dataFormatada = formatarDataHoraBR(f.timestamp);
         var produtosTexto = f.produtos_carrinho || '<em style="color:#999;">Carrinho não registrado</em>';
         
         var opcoesHtml = '';
-        if (f.opcoes_json) {
-            try {
-                var ops = JSON.parse(f.opcoes_json);
-                ops.forEach(function(op) {
-                    opcoesHtml += '<span>' + op.nome + ': R$ ' + parseFloat(op.preco).toFixed(2) + ' (' + op.prazo + 'd)</span>';
-                });
-            } catch(e) {}
-        } else {
-            for (var i = 1; i <= 5; i++) {
-                var nome = f['opcao_' + i + '_nome'];
-                var valor = parseFloat(f['opcao_' + i + '_valor'] || 0);
-                if (nome && valor > 0) {
-                    opcoesHtml += '<span>' + nome + ': R$ ' + valor.toFixed(2) + '</span>';
-                }
+        for (var i = 1; i <= 5; i++) {
+            var nome = f['opcao_' + i + '_nome'];
+            var valor = parseFloat(f['opcao_' + i + '_valor'] || 0);
+            var prazo = parseInt(f['opcao_' + i + '_prazo'] || 0);
+            
+            if (nome && valor > 0) {
+                opcoesHtml += '<span>' + nome + ': R$ ' + valor.toFixed(2) + ' (' + prazo + 'd)</span>';
             }
         }
         
@@ -6231,6 +7158,10 @@ function renderizarFretes() {
             '<div class="frete-header">' +
                 '<span class="frete-cep"><i class="fas fa-map-marker-alt"></i> CEP: ' + (f.cep_destino || '-') + '</span>' +
                 '<span class="frete-data"><i class="fas fa-clock"></i> ' + dataFormatada + '</span>' +
+            '</div>' +
+            '<div style="font-size:11px;color:#666;margin-bottom:4px;">' +
+                '<strong>Peso:</strong> ' + (f.peso || 0) + 'kg | ' +
+                '<strong>Dimensões:</strong> ' + (f.altura || 0) + '×' + (f.largura || 0) + '×' + (f.comprimento || 0) + ' cm' +
             '</div>' +
             '<div class="frete-produtos">' +
                 '<strong>🛒 Produtos no carrinho:</strong><br>' +
