@@ -2349,92 +2349,95 @@
     </div>
 </div>
 
-<!-- MODAL PDV - PROFISSIONAL -->
+<!-- MODAL PDV - PROFISSIONAL E CORRIGIDO -->
 <div class="modal-overlay" id="modalPedidoManual">
-    <div class="modal" style="max-width:99%; width:99%; height:98vh; display:flex; flex-direction:column; padding:0; overflow:hidden; border-radius: 12px;">
+    <div class="modal" style="max-width:98%; width:98%; height:95vh; display:flex; flex-direction:column; padding:0; overflow:hidden; border-radius:12px;">
         
-        <div class="modal-header" style="margin:0; padding:12px 20px; background:var(--primary-blue); color:white; border-radius:12px 12px 0 0; border:none; flex-shrink:0; display:flex; justify-content:space-between; align-items:center;">
-            <h2 style="color:white; margin:0; font-size:18px;"><i class="fas fa-cash-register"></i> Novo Pedido (PDV)</h2>
-            <button class="modal-close" style="color:white; background:rgba(255,255,255,0.15); border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; font-size:20px;" onclick="fecharModal('modalPedidoManual')">&times;</button>
+        <!-- CABEÇALHO -->
+        <div class="modal-header" style="margin:0; padding:15px 25px; background:var(--primary-blue); color:white; border-radius:12px 12px 0 0; border:none; flex-shrink:0; display:flex; justify-content:space-between; align-items:center;">
+            <h2 style="color:white; margin:0; font-size:20px;"><i class="fas fa-cash-register"></i> Novo Pedido (PDV)</h2>
+            <button class="modal-close" style="color:white; background:rgba(255,255,255,0.15); border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; font-size:22px; border:none;" onclick="fecharModal('modalPedidoManual')">&times;</button>
         </div>
 
+        <!-- CORPO: PRODUTOS (ESQUERDA) E CARRINHO (DIREITA) -->
         <div style="display:flex; flex:1; overflow:hidden; background:#f0f2f5;">
             
             <!-- COLUNA ESQUERDA: PRODUTOS -->
-            <div style="flex:1.3; display:flex; flex-direction:column; border-right:1px solid #ddd; overflow:hidden;">
-                <div style="padding:15px; background:white; border-bottom:1px solid #eee; display:flex; gap:15px;">
+            <div style="flex:1.4; display:flex; flex-direction:column; border-right:2px solid #ddd; overflow:hidden; background:white;">
+                
+                <div style="padding:15px; border-bottom:1px solid #eee; display:flex; gap:15px; flex-shrink:0;">
                     <div style="flex:2; position:relative;">
-                        <label style="font-size:12px; font-weight:700; color:#555; display:block; margin-bottom:4px;">Buscar Cliente (Nome, CPF/CNPJ ou Tel)</label>
-                        <input type="text" id="pdvBuscaCliente" placeholder="Digite para buscar..." oninput="pdvBuscarCliente()" onfocus="pdvBuscarCliente()" style="width:100%; padding:10px; border:2px solid #ddd; border-radius:6px; font-size:14px;">
+                        <label style="font-size:12px; font-weight:700; color:#555; display:block; margin-bottom:5px;">Buscar Cliente</label>
+                        <input type="text" id="pdvBuscaCliente" placeholder="Nome, CPF/CNPJ ou Telefone..." oninput="pdvBuscarCliente()" onfocus="pdvBuscarCliente()" style="width:100%; padding:12px; border:2px solid #ccc; border-radius:6px; font-size:15px;">
                         <div id="pdvListaClientes" style="display:none; position:absolute; background:white; border:1px solid #ddd; border-radius:6px; box-shadow:0 4px 15px rgba(0,0,0,0.15); width:100%; max-height:250px; overflow-y:auto; z-index:100; top:100%; left:0;"></div>
                     </div>
                     <div style="flex:1;">
-                        <label style="font-size:12px; font-weight:700; color:#555; display:block; margin-bottom:4px;">CPF/CNPJ</label>
-                        <input type="text" id="pdvClienteDocumento" readonly style="width:100%; padding:10px; border:2px solid #ddd; border-radius:6px; font-size:14px; background:#f8f9fa;">
+                        <label style="font-size:12px; font-weight:700; color:#555; display:block; margin-bottom:5px;">CPF/CNPJ</label>
+                        <input type="text" id="pdvClienteDocumento" readonly style="width:100%; padding:12px; border:2px solid #eee; border-radius:6px; font-size:15px; background:#f8f9fa;">
                     </div>
                 </div>
 
-                <div style="padding:15px; background:#f8f9fa; border-bottom:1px solid #eee;">
-                    <label style="font-size:12px; font-weight:700; color:#555;"><i class="fas fa-search"></i> Adicionar Produto</label>
-                    <input type="text" id="pdvBuscaProduto" placeholder="Nome ou código..." oninput="pdvFiltrarProdutos()" style="width:100%; padding:12px; border:2px solid var(--primary-blue); border-radius:6px; font-size:15px; margin-top:5px;">
+                <div style="padding:15px; background:#f8f9fa; border-bottom:2px solid #ddd; flex-shrink:0;">
+                    <label style="font-size:13px; font-weight:700; color:var(--primary-blue); display:block; margin-bottom:5px;"><i class="fas fa-search"></i> Adicionar Produto</label>
+                    <input type="text" id="pdvBuscaProduto" placeholder="Nome ou código do produto..." oninput="pdvFiltrarProdutos()" style="width:100%; padding:14px; border:2px solid var(--primary-blue); border-radius:8px; font-size:16px;">
                 </div>
 
-                <!-- LISTA DE PRODUTOS -->
-                <div id="pdvListaProdutos" style="flex:1; overflow-y:auto; padding:10px; display:flex; flex-direction:column; gap:8px;"></div>
+                <div id="pdvListaProdutos" style="flex:1; overflow-y:auto; padding:10px; display:flex; flex-direction:column; gap:10px;"></div>
             </div>
 
             <!-- COLUNA DIREITA: CARRINHO -->
-            <div style="flex:1; display:flex; flex-direction:column; background:white; overflow:hidden;">
-                <div style="display:flex; padding:10px; background:#fff; gap:10px; border-bottom:1px solid #ddd;">
-                    <button id="tabPdvAtacado" onclick="mudarModoPdv('ATACADO')" style="flex:1; padding:12px; border:none; border-radius:6px; font-weight:700; cursor:pointer; background:var(--primary-blue); color:white; font-size:14px;">📦 Atacado</button>
-                    <button id="tabPdvVarejo" onclick="mudarModoPdv('VAREJO')" style="flex:1; padding:12px; border:none; border-radius:6px; font-weight:700; cursor:pointer; background:#e0e0e0; color:#333; font-size:14px;">🏪 Varejo</button>
+            <div style="flex:1; display:flex; flex-direction:column; background:#fff; overflow:hidden;">
+                <div style="display:flex; padding:15px; background:#f8f9fa; gap:10px; border-bottom:2px solid #ddd; flex-shrink:0;">
+                    <button id="tabPdvAtacado" onclick="mudarModoPdv('ATACADO')" style="flex:1; padding:15px; border:none; border-radius:8px; font-weight:700; cursor:pointer; background:var(--primary-blue); color:white; font-size:16px;">📦 Atacado</button>
+                    <button id="tabPdvVarejo" onclick="mudarModoPdv('VAREJO')" style="flex:1; padding:15px; border:none; border-radius:8px; font-weight:700; cursor:pointer; background:#e0e0e0; color:#333; font-size:16px;">🏪 Varejo</button>
                 </div>
                 <div id="pdvCarrinho" style="flex:1; overflow-y:auto; padding:15px; background:#fafafa;"></div>
             </div>
         </div>
 
         <!-- RODAPÉ -->
-        <div style="padding:15px 20px; border-top:3px solid #ddd; background:white; display:flex; flex-wrap:wrap; gap:20px; align-items:flex-start; flex-shrink:0;">
+        <div style="padding:15px 25px; border-top:2px solid #ddd; background:white; flex-shrink:0; display:flex; flex-wrap:wrap; gap:20px; align-items:flex-end; box-shadow:0 -4px 10px rgba(0,0,0,0.05);">
             
-            <!-- COLUNA 1: FRETE E OPÇÕES -->
+            <!-- FRETE E OPÇÕES -->
             <div style="flex:1; min-width:300px; display:flex; flex-direction:column; gap:10px;">
-                <div style="display:flex; gap:10px;">
-                    <label style="flex:1; background:#e8f5e9; padding:10px; border-radius:6px; border:1px solid #c8e6c9; cursor:pointer; display:flex; align-items:center; gap:8px; font-size:13px; font-weight:700; color:#155724;">
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <label style="background:#e8f5e9; padding:8px 12px; border-radius:6px; border:1px solid #c8e6c9; cursor:pointer; display:flex; align-items:center; gap:8px; font-size:13px; font-weight:700; color:#155724;">
                         <input type="checkbox" id="pdvCheckboxRevenda" onchange="pdvAtualizarCarrinho()" style="width:18px; height:18px;"> 👑 Revenda
+                    </label>
+                    <label style="background:#fff3cd; padding:8px 12px; border-radius:6px; border:1px solid #ffeeba; cursor:pointer; display:flex; align-items:center; gap:8px; font-size:13px; font-weight:700; color:#856404;">
+                        <input type="checkbox" id="pdvCheckboxMisto" style="width:18px; height:18px;"> 🔄 Misto
                     </label>
                 </div>
                 
-                <div style="background:#f8f9fa; padding:12px; border-radius:8px; border:1px solid #eee;">
-                    <label style="font-size:12px; font-weight:700; color:#555; display:block; margin-bottom:8px;"><i class="fas fa-truck"></i> Calcular Frete (Obrigatório)</label>
+                <div style="background:#f8f9fa; padding:10px; border-radius:8px; border:1px solid #eee;">
                     <div style="display:flex; gap:8px;">
-                        <input type="text" id="pdvCepDestino" placeholder="CEP" maxlength="8" oninput="this.value=this.value.replace(/\D/g,'')" style="flex:1; padding:10px; border:1px solid #ddd; border-radius:4px; font-size:14px;">
+                        <input type="text" id="pdvCepDestino" placeholder="CEP" maxlength="8" oninput="this.value=this.value.replace(/\D/g,'')" style="flex:1; padding:10px; border:1px solid #ccc; border-radius:4px; font-size:14px;">
                         <button onclick="calcularFretePdv()" id="btnCalcularFretePdv" style="padding:10px 15px; background:var(--primary-blue); color:white; border:none; border-radius:4px; cursor:pointer; font-weight:600; font-size:13px;">
                             <i class="fas fa-search"></i> Buscar
                         </button>
                     </div>
-                    <div id="pdvOpcoesFrete" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px;"></div>
-                    
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; padding-top:10px; border-top:1px dashed #ccc;">
-                        <span style="font-size:12px; font-weight:700; color:var(--primary-blue);">Valor do Frete: R$</span>
-                        <input type="number" id="pdvFreteValor" placeholder="0,00" step="0.01" oninput="pdvCalcularTotais()" style="width:90px; text-align:right; padding:8px; border:2px solid var(--primary-blue); border-radius:4px; font-size:15px; font-weight:bold;">
+                    <div id="pdvOpcoesFrete" style="display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-top:8px;"></div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; border-top:1px dashed #ccc; padding-top:8px;">
+                        <span style="font-size:12px; font-weight:700; color:var(--primary-blue);">R$</span>
+                        <input type="number" id="pdvFreteValor" placeholder="0,00" step="0.01" oninput="pdvCalcularTotais()" style="width:80px; text-align:right; padding:6px; border:2px solid var(--primary-blue); border-radius:4px; font-size:14px; font-weight:bold;">
                     </div>
-                    <div id="pdvFreteNome" style="font-size:11px; color:#888; margin-top:5px; font-weight:bold; text-align:right;">Nenhum frete selecionado</div>
+                    <div id="pdvFreteNome" style="font-size:11px; color:#888; margin-top:5px; text-align:right;">Selecione o frete</div>
                 </div>
             </div>
 
-            <!-- COLUNA 2: VALORES -->
-            <div style="flex:1; min-width:250px; display:flex; flex-direction:column; gap:10px; background:#f8f9fa; padding:15px; border-radius:8px; border:1px solid #eee;">
-                <div style="display:flex; justify-content:space-between; font-size:15px;">
+            <!-- PAGAMENTO E DESCONTO -->
+            <div style="flex:1; min-width:250px; display:flex; flex-direction:column; gap:8px;">
+                <div style="display:flex; justify-content:space-between; font-size:14px;">
                     <span>Subtotal:</span>
                     <span id="pdvSubtotal" style="font-weight:700;">R$ 0,00</span>
                 </div>
-                <div style="display:flex; justify-content:space-between; align-items:center; font-size:15px; color:var(--danger);">
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:14px; color:var(--danger);">
                     <span>Desconto R$:</span>
-                    <input type="number" id="pdvDescontoValor" placeholder="0,00" step="0.01" oninput="pdvCalcularTotais()" style="width:100px; text-align:right; padding:6px; border:1px solid #ddd; border-radius:4px; color:var(--danger); font-weight:bold;">
+                    <input type="number" id="pdvDescontoValor" placeholder="0,00" step="0.01" oninput="pdvCalcularTotais()" style="width:80px; text-align:right; padding:6px; border:1px solid #ccc; border-radius:4px; color:var(--danger);">
                 </div>
-                <div style="display:flex; justify-content:space-between; align-items:center; font-size:15px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:14px;">
                     <span>Pagamento:</span>
-                    <select id="pdvPagamento" style="padding:8px; border:2px solid #ddd; border-radius:4px; width:160px; font-weight:bold; font-size:14px;">
+                    <select id="pdvPagamento" style="padding:6px; border:1px solid #ccc; border-radius:4px; width:140px; font-weight:bold; font-size:13px;">
                         <option value="">Selecione...</option>
                         <option value="PIX">PIX</option>
                         <option value="Cartão de Crédito">Cartão de Crédito</option>
@@ -2445,21 +2448,20 @@
                 </div>
             </div>
 
-            <!-- COLUNA 3: TOTAL E AÇÕES -->
-            <div style="flex:1.2; min-width:300px; display:flex; flex-direction:column; justify-content:space-between; height:100%;">
-                <div style="display:flex; justify-content:space-between; align-items:center; font-size:32px; font-weight:700; color:var(--primary-blue); margin-bottom:15px;">
+            <!-- TOTAL E BOTÕES -->
+            <div style="flex:1.2; min-width:280px; display:flex; flex-direction:column; gap:10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:28px; font-weight:700; color:var(--primary-blue);">
                     <span>TOTAL:</span>
                     <span id="pdvTotal">R$ 0,00</span>
                 </div>
                 <div style="display:flex; gap:10px;">
-                    <button onclick="imprimirOrcamentoPdv()" style="flex:1; background:#6c757d; color:white; border:none; padding:14px; border-radius:6px; font-weight:700; cursor:pointer; font-size:15px;">
+                    <button onclick="imprimirOrcamentoPdv()" style="flex:1; background:#6c757d; color:white; border:none; padding:12px; border-radius:6px; font-weight:700; cursor:pointer; font-size:14px;">
                         <i class="fas fa-print"></i> Orçamento
                     </button>
-                    <button id="btnSalvarPdv" onclick="salvarPedidoPdv()" style="flex:2; background:var(--success); color:white; border:none; padding:14px; border-radius:6px; font-weight:700; cursor:pointer; font-size:17px; box-shadow:0 4px 10px rgba(39,174,96,0.3);">
+                    <button id="btnSalvarPdv" onclick="salvarPedidoPdv()" style="flex:2; background:var(--success); color:white; border:none; padding:12px; border-radius:6px; font-weight:700; cursor:pointer; font-size:16px; box-shadow:0 4px 10px rgba(39,174,96,0.3);">
                         <i class="fas fa-check-circle"></i> Salvar Pedido
                     </button>
                 </div>
-                <button onclick="limparPdv()" style="width:100%; background:transparent; border:none; color:#999; font-size:12px; cursor:pointer; margin-top:10px;">Limpar Carrinho</button>
             </div>
         </div>
     </div>
@@ -2543,158 +2545,147 @@
     </div>
 </div>
 
-      <!-- ============================================================ -->
-    <!-- MODAL GERENCIAR CLIENTE (NOVO) -->
-    <!-- ============================================================ -->
-    <div class="modal-overlay" id="modalGerenciarCliente">
-        <div class="modal" style="max-width:750px;max-height:92vh;overflow-y:auto;">
-            <div class="modal-header">
-                <h2><i class="fas fa-user-cog"></i> Gerenciar Cliente</h2>
-                <button class="modal-close" onclick="fecharModal('modalGerenciarCliente')">&times;</button>
+<!-- MODAL GERENCIAR CLIENTE (NOVO) -->
+<div class="modal-overlay" id="modalGerenciarCliente">
+    <div class="modal" style="max-width:750px;max-height:92vh;overflow-y:auto;">
+        <div class="modal-header">
+            <h2><i class="fas fa-user-cog"></i> Gerenciar Cliente</h2>
+            <button class="modal-close" onclick="fecharModal('modalGerenciarCliente')">&times;</button>
+        </div>
+
+        <input type="hidden" id="gcIdCliente" value="">
+
+        <div style="background:#f0f4f8;padding:12px 15px;border-radius:8px;margin-bottom:15px;">
+            <div style="font-size:16px;font-weight:700;color:var(--primary-blue);" id="gcNomeCliente">---</div>
+            <div style="font-size:12px;color:#888;" id="gcInfoCliente">---</div>
+        </div>
+
+        <div style="border:1px solid #e0e0e0;border-radius:8px;padding:15px;margin-bottom:15px;">
+            <h4 style="color:var(--primary-blue);margin-bottom:12px;font-size:14px;">
+                <i class="fas fa-flag"></i> Status do Cliente
+            </h4>
+            
+            <div class="checkbox-group" style="margin-bottom:10px;">
+                <input type="checkbox" id="gcIsRevendedor" onchange="gcAtualizarPreview()">
+                <label for="gcIsRevendedor">
+                    <strong>É Revendedor</strong> — libera acesso com preços exclusivos (10% desconto)
+                </label>
             </div>
-
-            <input type="hidden" id="gcIdCliente" value="">
-
-            <!-- CABEÇALHO DO CLIENTE -->
-            <div style="background:#f0f4f8;padding:12px 15px;border-radius:8px;margin-bottom:15px;">
-                <div style="font-size:16px;font-weight:700;color:var(--primary-blue);" id="gcNomeCliente">---</div>
-                <div style="font-size:12px;color:#888;" id="gcInfoCliente">---</div>
+            
+            <div class="checkbox-group" style="margin-bottom:10px;">
+                <input type="checkbox" id="gcPendencia" onchange="gcAtualizarPreview()">
+                <label for="gcPendencia">
+                    <strong>Bloqueado por Pendência</strong> — cliente <u>não consegue logar</u> no revenda
+                </label>
             </div>
-
-            <!-- STATUS DO CLIENTE -->
-            <div style="border:1px solid #e0e0e0;border-radius:8px;padding:15px;margin-bottom:15px;">
-                <h4 style="color:var(--primary-blue);margin-bottom:12px;font-size:14px;">
-                    <i class="fas fa-flag"></i> Status do Cliente
-                </h4>
-                
-                <div class="checkbox-group" style="margin-bottom:10px;">
-                    <input type="checkbox" id="gcIsRevendedor" onchange="gcAtualizarPreview()">
-                    <label for="gcIsRevendedor">
-                        <strong>É Revendedor</strong> — libera acesso com preços exclusivos (10% desconto)
-                    </label>
-                </div>
-                
-                <div class="checkbox-group" style="margin-bottom:10px;">
-                    <input type="checkbox" id="gcPendencia" onchange="gcAtualizarPreview()">
-                    <label for="gcPendencia">
-                        <strong>Bloqueado por Pendência</strong> — cliente <u>não consegue logar</u> no revenda
-                    </label>
-                </div>
-                
-                <div class="checkbox-group">
-                    <input type="checkbox" id="gcAnalise" onchange="gcAtualizarPreview()">
-                    <label for="gcAnalise">
-                        <strong>Em Análise</strong> — cliente vê "aguardando liberação" ao tentar logar
-                    </label>
-                </div>
-            </div>
-
-            <!-- PARCELAMENTO (só aparece se for revendedor) -->
-            <div id="gcAreaParcelas" style="border:1px solid #e0e0e0;border-radius:8px;padding:15px;margin-bottom:15px;display:none;">
-                <h4 style="color:var(--primary-blue);margin-bottom:12px;font-size:14px;">
-                    <i class="fas fa-calendar-alt"></i> Opções de Parcelamento (Boleto Faturado)
-                </h4>
-                <p style="font-size:12px;color:#888;margin-bottom:12px;">
-                    Adicione as parcelas que este revendedor poderá escolher no checkout. 
-                    <strong>Ele verá exatamente essas opções.</strong>
-                </p>
-                
-                <!-- LISTA DE PARCELAS ADICIONADAS -->
-                <div id="gcListaParcelas" style="margin-bottom:12px;"></div>
-                
-                <!-- ADICIONAR NOVA PARCELA -->
-                <div style="display:flex;gap:8px;flex-wrap:wrap;background:#f8f9fa;padding:10px;border-radius:6px;">
-                    <div style="flex:1;min-width:100px;">
-                        <label style="display:block;font-size:11px;font-weight:600;color:#666;margin-bottom:3px;">Dias para vencimento</label>
-                        <input type="number" id="gcNovaParcelaDias" placeholder="Ex: 7" min="1" 
-                               style="width:100%;padding:6px 10px;border:2px solid #ddd;border-radius:5px;font-size:13px;">
-                    </div>
-                    <div style="flex:1;min-width:100px;">
-                        <label style="display:block;font-size:11px;font-weight:600;color:#666;margin-bottom:3px;">Valor mínimo (R$)</label>
-                        <input type="number" id="gcNovaParcelaMinimo" placeholder="Ex: 100" min="0" step="0.01"
-                               style="width:100%;padding:6px 10px;border:2px solid #ddd;border-radius:5px;font-size:13px;">
-                    </div>
-                    <div style="display:flex;align-items:flex-end;">
-                        <button type="button" onclick="gcAdicionarParcela()" 
-                                style="padding:8px 16px;background:var(--primary-blue);color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:13px;white-space:nowrap;">
-                            <i class="fas fa-plus"></i> Adicionar
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- CONTROLE FINANCEIRO -->
-            <div style="border:1px solid #e0e0e0;border-radius:8px;padding:15px;margin-bottom:15px;">
-                <h4 style="color:var(--primary-blue);margin-bottom:12px;font-size:14px;">
-                    <i class="fas fa-dollar-sign"></i> Controle Financeiro
-                </h4>
-                
-                <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                    <div class="form-group">
-                        <label style="display:block;font-size:12px;font-weight:600;color:#333;margin-bottom:4px;">
-                            Limite de Crédito (R$)
-                        </label>
-                        <input type="number" id="gcLimiteCredito" min="0" step="0.01" placeholder="0,00"
-                               style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
-                    </div>
-                    <div class="form-group">
-                        <label style="display:block;font-size:12px;font-weight:600;color:#333;margin-bottom:4px;">
-                            Próximo Vencimento
-                        </label>
-                        <input type="date" id="gcProximoVencimento"
-                               style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
-                    </div>
-                </div>
-                
-                <div class="form-group" style="margin-top:10px;">
-                    <label style="display:block;font-size:12px;font-weight:600;color:#333;margin-bottom:4px;">
-                        Situação Financeira
-                    </label>
-                    <select id="gcSituacao" style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
-                        <option value="Em dia">✅ Em dia</option>
-                        <option value="Devendo">⚠️ Devendo</option>
-                        <option value="Negativado">🚫 Negativado</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- OBSERVAÇÃO INTERNA -->
-            <div style="border:1px solid #e0e0e0;border-radius:8px;padding:15px;margin-bottom:15px;">
-                <h4 style="color:var(--primary-blue);margin-bottom:12px;font-size:14px;">
-                    <i class="fas fa-sticky-note"></i> Observação Interna (aparece só no gestor)
-                </h4>
-                <textarea id="gcObservacaoInterna" rows="3" 
-                          placeholder="Ex: cliente prefere entrega à tarde, sempre compra caixas kraft..."
-                          style="width:100%;padding:10px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;resize:vertical;"></textarea>
-            </div>
-
-            <!-- PREVIEW DO QUE SERÁ SALVO -->
-            <div style="border:2px solid var(--primary-blue);border-radius:8px;padding:15px;margin-bottom:15px;background:#f0f4f8;">
-                <h4 style="color:var(--primary-blue);margin-bottom:8px;font-size:13px;">
-                    <i class="fas fa-eye"></i> Preview (o que será salvo no banco)
-                </h4>
-                <div style="font-size:12px;color:#555;margin-bottom:6px;">
-                    <strong>Campo observacoes:</strong>
-                </div>
-                <div id="gcPreviewObservacoes" 
-                     style="background:white;padding:10px;border-radius:6px;font-family:monospace;font-size:13px;color:var(--primary-blue);word-break:break-all;min-height:36px;border:1px solid #ddd;">
-                    REVENDA
-                </div>
-            </div>
-
-            <!-- AÇÕES -->
-            <div class="form-actions" style="justify-content:center;gap:10px;flex-wrap:wrap;">
-                <button class="btn-cancel" onclick="fecharModal('modalGerenciarCliente')" style="padding:10px 25px;">
-                    <i class="fas fa-times"></i> Cancelar
-                </button>
-                <button class="btn-save" onclick="gcSalvarCliente()" id="gcBtnSalvar" style="padding:10px 25px;">
-                    <i class="fas fa-save"></i> Salvar Alterações
-                </button>
+            
+            <div class="checkbox-group">
+                <input type="checkbox" id="gcAnalise" onchange="gcAtualizarPreview()">
+                <label for="gcAnalise">
+                    <strong>Em Análise</strong> — cliente vê "aguardando liberação" ao tentar logar
+                </label>
             </div>
         </div>
-    </div>
 
-<!-- 🔥 NOVO: MODAL SIMULAÇÃO DE FRETES -->
+        <div id="gcAreaParcelas" style="border:1px solid #e0e0e0;border-radius:8px;padding:15px;margin-bottom:15px;display:none;">
+            <h4 style="color:var(--primary-blue);margin-bottom:12px;font-size:14px;">
+                <i class="fas fa-calendar-alt"></i> Opções de Parcelamento (Boleto Faturado)
+            </h4>
+            <p style="font-size:12px;color:#888;margin-bottom:12px;">
+                Adicione as parcelas que este revendedor poderá escolher no checkout. 
+                <strong>Ele verá exatamente essas opções.</strong>
+            </p>
+            
+            <div id="gcListaParcelas" style="margin-bottom:12px;"></div>
+            
+            <div style="display:flex;gap:8px;flex-wrap:wrap;background:#f8f9fa;padding:10px;border-radius:6px;">
+                <div style="flex:1;min-width:100px;">
+                    <label style="display:block;font-size:11px;font-weight:600;color:#666;margin-bottom:3px;">Dias para vencimento</label>
+                    <input type="number" id="gcNovaParcelaDias" placeholder="Ex: 7" min="1" 
+                           style="width:100%;padding:6px 10px;border:2px solid #ddd;border-radius:5px;font-size:13px;">
+                </div>
+                <div style="flex:1;min-width:100px;">
+                    <label style="display:block;font-size:11px;font-weight:600;color:#666;margin-bottom:3px;">Valor mínimo (R$)</label>
+                    <input type="number" id="gcNovaParcelaMinimo" placeholder="Ex: 100" min="0" step="0.01"
+                           style="width:100%;padding:6px 10px;border:2px solid #ddd;border-radius:5px;font-size:13px;">
+                </div>
+                <div style="display:flex;align-items:flex-end;">
+                    <button type="button" onclick="gcAdicionarParcela()" 
+                            style="padding:8px 16px;background:var(--primary-blue);color:white;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:13px;white-space:nowrap;">
+                        <i class="fas fa-plus"></i> Adicionar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div style="border:1px solid #e0e0e0;border-radius:8px;padding:15px;margin-bottom:15px;">
+            <h4 style="color:var(--primary-blue);margin-bottom:12px;font-size:14px;">
+                <i class="fas fa-dollar-sign"></i> Controle Financeiro
+            </h4>
+            
+            <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div class="form-group">
+                    <label style="display:block;font-size:12px;font-weight:600;color:#333;margin-bottom:4px;">
+                        Limite de Crédito (R$)
+                    </label>
+                    <input type="number" id="gcLimiteCredito" min="0" step="0.01" placeholder="0,00"
+                           style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
+                </div>
+                <div class="form-group">
+                    <label style="display:block;font-size:12px;font-weight:600;color:#333;margin-bottom:4px;">
+                        Próximo Vencimento
+                    </label>
+                    <input type="date" id="gcProximoVencimento"
+                           style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
+                </div>
+            </div>
+            
+            <div class="form-group" style="margin-top:10px;">
+                <label style="display:block;font-size:12px;font-weight:600;color:#333;margin-bottom:4px;">
+                    Situação Financeira
+                </label>
+                <select id="gcSituacao" style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
+                    <option value="Em dia">✅ Em dia</option>
+                    <option value="Devendo">⚠️ Devendo</option>
+                    <option value="Negativado">🚫 Negativado</option>
+                </select>
+            </div>
+        </div>
+
+        <div style="border:1px solid #e0e0e0;border-radius:8px;padding:15px;margin-bottom:15px;">
+            <h4 style="color:var(--primary-blue);margin-bottom:12px;font-size:14px;">
+                <i class="fas fa-sticky-note"></i> Observação Interna (aparece só no gestor)
+            </h4>
+            <textarea id="gcObservacaoInterna" rows="3" 
+                      placeholder="Ex: cliente prefere entrega à tarde, sempre compra caixas kraft..."
+                      style="width:100%;padding:10px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;resize:vertical;"></textarea>
+        </div>
+
+        <div style="border:2px solid var(--primary-blue);border-radius:8px;padding:15px;margin-bottom:15px;background:#f0f4f8;">
+            <h4 style="color:var(--primary-blue);margin-bottom:8px;font-size:13px;">
+                <i class="fas fa-eye"></i> Preview (o que será salvo no banco)
+            </h4>
+            <div style="font-size:12px;color:#555;margin-bottom:6px;">
+                <strong>Campo observacoes:</strong>
+            </div>
+            <div id="gcPreviewObservacoes" 
+                 style="background:white;padding:10px;border-radius:6px;font-family:monospace;font-size:13px;color:var(--primary-blue);word-break:break-all;min-height:36px;border:1px solid #ddd;">
+                REVENDA
+            </div>
+        </div>
+
+        <div class="form-actions" style="justify-content:center;gap:10px;flex-wrap:wrap;">
+            <button class="btn-cancel" onclick="fecharModal('modalGerenciarCliente')" style="padding:10px 25px;">
+                <i class="fas fa-times"></i> Cancelar
+            </button>
+            <button class="btn-save" onclick="gcSalvarCliente()" id="gcBtnSalvar" style="padding:10px 25px;">
+                <i class="fas fa-save"></i> Salvar Alterações
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL SIMULAÇÃO DE FRETES -->
 <div class="modal-overlay" id="modalFretes">
     <div class="modal" style="max-width:1100px;">
         <div class="modal-header">
@@ -5887,326 +5878,6 @@ async function cancelarPedido(id) {
 }
 
 // ============================================================
-// SISTEMA PDV INTELIGENTE (ATACADO / VAREJO / MISTO)
-// ============================================================
-let pdvCarrinho = [];
-let pdvClienteSelecionado = null;
-let pdvModoAtual = 'ATACADO';
-
-function abrirPedidoManual() {
-    document.getElementById('modalPedidoManual').classList.add('open');
-    
-    // Limpa TUDO (sem cliente padrão)
-    pdvCarrinho = [];
-    pdvClienteSelecionado = null;
-    pdvModoAtual = 'ATACADO';
-    
-    document.getElementById('pdvBuscaCliente').value = '';
-    document.getElementById('pdvClienteDocumento').value = '';
-    document.getElementById('pdvBuscaProduto').value = '';
-    document.getElementById('pdvDescontoValor').value = '';
-    document.getElementById('pdvFreteValor').value = '';
-    document.getElementById('pdvCepDestino').value = '';
-    document.getElementById('pdvOpcoesFrete').innerHTML = '';
-    document.getElementById('pdvFreteNome').textContent = 'Nenhum frete selecionado';
-    document.getElementById('pdvCheckboxRevenda').checked = false;
-    document.getElementById('pdvPagamento').value = '';
-    
-    mudarModoPdv('ATACADO');
-    pdvAtualizarCarrinho();
-    pdvFiltrarProdutos(); // Carrega a lista de produtos na hora
-}
-
-function mudarModoPdv(modo) {
-    pdvModoAtual = modo;
-    const btnAtacado = document.getElementById('tabPdvAtacado');
-    const btnVarejo = document.getElementById('tabPdvVarejo');
-    const containerRevenda = document.getElementById('pdvContainerRevenda');
-
-    if (modo === 'ATACADO') {
-        btnAtacado.style.background = 'var(--primary-blue)';
-        btnAtacado.style.color = 'white';
-        btnVarejo.style.background = '#e0e0e0';
-        btnVarejo.style.color = '#333';
-        containerRevenda.style.display = 'flex';
-    } else {
-        btnAtacado.style.background = '#e0e0e0';
-        btnAtacado.style.color = '#333';
-        
-        // 🔥 VAREJO LARANJA
-        btnVarejo.style.background = 'var(--orange-top)';
-        btnVarejo.style.color = 'white';
-        containerRevenda.style.display = 'none';
-    }
-    pdvAtualizarCarrinho();
-}
-
-function pdvBuscarCliente() {
-    const termo = document.getElementById('pdvBuscaCliente').value.toLowerCase();
-    const lista = document.getElementById('pdvListaClientes');
-    
-    // Remove pontuação para buscar CPF/CNPJ e Telefone
-    const termoLimpo = termo.replace(/\D/g, '');
-
-    // Opção Balcão
-    let htmlBalcao = `<div onclick="pdvSelecionarCliente(0, 'Cliente Balcão', '')" style="padding:12px; border-bottom:1px solid #eee; cursor:pointer; background:#f0f8ff;">
-        <strong style="font-size:14px;">👤 Cliente Balcão</strong>
-        <div style="font-size:12px; color:#888;">Venda sem cadastro</div>
-    </div>`;
-
-    if (termo.length < 2 && termoLimpo.length < 2) { 
-        lista.innerHTML = htmlBalcao;
-        lista.style.display = 'block'; 
-        return; 
-    }
-    
-    const encontrados = dados.clientes.filter(c => {
-        const nome = String(c.nome || '').toLowerCase();
-        const email = String(c.email || '').toLowerCase();
-        const cpfLimpo = String(c.cpf || c.documento || '').replace(/\D/g, '');
-        const telLimpo = String(c.telefone || '').replace(/\D/g, '');
-
-        // Busca por nome, email, ou CPF/Tel (apenas números)
-        return nome.includes(termo) || 
-               email.includes(termo) ||
-               (termoLimpo.length >= 2 && cpfLimpo.includes(termoLimpo)) ||
-               (termoLimpo.length >= 2 && telLimpo.includes(termoLimpo));
-    }).slice(0, 10); 
-    
-    let htmlClientes = encontrados.map(c => `
-        <div onclick="pdvSelecionarCliente(${c.id_cliente}, '${c.nome.replace(/'/g, "\\'")}', '${c.cpf || ''}')" style="padding:12px; border-bottom:1px solid #eee; cursor:pointer;" onmouseover="this.style.background='#f0f4f8'" onmouseout="this.style.background='white'">
-            <strong style="font-size:14px;">${c.nome}</strong>
-            <div style="font-size:12px; color:#888;">${c.telefone || ''} | CPF/CNPJ: ${formatarDocumento(c.cpf)}</div>
-        </div>
-    `).join('');
-    
-    lista.innerHTML = htmlBalcao + htmlClientes;
-    lista.style.display = 'block';
-}
-
-function pdvSelecionarCliente(id, nome, cpf) {
-    pdvClienteSelecionado = { id, nome, cpf };
-    document.getElementById('pdvBuscaCliente').value = nome;
-    document.getElementById('pdvClienteDocumento').value = formatarDocumento(cpf);
-    document.getElementById('pdvListaClientes').style.display = 'none';
-}
-
-document.addEventListener('click', function(e) {
-    const lista = document.getElementById('pdvListaClientes');
-    const input = document.getElementById('pdvBuscaCliente');
-    if (lista && input && !lista.contains(e.target) && e.target !== input) lista.style.display = 'none';
-});
-
-function pdvFiltrarProdutos() {
-    const termo = document.getElementById('pdvBuscaProduto').value.toLowerCase();
-    const container = document.getElementById('pdvListaProdutos');
-    
-    let produtos = dados.produtos;
-    if (termo) {
-        produtos = produtos.filter(p => 
-            String(p.nome || '').toLowerCase().includes(termo) || 
-            String(p.codigo_produto || '').toLowerCase().includes(termo)
-        );
-    }
-    
-    produtos.sort((a, b) => String(a.nome).localeCompare(String(b.nome)));
-    
-    if (produtos.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:20px; color:#999;">Nenhum produto encontrado.</div>';
-        return;
-    }
-    
-    container.innerHTML = produtos.map(p => {
-        const preco = parseFloat(p.preco_venda?.split(';')[0]?.split(':')[1]) || 0;
-        return `
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px; background:white; border:1px solid #eee; border-radius:6px;">
-            <div style="flex:1; cursor:pointer;" onclick="pdvAdicionarAoCarrinho(${p.id})">
-                <div style="font-weight:600; color:var(--primary-dark); font-size:13px;">${p.nome}</div>
-                <div style="font-size:11px; color:#888;">Cód: ${p.codigo_produto || '---'} | Estoque: ${p.estoque}</div>
-            </div>
-            <div style="display:flex; align-items:center; gap:10px;">
-                <span style="font-weight:700; color:var(--primary-blue);">R$ ${preco.toFixed(2)}</span>
-                <button onclick="pdvAdicionarAoCarrinho(${p.id})" style="background:var(--primary-blue); color:white; border:none; width:30px; height:30px; border-radius:50%; cursor:pointer; font-size:16px;">
-                    <i class="fas fa-plus"></i>
-                </button>
-            </div>
-        </div>
-        `;
-    }).join('');
-}
-
-async function salvarPedidoPdv() {
-    if (pdvCarrinho.length === 0) { alert('⚠️ Adicione pelo menos um produto.'); return; }
-    if (!pdvClienteSelecionado) { alert('⚠️ Selecione um cliente ou "Balcão".'); return; }
-    const freteNome = document.getElementById('pdvFreteNome').textContent;
-    if (freteNome === 'Nenhum frete selecionado') { alert('⚠️ Calcule e selecione o frete.'); return; }
-    const pagamento = document.getElementById('pdvPagamento').value;
-    if (!pagamento) { alert('⚠️ Selecione o pagamento.'); return; }
-
-    // 🔥 PERGUNTA MISTO: Verifica se tem produção
-    let temItemProducao = false;
-    let temMisto = false;
-    
-    pdvCarrinho.forEach(item => {
-        if (item.quantidade > item.estoque) {
-            temItemProducao = true;
-        }
-    });
-
-    if (temItemProducao) {
-        const resposta = confirm(
-            "⚠️ ATENÇÃO: Você está vendendo mais do que tem em estoque para alguns itens.\n\n" +
-            "Deseja marcar como PEDIDO MISTO? (O que tem em estoque sai agora, o restante vai para produção e será impresso separadamente no cupom)\n\n" +
-            "Clique em OK para SIM (Misto).\nClique em Cancelar para NÃO (Avisar que tudo irá para produção)."
-        );
-        temMisto = resposta;
-    }
-
-    const btn = document.getElementById('btnSalvarPdv');
-    const txtOriginal = btn.innerHTML;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
-    btn.disabled = true;
-
-    try {
-        let subtotal = 0;
-        const itensParaSalvar = pdvCarrinho.map(item => {
-            let precoUnit = 0;
-            if (pdvModoAtual === 'ATACADO') {
-                precoUnit = calcularPrecoUnitarioAtacado(item);
-            } else {
-                precoUnit = item.precoVarejoManual;
-            }
-            subtotal += precoUnit * item.quantidade;
-
-            // Define divisão
-            const qtdEstoque = Math.min(item.quantidade, item.estoque);
-            const qtdProducao = Math.max(0, item.quantidade - item.estoque);
-
-            let isProducao = false;
-            if (temMisto && qtdProducao > 0) {
-                isProducao = true;
-            }
-
-            return {
-                nome: item.nome,
-                quantidade: item.quantidade,
-                totalUnidades: item.quantidade,
-                price: precoUnit * item.quantidade,
-                unit_price: precoUnit,
-                isProducao: isProducao,
-                qtdEstoque: temMisto ? qtdEstoque : item.quantidade,
-                qtdProducao: temMisto ? qtdProducao : 0,
-                producao_dias: item.producao_dias,
-                modo: pdvModoAtual
-            };
-        });
-
-        const frete = parseFloat(document.getElementById('pdvFreteValor').value) || 0;
-        const desconto = parseFloat(document.getElementById('pdvDescontoValor').value) || 0;
-        const total = subtotal + frete - desconto;
-
-        const novoPedido = {
-            cliente_nome: pdvClienteSelecionado.nome,
-            cliente_email: 'pedido_manual@mcembalagens.com',
-            cliente_telefone: '',
-            cliente_documento: document.getElementById('pdvClienteDocumento').value.replace(/\D/g,''),
-            itens: JSON.stringify(itensParaSalvar),
-            total: total.toFixed(2),
-            total_produtos: subtotal.toFixed(2),
-            desconto: desconto.toFixed(2),
-            frete: freteNome,
-            frete_valor: frete.toFixed(2),
-            pagamento: pagamento,
-            status: 'Pendente',
-            data_pedido: new Date().toLocaleString('pt-BR'),
-            observacoes: `Venda via PDV (${pdvModoAtual})${temMisto ? ' - PEDIDO MISTO' : ''}.`
-        };
-
-        const { data: pedidoSalvo, error } = await supabaseClient.from('pedidos').insert([novoPedido]).select().single();
-        if (error) throw error;
-
-        // Baixa de Estoque
-        for (const item of pdvCarrinho) {
-            const prod = dados.produtos.find(p => p.id === item.productId);
-            if (prod) {
-                const qtdParaBaixar = temMisto ? Math.min(item.quantidade, item.estoque) : item.quantidade;
-                if (qtdParaBaixar > 0) {
-                    const novoEstoque = Math.max(0, prod.estoque - qtdParaBaixar);
-                    await supabaseClient.from('produtos').update({ estoque: novoEstoque }).eq('id', item.productId);
-                }
-            }
-        }
-
-        alert(`✅ Pedido #${pedidoSalvo.id_pedido} salvo!\n${temMisto ? '⚠️ Lembrete: Este é um PEDIDO MISTO.' : ''}`);
-        
-        if (confirm('Deseja imprimir o cupom agora?')) {
-            carregarDados().then(() => imprimirCupom(pedidoSalvo.id_pedido));
-        } else {
-            carregarDados();
-        }
-
-        fecharModal('modalPedidoManual');
-    } catch (error) {
-        console.error('Erro:', error);
-        alert('❌ Erro ao salvar: ' + (error.message || 'Tente novamente.'));
-    } finally {
-        btn.innerHTML = txtOriginal;
-        btn.disabled = false;
-    }
-}
-
-function imprimirOrcamentoPdv() {
-    if (pdvCarrinho.length === 0) { alert('⚠️ Adicione produtos.'); return; }
-    
-    const itensOrcamento = pdvCarrinho.map(item => {
-        let precoUnit = 0;
-        if (pdvModoAtual === 'ATACADO') {
-            precoUnit = calcularPrecoUnitarioAtacado(item);
-        } else {
-            precoUnit = item.precoVarejoManual;
-        }
-        return {
-            nome: item.nome,
-            quantidade: item.quantidade,
-            totalUnidades: item.quantidade,
-            price: precoUnit * item.quantidade,
-            unit_price: precoUnit,
-            isProducao: false
-        };
-    });
-
-    const frete = parseFloat(document.getElementById('pdvFreteValor').value) || 0;
-    const desconto = parseFloat(document.getElementById('pdvDescontoValor').value) || 0;
-    const subtotal = itensOrcamento.reduce((a, b) => a + b.price, 0);
-    const total = subtotal + frete - desconto;
-    const pagamento = document.getElementById('pdvPagamento').value || 'Não informado';
-
-    const pedidoFake = {
-        id_pedido: 'ORÇAMENTO',
-        cliente_nome: pdvClienteSelecionado ? pdvClienteSelecionado.nome : 'Cliente não identificado',
-        cliente_documento: document.getElementById('pdvClienteDocumento').value.replace(/\D/g,''),
-        itens: JSON.stringify(itensOrcamento),
-        total: total,
-        total_produtos: subtotal,
-        frete: document.getElementById('pdvFreteNome').textContent,
-        frete_valor: frete,
-        desconto: desconto,
-        pagamento: pagamento,
-        data_pedido: new Date().toLocaleString('pt-BR'),
-        status: 'ORÇAMENTO',
-        observacoes: 'Orçamento emitido sem baixa de estoque.'
-    };
-
-    imprimirCupomObjeto(pedidoFake);
-}
-
-function limparPdv() {
-    if (confirm('Limpar todo o pedido?')) {
-        abrirPedidoManual();
-    }
-}
-
-// ============================================================
 // IMPRESSÃO: CUPOM NORMAL, MISTO E ORÇAMENTO
 // ============================================================
 
@@ -6291,7 +5962,6 @@ function gerarHtmlCupom(pedido, isOrcamento) {
     
     const itens = processarItensPedido(pedido.itens);
     
-    // SEPARA OS ITENS: DISPONÍVEIS X PRODUÇÃO (Para o Misto)
     const itensDisponiveis = [];
     const itensProducao = [];
     
@@ -6345,7 +6015,6 @@ function gerarHtmlCupom(pedido, isOrcamento) {
         }
     });
     
-    // Monta a sessão de itens
     if (itensDisponiveis.length > 0) {
         itensHtml += `<div style="font-size:8px;font-weight:bold;background:#e8f5e9;color:#155724;padding:2px;text-align:center;margin-bottom:2px;">✅ ITENS DISPONÍVEIS (LEVAR AGORA)</div>`;
         itensHtml += itensDisponiveis.join('');
@@ -6356,7 +6025,6 @@ function gerarHtmlCupom(pedido, isOrcamento) {
         itensHtml += itensProducao.join('');
     }
     
-    // Berços
     const gomosOrdenados = Object.keys(totalBerçosPorGomos).map(Number).sort((a, b) => a - b);
     if (gomosOrdenados.length > 0) {
         itensHtml += `<div style="border-top:1px dashed #000;margin:3px 0;width:100%;"></div>
