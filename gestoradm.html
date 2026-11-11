@@ -2427,15 +2427,15 @@
                         <button onclick="limparPdv()" style="flex:1; background:#e0e0e0; color:#333; border:none; padding:12px; border-radius:6px; font-weight:700; cursor:pointer;">
                             <i class="fas fa-trash"></i> Limpar
                         </button>
-                        <button onclick="salvarPedidoPdv()" style="flex:2; background:var(--success); color:white; border:none; padding:12px; border-radius:6px; font-weight:700; cursor:pointer; font-size:16px; box-shadow:0 4px 10px rgba(39,174,96,0.3);">
-                            <i class="fas fa-check-circle"></i> Salvar Pedido
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+                                              <button id="btnSalvarPdv" onclick="salvarPedidoPdv()" style="flex:2; background:var(--success); color:white; border:none; padding:12px; border-radius:6px; font-weight:700; cursor:pointer; font-size:16px; box-shadow:0 4px 10px rgba(39,174,96,0.3);">
+    <i class="fas fa-check-circle"></i> Salvar Pedido
+</button>
+                    </div> <!-- Fecha div dos botões -->
+                </div> <!-- Fecha div do rodapé (totais) -->
+            </div> <!-- Fecha div da coluna do carrinho -->
+        </div> <!-- Fecha a div que divide as colunas -->
+    </div> <!-- Fecha a div modal -->
+</div> <!-- Fecha a div modal-overlay -->
 
 <!-- MODAL VISUALIZAÇÃO PEDIDO -->
 <div class="modal-overlay" id="modalVisualizacaoPedido">
@@ -5076,26 +5076,21 @@ async function executarSalvarCliente() {
                 dadosCliente[campo] = el.value;
             }
         });
-        dadosCliente.id_cliente = clienteEditando.id_cliente;
         
         if (dadosCliente.documento) {
             dadosCliente.cpf = dadosCliente.documento;
         }
         
-        await fetch(API_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                acao: 'atualizar_cliente',
-                cliente: dadosCliente
-            })
-        });
+        // 🔥 CORREÇÃO: Salva direto no Supabase em vez de usar a API antiga
+        const { error } = await supabaseClient
+            .from('clientes')
+            .update(dadosCliente)
+            .eq('id_cliente', clienteEditando.id_cliente);
+            
+        if (error) throw error;
         
         Object.keys(dadosCliente).forEach(key => {
-            if (key !== 'id_cliente') {
-                clienteEditando[key] = dadosCliente[key];
-            }
+            clienteEditando[key] = dadosCliente[key];
         });
         
         esconderSpinner();
@@ -5106,7 +5101,7 @@ async function executarSalvarCliente() {
     } catch (error) {
         console.error('Erro ao salvar cliente:', error);
         esconderSpinner();
-        alert('⚠️ Erro ao salvar cliente.');
+        alert('⚠️ Erro ao salvar cliente: ' + error.message);
     }
 }
 
@@ -6060,7 +6055,12 @@ async function salvarPedidoPdv() {
         return;
     }
 
-    const btn = document.querySelector('button[onclick="salvarPedidoPdv()"]');
+    // 🔥 CORREÇÃO: Busca o botão pelo ID (mais seguro)
+    const btn = document.getElementById('btnSalvarPdv');
+    if (!btn) {
+        alert('Erro interno: Botão de salvar não encontrado.');
+        return;
+    }
     const txtOriginal = btn.innerHTML;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
     btn.disabled = true;
@@ -6084,7 +6084,7 @@ async function salvarPedidoPdv() {
             cliente_nome: pdvClienteSelecionado.nome,
             cliente_email: 'pedido_manual@mcembalagens.com',
             cliente_telefone: '',
-            cliente_documento: document.getElementById('pdvClienteDocumento').value.replace(/\D/g,''), // CPF/CNPJ limpo
+            cliente_documento: document.getElementById('pdvClienteDocumento').value.replace(/\D/g,''),
             itens: JSON.stringify(itensParaSalvar),
             total: total.toFixed(2),
             total_produtos: subtotal.toFixed(2),
@@ -6435,15 +6435,14 @@ async function carregarFretes() {
     container.innerHTML = '<div style="text-align:center;padding:25px;color:#999;"><i class="fas fa-spinner fa-spin" style="font-size:24px;display:block;margin-bottom:8px;"></i>Carregando fretes...</div>';
     
     try {
-        var response = await fetch(API_URL + '?acao=buscar_fretes_simulados');
-        var data = await response.json();
-        
-        fretesSimulados = data.fretes || [];
+        // Como o sistema foi migrado para o Supabase, a busca de fretes simulados
+        // será implementada diretamente no banco em breve. Por enquanto, apenas exibimos um aviso.
+        fretesSimulados = [];
         renderizarFretes();
         
     } catch (error) {
         console.error('Erro ao carregar fretes:', error);
-        container.innerHTML = '<div style="text-align:center;padding:25px;color:#e74c3c;"><i class="fas fa-exclamation-circle" style="font-size:24px;display:block;margin-bottom:8px;"></i>Erro ao carregar fretes. Verifique se a ação "buscar_fretes_simulados" existe no Apps Script.</div>';
+        container.innerHTML = '<div style="text-align:center;padding:25px;color:#e74c3c;"><i class="fas fa-exclamation-circle" style="font-size:24px;display:block;margin-bottom:8px;"></i>Erro ao carregar fretes.</div>';
     }
 }
 
