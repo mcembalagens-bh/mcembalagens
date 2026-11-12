@@ -4758,37 +4758,52 @@ function calcularDimensoes() {
 function calcularPrazoProducao() {
     let maiorPrazo = 0;
 
+    // Agrupa a quantidade total de cada produto que está no carrinho
+    const qtdPorProduto = {};
+    carrinho.forEach(item => {
+        if (!qtdPorProduto[item.productId]) qtdPorProduto[item.productId] = 0;
+        qtdPorProduto[item.productId] += (item.totalUnits || 0);
+    });
+
     for (const item of carrinho) {
         const p = encontrarProduto(item.productId);
         if (!p) continue;
 
-        // Lê o estoque atualizado do banco
         const estoqueAtual = parseInt(p.stock) || 0;
-        
-        // Pega a quantidade correta de UNIDADES no carrinho (seja 1 pacote de 100 ou 100 pacotes de 1)
-        const qtdNoCarrinho = item.totalUnits || item.quantity || 0;
+        const qtdNoCarrinho = qtdPorProduto[item.productId] || 0;
 
-        // REGRA: Se a quantidade pedida for MAIOR que o estoque disponível, precisa de produção.
+        // Se o cliente está comprando MAIS do que tem no estoque
         if (qtdNoCarrinho > estoqueAtual) {
-            // Pega o prazo de produção do banco. Se estiver vazio, assume 7.
-            const prazoDesteItem = p.productionDays > 0 ? p.productionDays : 7;
-            if (prazoDesteItem > maiorPrazo) {
-                maiorPrazo = prazoDesteItem;
+            // E se o produto NÃO permite vender zerado, aí sim cobra a produção
+            if (p.vender_zerado !== true) {
+                const prazoDesteItem = p.productionDays > 0 ? p.productionDays : 7;
+                if (prazoDesteItem > maiorPrazo) {
+                    maiorPrazo = prazoDesteItem;
+                }
+            } else {
+                // Se permite vender zerado, mesmo passando do estoque, não cobra produção no frete
+                // (você pode mudar isso se quiser cobrar produção para vendas acima do estoque)
+                const prazoDesteItem = p.productionDays > 0 ? p.productionDays : 7;
+                if (prazoDesteItem > maiorPrazo) {
+                    maiorPrazo = prazoDesteItem;
+                }
             }
         }
     }
-
     return maiorPrazo;
 }
+    
 function formatarOpcoesFrete(opcoes) {
     const out = [];
-    const prod = checkoutState.producaoDias || calcularPrazoProducao();
+    const prod = checkoutState.producaoDias !== undefined ? checkoutState.producaoDias : calcularPrazoProducao();
+    
+    // RETIRADA NA LOJA (Corrigido para não somar o dia de envio se tiver produção)
     out.push({
         nome: 'Retirada na Loja',
         valor: 0,
-        prazoEnvio: 1,
+        prazoEnvio: 1, // 1 dia para separação
         prazoProducao: prod,
-        prazoTotal: 1 + prod,
+        prazoTotal: prod > 0 ? prod : 1, // Se tem produção, o prazo é só a produção. Se não, 1 dia.
         codigo: 'RETIRADA',
         freteGratis: true,
         isEntregaPropria: false
@@ -4799,7 +4814,7 @@ function formatarOpcoesFrete(opcoes) {
         if (isEP && out.some(o => o.codigo === 'ENTREGA_PROPRIA')) continue;
         const valorBase = parseFloat(op.price || op.preco || 0);
         const prazoBase = parseInt(op.delivery_time || op.prazo || 0);
-        const valorFinal = valorBase + 12.00; // ACRÉSCIMO FIXO
+        const valorFinal = valorBase + 12.00; // ACRÉSCIMO FIXO DE R$ 12
         const prazoEnvio = prazoBase + 2;
         const prazoTotal = prazoEnvio + prod;
         let nome = op.nome || op.name || 'Frete';
@@ -4807,6 +4822,7 @@ function formatarOpcoesFrete(opcoes) {
         else if (nome.indexOf('SEDEX') !== -1) nome = 'SEDEX';
         else if (nome.indexOf('Jadlog') !== -1) nome = 'Jadlog';
         else if (nome.indexOf('Loggi') !== -1) nome = 'Loggi';
+        
         out.push({
             nome: nome,
             valor: valorFinal,
@@ -4818,6 +4834,7 @@ function formatarOpcoesFrete(opcoes) {
             isEntregaPropria: isEP
         });
     }
+    
     out.sort((a, b) => a.valor - b.valor);
     const idx = out.findIndex(o => o.codigo === 'RETIRADA');
     if (idx > 0) out.unshift(out.splice(idx, 1)[0]);
