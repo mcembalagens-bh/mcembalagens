@@ -2,126 +2,81 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Auditoria - MC Embalagens</title>
+    <title>Auditoria de Estoque - MC Embalagens</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background: #f0f2f5; color: #333; padding: 20px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: #f0f2f5; padding: 20px; }
         .container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; }
         .header { background: #1a3a5c; color: white; padding: 20px 30px; }
-        .header h1 { font-size: 24px; }
-        .tabs { display: flex; background: #e2e8f0; border-bottom: 1px solid #cbd5e1; overflow-x: auto; }
-        .tab { padding: 15px 25px; cursor: pointer; font-weight: 600; color: #475569; border-bottom: 3px solid transparent; white-space: nowrap; }
-        .tab:hover { background: #cbd5e1; }
+        .tabs { display: flex; background: #e2e8f0; border-bottom: 1px solid #cbd5e1; }
+        .tab { padding: 15px 25px; cursor: pointer; font-weight: 600; color: #475569; border-bottom: 3px solid transparent; }
         .tab.active { background: white; color: #1a3a5c; border-bottom-color: #1a3a5c; }
         .content { padding: 30px; }
         .tab-pane { display: none; }
-        .tab-pane.active { display: block; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .tab-pane.active { display: block; }
         
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
-        th { background: #f8fafc; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 12px; }
-        tr:hover { background: #f1f5f9; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+        th { background: #f8fafc; color: #64748b; text-transform: uppercase; font-size: 12px; }
         
-        .badge { padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; display: inline-block; margin-bottom: 4px; }
-        .badge-success { background: #dcfce7; color: #166534; }
-        .badge-warning { background: #fef9c3; color: #854d0e; }
-        .badge-danger { background: #fee2e2; color: #991b1b; }
-        .badge-info { background: #e0f2fe; color: #075985; }
+        .badge { padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; display: inline-block; }
+        .badge-green { background: #dcfce7; color: #166534; }
+        .badge-red { background: #fee2e2; color: #991b1b; }
+        .badge-blue { background: #e0f2fe; color: #075985; }
         
+        .alerta-erro { background: #fee2e2; color: #991b1b; padding: 15px; margin-bottom: 20px; display: none; border-radius: 8px; }
         .loading { text-align: center; padding: 40px; color: #64748b; }
-        .alert-error { background: #fee2e2; color: #991b1b; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none; }
         
-        .lista-vendas { font-size: 12px; color: #475569; margin-top: 5px; max-height: 100px; overflow-y: auto; }
-        .lista-vendas div { border-bottom: 1px dashed #cbd5e1; padding: 3px 0; }
-        .lista-vendas div:last-child { border: none; }
+        /* Estilo para destacar a diferença no estoque */
+        .diferenca-positiva { color: #166534; font-weight: bold; }
+        .diferenca-negativa { color: #991b1b; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header">
-        <h1>🕵️ Painel de Auditoria - MC Embalagens</h1>
-        <p style="font-size:14px; opacity:0.8; margin-top:5px;">Últimos 30 dias | Análise de Estoque e Vendas</p>
+        <h1>🕵️ Raio-X do Estoque - MC Embalagens</h1>
     </div>
 
     <div class="tabs">
-        <div class="tab active" onclick="mudarAba('estoque', this)">📦 Análise de Estoque</div>
-        <div class="tab" onclick="mudarAba('pedidos', this)">🛍️ Pedidos</div>
-        <div class="tab" onclick="mudarAba('clientes', this)">👥 Clientes</div>
-        <div class="tab" onclick="mudarAba('timeline', this)">⏱️ Linha do Tempo</div>
+        <div class="tab active" onclick="mudarAba('estoque')">📦 Histórico de Estoque</div>
+        <div class="tab" onclick="mudarAba('pedidos')">🛍️ Pedidos (30 dias)</div>
     </div>
 
     <div class="content">
-        <div id="error-msg" class="alert-error"></div>
+        <div id="erro" class="alerta-erro"></div>
 
-        <!-- ABA ESTOQUE -->
         <div id="aba-estoque" class="tab-pane active">
-            <h3>Movimentação e Estoque Atual</h3>
-            <p style="font-size:13px; color:#666; margin-bottom:10px;">Abaixo estão os produtos e o detalhamento de cada venda que afetou o estoque.</p>
-            <div id="load-estoque" class="loading">Carregando dados de estoque...</div>
+            <h3>Movimentações Registradas</h3>
+            <p style="color:#666; font-size:13px; margin-bottom:10px;">Mostrando quem entrou e quem saiu. (Se estiver vazio, as alterações ocorreram antes de ativarmos o monitoramento).</p>
+            <div id="load-estoque" class="loading">Buscando histórico...</div>
             <table id="table-estoque" style="display:none;">
                 <thead>
                     <tr>
+                        <th>Data/Hora</th>
                         <th>Produto</th>
-                        <th>Estoque Atual</th>
-                        <th>Regra</th>
-                        <th>Saídas nos Pedidos (Últimos 30 dias)</th>
+                        <th>Estoque Anterior</th>
+                        <th>Estoque Novo</th>
+                        <th>Diferença</th>
+                        <th>Origem</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
             </table>
         </div>
 
-        <!-- ABA PEDIDOS -->
         <div id="aba-pedidos" class="tab-pane">
-            <h3>Pedidos dos Últimos 30 Dias</h3>
-            <div id="load-pedidos" class="loading">Carregando pedidos...</div>
+            <h3>Pedidos Recentes</h3>
+            <div id="load-pedidos" class="loading">Buscando pedidos...</div>
             <table id="table-pedidos" style="display:none;">
                 <thead>
                     <tr>
                         <th>Pedido</th>
                         <th>Data</th>
                         <th>Cliente</th>
-                        <th>Itens Comprados</th>
-                        <th>Total</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
-
-        <!-- ABA CLIENTES -->
-        <div id="aba-clientes" class="tab-pane">
-            <h3>Clientes Cadastrados</h3>
-            <div id="load-clientes" class="loading">Carregando clientes...</div>
-            <table id="table-clientes" style="display:none;">
-                <thead>
-                    <tr>
-                        <th>Nome</th>
-                        <th>Email / Telefone</th>
-                        <th>Documento</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
-
-        <!-- ABA LINHA DO TEMPO -->
-        <div id="aba-timeline" class="tab-pane">
-            <h3>Linha do Tempo Geral</h3>
-            <div id="load-timeline" class="loading">Carregando linha do tempo...</div>
-            <table id="table-timeline" style="display:none;">
-                <thead>
-                    <tr>
-                        <th>Data/Hora</th>
-                        <th>Evento</th>
-                        <th>Referência</th>
-                        <th>Detalhe</th>
+                        <th>Itens</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
@@ -135,227 +90,84 @@
     const supabaseKey = 'sb_publishable_JJBVWA5QR9N9WZTJ_PROcA_PaioDgKR';
     const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-    function parseData(dataStr) {
-        if (!dataStr) return new Date(0);
-        if (dataStr.includes('T')) return new Date(dataStr); 
-        if (dataStr.includes('/')) { 
-            const partes = dataStr.split(',')[0].split('/');
-            if (partes.length === 3) {
-                return new Date(parseInt(partes[2]), parseInt(partes[1])-1, parseInt(partes[0]));
-            }
-        }
-        return new Date(dataStr);
-    }
-
-    function isUltimos30Dias(dataStr) {
-        const data = parseData(dataStr);
-        const trintaDiasAtras = new Date();
-        trintaDiasAtras.setDate(trintaDiasAtras.getDate() - 30);
-        return data >= trintaDiasAtras;
+    function mudarAba(aba) {
+        document.querySelectorAll('.tab-pane').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('aba-' + aba).classList.add('active');
+        event.currentTarget.classList.add('active');
     }
 
     function formatarData(dataStr) {
         if (!dataStr) return '-';
-        return parseData(dataStr).toLocaleString('pt-BR');
+        return new Date(dataStr).toLocaleString('pt-BR');
     }
 
-    function mudarAba(aba, el) {
-        document.querySelectorAll('.tab-pane').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.getElementById('aba-' + aba).classList.add('active');
-        el.classList.add('active');
-    }
-
-    function mostrarErro(msg) {
-        const err = document.getElementById('error-msg');
-        err.textContent = msg;
-        err.style.display = 'block';
-    }
-
-    let db_pedidos = [];
-    let db_clientes = [];
-    let db_produtos = [];
-
-    async function init() {
+    async function carregarTudo() {
         try {
-            // O ERRO ESTAVA AQUI: Removemos o ".order()" para não quebrar se a coluna ID não existir.
-            const [resP, resC, resProd] = await Promise.all([
-                supabaseClient.from('pedidos').select('*'),
-                supabaseClient.from('clientes').select('*'),
-                supabaseClient.from('produtos').select('*')
-            ]);
-
-            if (resP.error) throw resP.error;
-            if (resC.error) throw resC.error;
-            if (resProd.error) throw resProd.error;
-
-            // Filtra e ordena tudo no próprio navegador
-            db_pedidos = resP.data.filter(p => isUltimos30Dias(p.data_pedido)).sort((a,b) => b.id_pedido - a.id_pedido);
-            db_clientes = resC.data.filter(c => isUltimos30Dias(c.data_cadastro));
-            db_produtos = resProd.data.sort((a,b) => a.nome.localeCompare(b.nome));
-
-            renderizarEstoque();
-            renderizarPedidos();
-            renderizarClientes();
-            renderizarTimeline();
-
-        } catch (e) {
-            mostrarErro('Erro ao carregar dados: ' + e.message);
-            document.querySelectorAll('.loading').forEach(l => l.textContent = 'Erro ao carregar.');
-        }
-    }
-
-    function renderizarEstoque() {
-        const tbody = document.querySelector('#table-estoque tbody');
-        tbody.innerHTML = '';
-
-        db_produtos.forEach(p => {
-            let movimentacoes = [];
+            // 1. Busca os Pedidos Recentes
+            const resPed = await supabaseClient.from('pedidos').select('*').order('id_pedido', { ascending: false }).limit(50);
             
-            db_pedidos.forEach(ped => {
-                if (!ped.itens) return;
-                
-                if (ped.itens.includes(p.nome)) {
-                    const regex = /\((.*?)\)/;
-                    const match = ped.itens.match(regex);
-                    const detalheQtd = match ? match[1] : 'Qtd indisponível';
-                    
-                    movimentacoes.push(`
-                        <div>
-                            <strong>Pedido #${ped.id_pedido}</strong>: -${detalheQtd} 
-                            <span style="color:#888;">(${formatarData(ped.data_pedido)})</span>
-                        </div>
-                    `);
-                }
-            });
-
-            let badgeEstoque = '';
-            if (p.estoque <= 0) badgeEstoque = '<span class="badge badge-danger">Zerado</span>';
-            else if (p.estoque < 10) badgeEstoque = '<span class="badge badge-warning">Baixo</span>';
-            else badgeEstoque = `<strong style="color:#166534">${p.estoque}</strong>`;
-
-            let htmlSaidas = movimentacoes.length > 0 
-                ? `<div class="lista-vendas">${movimentacoes.join('')}</div>`
-                : '<span style="color:#94a3b8; font-size:12px;">Nenhuma saída registrada</span>';
-
-            tbody.innerHTML += `
-                <tr>
-                    <td>
-                        <strong>${p.nome}</strong><br>
-                        <small style="color:#666">Cód: ${p.codigo_produto || '-'}</small>
-                    </td>
-                    <td>${badgeEstoque}</td>
-                    <td>
-                        ${p.vender_zerado === 'SIM' ? '<span class="badge badge-warning">Vende Zerado</span>' : '<span class="badge badge-info">Estoque Rigoroso</span>'}
-                    </td>
-                    <td>${htmlSaidas}</td>
-                </tr>
-            `;
-        });
-
-        document.getElementById('load-estoque').style.display = 'none';
-        document.getElementById('table-estoque').style.display = 'table';
-    }
-
-    function renderizarPedidos() {
-        const tbody = document.querySelector('#table-pedidos tbody');
-        tbody.innerHTML = '';
-
-        if (db_pedidos.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Nenhum pedido nos últimos 30 dias.</td></tr>';
-        } else {
-            db_pedidos.forEach(p => {
-                const itensFormatados = (p.itens || '').split('|').map(i => `<div>${i.trim()}</div>`).join('');
-
-                let badgeStatus = '<span class="badge badge-info">'+p.status+'</span>';
-                if(p.status && p.status.toLowerCase().includes('pendente')) badgeStatus = '<span class="badge badge-warning">Pendente</span>';
-                if(p.status && p.status.toLowerCase().includes('pago')) badgeStatus = '<span class="badge badge-success">Pago</span>';
-
-                tbody.innerHTML += `
+            const tbodyPed = document.querySelector('#table-pedidos tbody');
+            resPed.data.forEach(p => {
+                const itens = (p.itens || '').split('|').map(i => `<div>${i.trim()}</div>`).join('');
+                tbodyPed.innerHTML += `
                     <tr>
                         <td><strong>#${p.id_pedido}</strong></td>
                         <td>${formatarData(p.data_pedido)}</td>
                         <td>${p.cliente_nome}</td>
-                        <td style="font-size:12px;">${itensFormatados}</td>
-                        <td><strong style="color:#166534">R$ ${parseFloat(p.total || 0).toFixed(2)}</strong></td>
-                        <td>${badgeStatus}</td>
+                        <td style="font-size:12px">${itens}</td>
                     </tr>
                 `;
             });
+            document.getElementById('load-pedidos').style.display = 'none';
+            document.getElementById('table-pedidos').style.display = 'table';
+
+            // 2. Busca o Histórico de Estoque (A nova tabela caixa preta)
+            const resHist = await supabaseClient.from('historico_auditoria').select('*').order('data_alteracao', { ascending: false }).limit(100);
+
+            const tbodyHist = document.querySelector('#table-estoque tbody');
+            
+            if (!resHist.data || resHist.data.length === 0) {
+                tbodyHist.innerHTML = '<tr><td colspan="6" style="text-align:center;">Nenhuma alteração registrada pelo sistema ainda. Faça uma venda ou altere um produto no Gestor para testar.</td></tr>';
+            } else {
+                resHist.data.forEach(h => {
+                    const antigo = parseInt(h.dados_antigos?.estoque_antigo) || 0;
+                    const novo = parseInt(h.dados_novos?.estoque_novo) || 0;
+                    const nome = h.dados_novos?.nome || h.dados_antigos?.nome || 'Desconhecido';
+                    const diff = novo - antigo;
+                    
+                    let sinal = diff > 0 ? '+' + diff : diff;
+                    let cor = diff > 0 ? 'diferenca-positiva' : 'diferenca-negativa';
+                    
+                    // Descobre a origem. Se veio do site, pode ser venda. Se foi direto, foi o gestor.
+                    let origem = '<span class="badge badge-blue">Ajuste Manual / Gestor</span>';
+                    
+                    // Se o texto da operação indicar venda, a gente coloca (opcional, se o gatilho enviar isso no futuro)
+                    if(h.operacao === 'VENDA') origem = '<span class="badge badge-red">Venda no Site</span>';
+
+                    tbodyHist.innerHTML += `
+                        <tr>
+                            <td>${formatarData(h.data_alteracao)}</td>
+                            <td><strong>${nome}</strong></td>
+                            <td>${antigo}</td>
+                            <td>${novo}</td>
+                            <td class="${cor}">${sinal}</td>
+                            <td>${origem}</td>
+                        </tr>
+                    `;
+                });
+            }
+            document.getElementById('load-estoque').style.display = 'none';
+            document.getElementById('table-estoque').style.display = 'table';
+
+        } catch (e) {
+            document.getElementById('erro').textContent = 'Erro: ' + e.message;
+            document.getElementById('erro').style.display = 'block';
+            document.querySelectorAll('.loading').forEach(l => l.style.display = 'none');
         }
-        document.getElementById('load-pedidos').style.display = 'none';
-        document.getElementById('table-pedidos').style.display = 'table';
     }
 
-    function renderizarClientes() {
-        const tbody = document.querySelector('#table-clientes tbody');
-        tbody.innerHTML = '';
-
-        if (db_clientes.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Nenhum cliente nos últimos 30 dias.</td></tr>';
-        } else {
-            db_clientes.forEach(c => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td><strong>${c.nome || 'Sem nome'}</strong></td>
-                        <td>${c.email || '-'}<br><small style="color:#666">${c.telefone || '-'}</small></td>
-                        <td>${c.cpf || '-'}</td>
-                        <td>${c.observacoes || 'Sem status'}</td>
-                    </tr>
-                `;
-            });
-        }
-        document.getElementById('load-clientes').style.display = 'none';
-        document.getElementById('table-clientes').style.display = 'table';
-    }
-
-    function renderizarTimeline() {
-        const eventos = [];
-
-        db_pedidos.forEach(p => {
-            eventos.push({
-                data: parseData(p.data_pedido),
-                dataStr: p.data_pedido,
-                evento: '🛍️ Pedido',
-                ref: `#${p.id_pedido} - ${p.cliente_nome}`,
-                detalhe: `R$ ${parseFloat(p.total || 0).toFixed(2)} via ${p.pagamento}`
-            });
-        });
-
-        db_clientes.forEach(c => {
-            eventos.push({
-                data: parseData(c.data_cadastro),
-                dataStr: c.data_cadastro,
-                evento: '👥 Novo Cliente',
-                ref: c.nome,
-                detalhe: c.email
-            });
-        });
-
-        eventos.sort((a, b) => b.data - a.data);
-
-        const tbody = document.querySelector('#table-timeline tbody');
-        tbody.innerHTML = '';
-
-        if (eventos.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Nenhum evento nos últimos 30 dias.</td></tr>';
-        } else {
-            eventos.forEach(ev => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${formatarData(ev.dataStr)}</td>
-                        <td><strong>${ev.evento}</strong></td>
-                        <td>${ev.ref}</td>
-                        <td>${ev.detalhe}</td>
-                    </tr>
-                `;
-            });
-        }
-        document.getElementById('load-timeline').style.display = 'none';
-        document.getElementById('table-timeline').style.display = 'table';
-    }
-
-    init();
+    carregarTudo();
 </script>
 </body>
 </html>
