@@ -5495,7 +5495,25 @@ async function finalizarPedidoCheckout() {
         if (vendaSemDescontoAtiva) obs += ' | Venda sem desconto de revenda';
         obs += ' | Prazo: ' + (prazoEnvio + prodDias) + ' dias';
 
-        const itensTexto = carrinho.map(item => item.name + ' (' + item.qty + 'x ' + item.step + ' un) - R$ ' + (item.price || 0).toFixed(2)).join(' | ');
+               // Agrupa as quantidades reais para não errar a conta
+        const qtdPorProduto = {};
+        carrinho.forEach(item => {
+            if (!qtdPorProduto[item.productId]) qtdPorProduto[item.productId] = 0;
+            qtdPorProduto[item.productId] += (item.totalUnits || item.quantity || 0);
+        });
+
+        // Monta o texto enviando a tag de produção corretamente para o Gestor
+        const itensTexto = carrinho.map(item => {
+            const p = encontrarProduto(item.productId);
+            const estoqueReal = p ? (parseInt(p.stock) || 0) : 0;
+            const qtdTotal = qtdPorProduto[item.productId] || 0;
+            
+            // Se a quantidade total no carrinho for maior que o estoque real, é produção
+            const isProd = qtdTotal > estoqueReal;
+            const etiqueta = isProd ? ' (Produção)' : ' (Disponível)';
+            
+            return item.name + etiqueta + ' (' + item.qty + 'x ' + item.step + ' un) - R$ ' + (item.price || 0).toFixed(2);
+        }).join(' | ');
 
         const { data: pedidoSalvo, error } = await supabaseClient.from('pedidos').insert([{
             cliente_nome: nome,
