@@ -5463,6 +5463,31 @@ async function finalizarPedidoCheckout() {
         
         let totalProdutos = 0;
         carrinho.forEach(i => totalProdutos += i.price || 0);
+                // ============================================================
+        // TRAVA DE SEGURANÇA NO INDEX: RECALCULA A PRODUÇÃO NO CLIQUE
+        // ============================================================
+        let temProducao = false;
+        let maiorPrazo = 0;
+        const qtdPorProduto = {};
+        
+        carrinho.forEach(item => {
+            if (!qtdPorProduto[item.productId]) qtdPorProduto[item.productId] = 0;
+            qtdPorProduto[item.productId] += (item.totalUnits || item.quantity || 0);
+        });
+
+        carrinho.forEach(item => {
+            const p = encontrarProduto(item.productId);
+            if (!p) return;
+            const estoqueReal = parseInt(p.stock) || 0;
+            const qtdTotal = qtdPorProduto[item.productId] || 0;
+            
+            if (qtdTotal > estoqueReal) {
+                temProducao = true;
+                const prazoItem = p.productionDays > 0 ? p.productionDays : 7;
+                if (prazoItem > maiorPrazo) maiorPrazo = prazoItem;
+            }
+        });
+        // ============================================================
         
         if (!usuarioLogado) {
             alert('Faça login novamente.'); fecharCheckout(); abrirLogin(); return;
@@ -5489,33 +5514,32 @@ async function finalizarPedidoCheckout() {
         }
         const total = (totalProdutos - desconto) + freteValor;
 
-        let obs = 'Frete: ' + freteNome + ' (R$ ' + freteValor.toFixed(2) + ') | Pagamento: ' + checkoutState.pagamentoSelecionado;
+                let obs = 'Frete: ' + freteNome + ' (R$ ' + freteValor.toFixed(2) + ') | Pagamento: ' + checkoutState.pagamentoSelecionado;
         if (desconto > 0) obs += ' | Desconto PIX: R$ ' + desconto.toFixed(2);
         if (checkoutState.boletoFaturadoSelecionado) obs += ' | ' + checkoutState.boletoFaturadoSelecionado.label;
         if (vendaSemDescontoAtiva) obs += ' | Venda sem desconto de revenda';
-        obs += ' | Prazo: ' + (prazoEnvio + prodDias) + ' dias';
+        
+        // Se tem produção, avisa na observação para o Gestor ler
+        if (temProducao) {
+            obs += ' | TEM PRODUCAO | Prazo: ' + (prazoEnvio + maiorPrazo) + ' dias';
+        } else {
+            obs += ' | SEM PRODUCAO | Prazo: ' + (prazoEnvio + prodDias) + ' dias';
+        }
 
-               // Agrupa as quantidades reais para não errar a conta
-        const qtdPorProduto = {};
-        carrinho.forEach(item => {
-            if (!qtdPorProduto[item.productId]) qtdPorProduto[item.productId] = 0;
-            qtdPorProduto[item.productId] += (item.totalUnits || item.quantity || 0);
-        });
-
-        // Monta o texto enviando a tag de produção corretamente para o Gestor
+        // Monta os itens com a etiqueta correta
         const itensTexto = carrinho.map(item => {
             const p = encontrarProduto(item.productId);
             const estoqueReal = p ? (parseInt(p.stock) || 0) : 0;
             const qtdTotal = qtdPorProduto[item.productId] || 0;
             
-            // Se a quantidade total no carrinho for maior que o estoque real, é produção
+            // AQUI: Força a etiqueta (Produção) se a quantidade for maior que o estoque
             const isProd = qtdTotal > estoqueReal;
             const etiqueta = isProd ? ' (Produção)' : ' (Disponível)';
             
             return item.name + etiqueta + ' (' + item.qty + 'x ' + item.step + ' un) - R$ ' + (item.price || 0).toFixed(2);
         }).join(' | ');
 
-        const { data: pedidoSalvo, error } = await supabaseClient.from('pedidos').insert([{
+              const { data: pedidoSalvo, error } = await supabaseClient.from('pedidos').insert([{
             cliente_nome: nome,
             cliente_email: email,
             cliente_telefone: tel,
@@ -5528,8 +5552,8 @@ async function finalizarPedidoCheckout() {
             frete: freteNome,
             frete_valor: String(freteValor.toFixed(2)),
             observacoes: obs,
-            prazo_entrega: prazoEnvio + prodDias,
-            producao_dias: prodDias,
+            prazo_entrega: prazoEnvio + (temProducao ? maiorPrazo : producaoDias), // <-- MUDOU AQUI
+            producao_dias: temProducao ? maiorPrazo : 0, // <-- MUDOU AQUI
             pagamento: checkoutState.pagamentoSelecionado,
             status: 'Pendente',
             data_pedido: new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
