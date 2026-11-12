@@ -135,11 +135,10 @@
     const supabaseKey = 'sb_publishable_JJBVWA5QR9N9WZTJ_PROcA_PaioDgKR';
     const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-    // Função super segura para ler datas em qualquer formato
     function parseData(dataStr) {
         if (!dataStr) return new Date(0);
-        if (dataStr.includes('T')) return new Date(dataStr); // Formato ISO (2026-11-10T...)
-        if (dataStr.includes('/')) { // Formato BR (10/11/2026)
+        if (dataStr.includes('T')) return new Date(dataStr); 
+        if (dataStr.includes('/')) { 
             const partes = dataStr.split(',')[0].split('/');
             if (partes.length === 3) {
                 return new Date(parseInt(partes[2]), parseInt(partes[1])-1, parseInt(partes[0]));
@@ -173,28 +172,27 @@
         err.style.display = 'block';
     }
 
-    // Variável global para guardar os dados baixados
     let db_pedidos = [];
     let db_clientes = [];
     let db_produtos = [];
 
     async function init() {
         try {
-            // Baixa TUDO de uma vez, sem filtro no banco (para evitar erro de data)
+            // O ERRO ESTAVA AQUI: Removemos o ".order()" para não quebrar se a coluna ID não existir.
             const [resP, resC, resProd] = await Promise.all([
-                supabaseClient.from('pedidos').select('*').order('id_pedido', { ascending: false }),
-                supabaseClient.from('clientes').select('*').order('id', { ascending: false }),
-                supabaseClient.from('produtos').select('*').order('nome', { ascending: true })
+                supabaseClient.from('pedidos').select('*'),
+                supabaseClient.from('clientes').select('*'),
+                supabaseClient.from('produtos').select('*')
             ]);
 
             if (resP.error) throw resP.error;
             if (resC.error) throw resC.error;
             if (resProd.error) throw resProd.error;
 
-            // Filtra os últimos 30 dias no navegador
-            db_pedidos = resP.data.filter(p => isUltimos30Dias(p.data_pedido));
-            db_clientes = resC.data.filter(c => isUltimos30Dias(c.data_cadastro)); // Filtro de data do cliente
-            db_produtos = resProd.data;
+            // Filtra e ordena tudo no próprio navegador
+            db_pedidos = resP.data.filter(p => isUltimos30Dias(p.data_pedido)).sort((a,b) => b.id_pedido - a.id_pedido);
+            db_clientes = resC.data.filter(c => isUltimos30Dias(c.data_cadastro));
+            db_produtos = resProd.data.sort((a,b) => a.nome.localeCompare(b.nome));
 
             renderizarEstoque();
             renderizarPedidos();
@@ -207,25 +205,17 @@
         }
     }
 
-    // ==========================================
-    // 1. RENDERIZAR ESTOQUE (Com a movimentação)
-    // ==========================================
     function renderizarEstoque() {
         const tbody = document.querySelector('#table-estoque tbody');
         tbody.innerHTML = '';
 
         db_produtos.forEach(p => {
-            // Procura em todos os pedidos dos últimos 30 dias se esse produto foi comprado
             let movimentacoes = [];
             
             db_pedidos.forEach(ped => {
                 if (!ped.itens) return;
                 
-                // O campo "itens" salva uma string assim: "Nome do Produto (1x 10 un) - R$ 25.00 | ..."
-                // Vamos verificar se o nome do produto está na string do pedido
                 if (ped.itens.includes(p.nome)) {
-                    // Tenta extrair a quantidade do pedido com Regex
-                    // Procura por algo como: (1x 10 un) ou (2x 50 un)
                     const regex = /\((.*?)\)/;
                     const match = ped.itens.match(regex);
                     const detalheQtd = match ? match[1] : 'Qtd indisponível';
@@ -239,13 +229,11 @@
                 }
             });
 
-            // Monta o status do estoque
             let badgeEstoque = '';
             if (p.estoque <= 0) badgeEstoque = '<span class="badge badge-danger">Zerado</span>';
             else if (p.estoque < 10) badgeEstoque = '<span class="badge badge-warning">Baixo</span>';
             else badgeEstoque = `<strong style="color:#166534">${p.estoque}</strong>`;
 
-            // Monta a lista de saídas ou aviso que não teve
             let htmlSaidas = movimentacoes.length > 0 
                 ? `<div class="lista-vendas">${movimentacoes.join('')}</div>`
                 : '<span style="color:#94a3b8; font-size:12px;">Nenhuma saída registrada</span>';
@@ -269,9 +257,6 @@
         document.getElementById('table-estoque').style.display = 'table';
     }
 
-    // ==========================================
-    // 2. RENDERIZAR PEDIDOS
-    // ==========================================
     function renderizarPedidos() {
         const tbody = document.querySelector('#table-pedidos tbody');
         tbody.innerHTML = '';
@@ -280,7 +265,6 @@
             tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Nenhum pedido nos últimos 30 dias.</td></tr>';
         } else {
             db_pedidos.forEach(p => {
-                // Formata os itens trocando o "|" por quebra de linha
                 const itensFormatados = (p.itens || '').split('|').map(i => `<div>${i.trim()}</div>`).join('');
 
                 let badgeStatus = '<span class="badge badge-info">'+p.status+'</span>';
@@ -303,15 +287,12 @@
         document.getElementById('table-pedidos').style.display = 'table';
     }
 
-    // ==========================================
-    // 3. RENDERIZAR CLIENTES (Corrigido)
-    // ==========================================
     function renderizarClientes() {
         const tbody = document.querySelector('#table-clientes tbody');
         tbody.innerHTML = '';
 
         if (db_clientes.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Nenhum cliente cadastrado nos últimos 30 dias (ou erro na data).</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Nenhum cliente nos últimos 30 dias.</td></tr>';
         } else {
             db_clientes.forEach(c => {
                 tbody.innerHTML += `
@@ -328,9 +309,6 @@
         document.getElementById('table-clientes').style.display = 'table';
     }
 
-    // ==========================================
-    // 4. RENDERIZAR TIMELINE
-    // ==========================================
     function renderizarTimeline() {
         const eventos = [];
 
@@ -377,7 +355,6 @@
         document.getElementById('table-timeline').style.display = 'table';
     }
 
-    // Inicia
     init();
 </script>
 </body>
