@@ -16,21 +16,25 @@
         .tab-pane { display: none; }
         .tab-pane.active { display: block; }
         
+        /* BARRA DE PESQUISA */
+        .search-bar { margin-bottom: 20px; display: flex; gap: 10px; align-items: center; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .search-bar input { flex: 1; padding: 12px 15px; border: 2px solid #cbd5e1; border-radius: 8px; font-size: 15px; outline: none; transition: 0.3s; }
+        .search-bar input:focus { border-color: #1a3a5c; box-shadow: 0 0 0 3px rgba(26,58,92,0.1); }
+        .search-bar button { padding: 12px 20px; background: #1a3a5c; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .search-bar button:hover { background: #2a5a8c; }
+
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
         th { background: #f8fafc; color: #64748b; text-transform: uppercase; font-size: 12px; }
         
         .badge { padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; display: inline-block; }
-        .badge-green { background: #dcfce7; color: #166534; }
-        .badge-red { background: #fee2e2; color: #991b1b; }
         .badge-blue { background: #e0f2fe; color: #075985; }
+        
+        .diferenca-positiva { color: #166534; font-weight: bold; }
+        .diferenca-negativa { color: #991b1b; font-weight: bold; }
         
         .alerta-erro { background: #fee2e2; color: #991b1b; padding: 15px; margin-bottom: 20px; display: none; border-radius: 8px; }
         .loading { text-align: center; padding: 40px; color: #64748b; }
-        
-        /* Estilo para destacar a diferença no estoque */
-        .diferenca-positiva { color: #166534; font-weight: bold; }
-        .diferenca-negativa { color: #991b1b; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -49,8 +53,11 @@
         <div id="erro" class="alerta-erro"></div>
 
         <div id="aba-estoque" class="tab-pane active">
-            <h3>Movimentações Registradas</h3>
-            <p style="color:#666; font-size:13px; margin-bottom:10px;">Mostrando quem entrou e quem saiu. (Se estiver vazio, as alterações ocorreram antes de ativarmos o monitoramento).</p>
+            <div class="search-bar">
+                <input type="text" id="filtroProduto" placeholder="🔍 Digite o nome ou código do produto para filtrar..." oninput="filtrarEstoque()">
+                <button onclick="document.getElementById('filtroProduto').value=''; filtrarEstoque();">Limpar Filtro</button>
+            </div>
+
             <div id="load-estoque" class="loading">Buscando histórico...</div>
             <table id="table-estoque" style="display:none;">
                 <thead>
@@ -65,6 +72,7 @@
                 </thead>
                 <tbody></tbody>
             </table>
+            <div id="sem-resultado" style="display:none; text-align:center; padding:20px; color:#666;">Nenhuma movimentação encontrada para este filtro.</div>
         </div>
 
         <div id="aba-pedidos" class="tab-pane">
@@ -90,6 +98,10 @@
     const supabaseKey = 'sb_publishable_JJBVWA5QR9N9WZTJ_PROcA_PaioDgKR';
     const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
+    // Variáveis globais para guardar os dados baixados
+    let historicoOriginal = [];
+    let pedidosOriginal = [];
+
     function mudarAba(aba) {
         document.querySelectorAll('.tab-pane').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -106,9 +118,10 @@
         try {
             // 1. Busca os Pedidos Recentes
             const resPed = await supabaseClient.from('pedidos').select('*').order('id_pedido', { ascending: false }).limit(50);
+            pedidosOriginal = resPed.data || [];
             
             const tbodyPed = document.querySelector('#table-pedidos tbody');
-            resPed.data.forEach(p => {
+            pedidosOriginal.forEach(p => {
                 const itens = (p.itens || '').split('|').map(i => `<div>${i.trim()}</div>`).join('');
                 tbodyPed.innerHTML += `
                     <tr>
@@ -122,49 +135,77 @@
             document.getElementById('load-pedidos').style.display = 'none';
             document.getElementById('table-pedidos').style.display = 'table';
 
-            // 2. Busca o Histórico de Estoque (A nova tabela caixa preta)
-            const resHist = await supabaseClient.from('historico_auditoria').select('*').order('data_alteracao', { ascending: false }).limit(100);
+            // 2. Busca o Histórico de Estoque
+            const resHist = await supabaseClient.from('historico_auditoria').select('*').order('data_alteracao', { ascending: false }).limit(200);
+            historicoOriginal = resHist.data || [];
 
-            const tbodyHist = document.querySelector('#table-estoque tbody');
-            
-            if (!resHist.data || resHist.data.length === 0) {
-                tbodyHist.innerHTML = '<tr><td colspan="6" style="text-align:center;">Nenhuma alteração registrada pelo sistema ainda. Faça uma venda ou altere um produto no Gestor para testar.</td></tr>';
-            } else {
-                resHist.data.forEach(h => {
-                    const antigo = parseInt(h.dados_antigos?.estoque_antigo) || 0;
-                    const novo = parseInt(h.dados_novos?.estoque_novo) || 0;
-                    const nome = h.dados_novos?.nome || h.dados_antigos?.nome || 'Desconhecido';
-                    const diff = novo - antigo;
-                    
-                    let sinal = diff > 0 ? '+' + diff : diff;
-                    let cor = diff > 0 ? 'diferenca-positiva' : 'diferenca-negativa';
-                    
-                    // Descobre a origem. Se veio do site, pode ser venda. Se foi direto, foi o gestor.
-                    let origem = '<span class="badge badge-blue">Ajuste Manual / Gestor</span>';
-                    
-                    // Se o texto da operação indicar venda, a gente coloca (opcional, se o gatilho enviar isso no futuro)
-                    if(h.operacao === 'VENDA') origem = '<span class="badge badge-red">Venda no Site</span>';
-
-                    tbodyHist.innerHTML += `
-                        <tr>
-                            <td>${formatarData(h.data_alteracao)}</td>
-                            <td><strong>${nome}</strong></td>
-                            <td>${antigo}</td>
-                            <td>${novo}</td>
-                            <td class="${cor}">${sinal}</td>
-                            <td>${origem}</td>
-                        </tr>
-                    `;
-                });
-            }
-            document.getElementById('load-estoque').style.display = 'none';
-            document.getElementById('table-estoque').style.display = 'table';
+            renderizarTabelaEstoque(historicoOriginal);
 
         } catch (e) {
             document.getElementById('erro').textContent = 'Erro: ' + e.message;
             document.getElementById('erro').style.display = 'block';
             document.querySelectorAll('.loading').forEach(l => l.style.display = 'none');
         }
+    }
+
+    // Função que desenha a tabela na tela
+    function renderizarTabelaEstoque(dados) {
+        const tbodyHist = document.querySelector('#table-estoque tbody');
+        const semResultado = document.getElementById('sem-resultado');
+        tbodyHist.innerHTML = '';
+
+        if (dados.length === 0) {
+            document.getElementById('table-estoque').style.display = 'none';
+            semResultado.style.display = 'block';
+            return;
+        }
+
+        dados.forEach(h => {
+            const antigo = parseInt(h.dados_antigos?.estoque_antigo) || 0;
+            const novo = parseInt(h.dados_novos?.estoque_novo) || 0;
+            const nome = h.dados_novos?.nome || h.dados_antigos?.nome || 'Desconhecido';
+            const diff = novo - antigo;
+            
+            let sinal = diff > 0 ? '+' + diff : diff;
+            let cor = diff > 0 ? 'diferenca-positiva' : 'diferenca-negativa';
+            
+            let origem = '<span class="badge badge-blue">Ajuste Manual / Gestor</span>';
+            if(h.operacao === 'VENDA') origem = '<span class="badge" style="background:#fee2e2;color:#991b1b;">Venda no Site</span>';
+
+            tbodyHist.innerHTML += `
+                <tr>
+                    <td>${formatarData(h.data_alteracao)}</td>
+                    <td><strong>${nome}</strong></td>
+                    <td>${antigo}</td>
+                    <td>${novo}</td>
+                    <td class="${cor}">${sinal}</td>
+                    <td>${origem}</td>
+                </tr>
+            `;
+        });
+
+        document.getElementById('load-estoque').style.display = 'none';
+        semResultado.style.display = 'none';
+        document.getElementById('table-estoque').style.display = 'table';
+    }
+
+    // Função que roda toda vez que o cliente digita no input
+    function filtrarEstoque() {
+        const termo = document.getElementById('filtroProduto').value.toLowerCase().trim();
+        
+        if (!termo) {
+            renderizarTabelaEstoque(historicoOriginal);
+            return;
+        }
+
+        // Filtra comparando o nome do produto ou o ID
+        const filtrados = historicoOriginal.filter(h => {
+            const nome = String(h.dados_novos?.nome || h.dados_antigos?.nome || '').toLowerCase();
+            const id = String(h.id_registro || '');
+            return nome.includes(termo) || id.includes(termo);
+        });
+
+        renderizarTabelaEstoque(filtrados);
     }
 
     carregarTudo();
