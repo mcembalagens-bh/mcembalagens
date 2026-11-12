@@ -4460,12 +4460,13 @@ function ajustarPacoteCarrinho(index, delta) {
     }
 
     const product = encontrarProduto(item.productId);
-    const podeZerado = product ? product.vender_zerado : item.vender_zerado;
+    const permiteVenderZerado = product ? product.vender_zerado : item.vender_zerado;
     
-    // Se o produto NÃO permite vender zerado, ele NÃO PODE passar do estoque.
-    if (!podeZerado) {
+    // Se NÃO permite vender zerado, valida o estoque em UNIDADES
+    if (!permiteVenderZerado) {
         const estoque = product ? product.stock : item.stock;
-        // Calcula quanto já tem no carrinho DESTE produto (outros pacotes, por ex)
+        
+        // Calcula quanto já tem no carrinho DESTE produto
         let reservado = 0;
         carrinho.forEach((i, idx) => {
             if (idx !== index && i.productId === item.productId) {
@@ -4473,16 +4474,18 @@ function ajustarPacoteCarrinho(index, delta) {
             }
         });
         
-        const totalUnits = novaQtd * item.step;
+        // Multiplica a quantidade de pacotes pelo tamanho do pacote
+        const totalUnitsNovo = novaQtd * item.step; 
         const disponivel = estoque - reservado;
         
-        if (totalUnits > disponivel) {
-            alert('⚠️ Estoque insuficiente!\n\nDisponível: ' + disponivel + ' unidades\nSolicitado: ' + totalUnits + ' unidades');
+        // Se a nova quantidade em unidades passar do disponível, bloqueia
+        if (totalUnitsNovo > disponivel) {
+            alert('⚠️ Estoque insuficiente!\n\nDisponível: ' + disponivel + ' unidades\nSolicitado: ' + totalUnitsNovo + ' unidades');
             return;
         }
     }
 
-    // Atualiza a quantidade
+    // Atualiza a quantidade e o preço
     item.qty = novaQtd;
     item.totalUnits = novaQtd * item.step;
     item.price = item.totalUnits * item.unitPrice;
@@ -4753,15 +4756,30 @@ function calcularDimensoes() {
 }
 
 function calcularPrazoProducao() {
-    let maior = 0;
+    let maiorPrazo = 0;
+
     for (const item of carrinho) {
         const p = encontrarProduto(item.productId);
-        const pr = p ? (p.productionDays || 0) : (item.productionDays || 0);
-        if (pr > maior) maior = pr;
-    }
-    return maior;
-}
+        if (!p) continue;
 
+        // Lê o estoque atualizado do banco
+        const estoqueAtual = parseInt(p.stock) || 0;
+        
+        // Pega a quantidade correta de UNIDADES no carrinho (seja 1 pacote de 100 ou 100 pacotes de 1)
+        const qtdNoCarrinho = item.totalUnits || item.quantity || 0;
+
+        // REGRA: Se a quantidade pedida for MAIOR que o estoque disponível, precisa de produção.
+        if (qtdNoCarrinho > estoqueAtual) {
+            // Pega o prazo de produção do banco. Se estiver vazio, assume 7.
+            const prazoDesteItem = p.productionDays > 0 ? p.productionDays : 7;
+            if (prazoDesteItem > maiorPrazo) {
+                maiorPrazo = prazoDesteItem;
+            }
+        }
+    }
+
+    return maiorPrazo;
+}
 function formatarOpcoesFrete(opcoes) {
     const out = [];
     const prod = checkoutState.producaoDias || calcularPrazoProducao();
@@ -5602,7 +5620,17 @@ async function finalizarPedidoCheckout() {
         document.getElementById('checkoutContent').style.display = 'flex';
     }
 }
-
+    // Atualiza o cache do carrinho com os dados reais de estoque atuais
+    if (carrinho.length > 0) {
+        carrinho.forEach(item => {
+            const p = encontrarProduto(item.productId);
+            if (p) {
+                item.stock = p.stock;
+                item.productionDays = p.productionDays;
+            }
+        });
+        salvarCarrinho();
+    }
 console.log('✅ PARTE 6/7 carregada — Checkout, Frete, PIX e Pagamento prontos');  
 
 // ============================================================
