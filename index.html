@@ -4368,18 +4368,16 @@ function abrirCarrinho() {
         const prazoProducao = product ? product.productionDays : (item.productionDays || 7);
         const totalUnidadesProdutoNoCarrinho = totalPorProduto[item.productId] || 0;
 
-        let stockStatusHtml = '';
-        if (!podeZerado) {
-            if (totalUnidadesProdutoNoCarrinho > estoqueAtual) {
-                stockStatusHtml = `<span class="stock-badge esgotado" style="background:#fce4ec;color:#c62828;"><i class="fas fa-exclamation-triangle"></i> Estoque insuficiente!</span>`;
-            } else {
-                stockStatusHtml = `<span class="stock-badge available"><i class="fas fa-check-circle"></i> Disponível (${estoqueAtual - totalUnidadesProdutoNoCarrinho} restantes)</span>`;
-            }
+             let stockStatusHtml = '';
+        if (totalUnidadesProdutoNoCarrinho > estoqueAtual) {
+            // Comprou mais do que tem
+            stockStatusHtml = `<span class="stock-badge production" style="background:#fff3e0;color:#e65100;"><i class="fas fa-clock"></i> Sob demanda: ${prazoProducao} dias úteis</span>`;
         } else {
-            if (totalUnidadesProdutoNoCarrinho <= estoqueAtual) {
-                stockStatusHtml = `<span class="stock-badge available"><i class="fas fa-check-circle"></i> Disponível</span>`;
+            // Tem estoque suficiente
+            if (estoqueAtual > 0) {
+                stockStatusHtml = `<span class="stock-badge available"><i class="fas fa-check-circle"></i> Disponível (${estoqueAtual - totalUnidadesProdutoNoCarrinho} restantes)</span>`;
             } else {
-                stockStatusHtml = `<span class="stock-badge production"><i class="fas fa-clock"></i> Produção: ${prazoProducao} dias úteis</span>`;
+                stockStatusHtml = `<span class="stock-badge esgotado" style="background:#fce4ec;color:#c62828;"><i class="fas fa-exclamation-triangle"></i> Esgotado</span>`;
             }
         }
 
@@ -4758,7 +4756,7 @@ function calcularDimensoes() {
 function calcularPrazoProducao() {
     let maiorPrazo = 0;
 
-    // Agrupa a quantidade total de cada produto que está no carrinho
+    // Agrupa a quantidade total de cada produto no carrinho
     const qtdPorProduto = {};
     carrinho.forEach(item => {
         if (!qtdPorProduto[item.productId]) qtdPorProduto[item.productId] = 0;
@@ -4772,24 +4770,17 @@ function calcularPrazoProducao() {
         const estoqueAtual = parseInt(p.stock) || 0;
         const qtdNoCarrinho = qtdPorProduto[item.productId] || 0;
 
-        // Se o cliente está comprando MAIS do que tem no estoque
+        // REGRA DE OURO: Se a quantidade pedida for MAIOR que o estoque, entra em produção.
         if (qtdNoCarrinho > estoqueAtual) {
-            // E se o produto NÃO permite vender zerado, aí sim cobra a produção
-            if (p.vender_zerado !== true) {
-                const prazoDesteItem = p.productionDays > 0 ? p.productionDays : 7;
-                if (prazoDesteItem > maiorPrazo) {
-                    maiorPrazo = prazoDesteItem;
-                }
-            } else {
-                // Se permite vender zerado, mesmo passando do estoque, não cobra produção no frete
-                // (você pode mudar isso se quiser cobrar produção para vendas acima do estoque)
-                const prazoDesteItem = p.productionDays > 0 ? p.productionDays : 7;
-                if (prazoDesteItem > maiorPrazo) {
-                    maiorPrazo = prazoDesteItem;
-                }
+            // Pega o prazo do banco. Se estiver vazio, assume 7 dias.
+            const prazoDesteItem = p.productionDays > 0 ? p.productionDays : 7;
+            if (prazoDesteItem > maiorPrazo) {
+                maiorPrazo = prazoDesteItem;
             }
         }
+        // Se a quantidade for menor ou igual ao estoque, prazoDesteItem é 0 e não afeta o prazo final.
     }
+
     return maiorPrazo;
 }
     
@@ -4797,13 +4788,12 @@ function formatarOpcoesFrete(opcoes) {
     const out = [];
     const prod = checkoutState.producaoDias !== undefined ? checkoutState.producaoDias : calcularPrazoProducao();
     
-    // RETIRADA NA LOJA (Corrigido para não somar o dia de envio se tiver produção)
-    out.push({
+        out.push({
         nome: 'Retirada na Loja',
         valor: 0,
-        prazoEnvio: 1, // 1 dia para separação
+        prazoEnvio: 1,
         prazoProducao: prod,
-        prazoTotal: prod > 0 ? prod : 1, // Se tem produção, o prazo é só a produção. Se não, 1 dia.
+        prazoTotal: prod > 0 ? (1 + prod) : 1, // Se tiver produção, soma 1 dia de separação + produção. Se não, só 1 dia.
         codigo: 'RETIRADA',
         freteGratis: true,
         isEntregaPropria: false
@@ -5530,14 +5520,20 @@ async function finalizarPedidoCheckout() {
         if (error) throw error;
         const novoId = pedidoSalvo.id_pedido;
 
-        // Baixar Estoque
+                // Baixar Estoque (Regra: Se comprar mais que o estoque, NÃO mexe no estoque)
         for (const item of carrinho) {
             const p = encontrarProduto(item.productId);
             if (!p) continue;
+            
             const estoqueAtual = parseInt(p.stock) || 0;
-            const qtd = parseInt(item.totalUnits);
-            if (qtd <= estoqueAtual) {
-                await supabaseClient.from('produtos').update({ estoque: Math.max(0, estoqueAtual - qtd) }).eq('id', item.productId);
+            const qtdComprada = parseInt(item.totalUnits);
+            
+            // Só baixa do estoque se a quantidade comprada for MENOR ou IGUAL ao que tem.
+            // Se a cliente comprou 200 e tem 100, o sistema NÃO FAZ NADA (mantém os 100 lá).
+            if (qtdComprada <= estoqueAtual) {
+                const novoEstoque = estoqueAtual - qtdComprada;
+                await supabaseClient.from('produtos').update({ estoque: novoEstoque }).eq('id', item.productId);
+                p.stock = novoEstoque; // Atualiza na memória
             }
         }
 
