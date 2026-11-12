@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Auditoria - MC Embalagens</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #f0f2f5; color: #333; padding: 20px; }
+        .container { max-width: 1300px; margin: 0 auto; background: white; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; }
+        .header { background: #1a3a5c; color: white; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 24px; }
+        .header p { font-size: 14px; opacity: 0.8; margin-top: 5px; }
+        .tabs { display: flex; background: #e2e8f0; border-bottom: 1px solid #cbd5e1; overflow-x: auto; }
+        .tab { padding: 15px 25px; cursor: pointer; font-weight: 600; color: #475569; border-bottom: 3px solid transparent; transition: 0.3s; white-space: nowrap; }
+        .tab:hover { background: #cbd5e1; }
+        .tab.active { background: white; color: #1a3a5c; border-bottom-color: #1a3a5c; }
+        .content { padding: 30px; }
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th { background: #f8fafc; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
+        tr:hover { background: #f1f5f9; }
+        
+        .badge { padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; display: inline-block; }
+        .badge-success { background: #dcfce7; color: #166534; }
+        .badge-warning { background: #fef9c3; color: #854d0e; }
+        .badge-danger { background: #fee2e2; color: #991b1b; }
+        .badge-info { background: #e0f2fe; color: #075985; }
+        
+        .loading { text-align: center; padding: 50px; color: #64748b; font-size: 16px; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #1a3a5c; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .alert-error { background: #fee2e2; color: #991b1b; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #dc2626; display: none; }
+        
+        @media (max-width: 768px) {
+            .content { padding: 15px; }
+            table { display: block; overflow-x: auto; white-space: nowrap; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div>
+            <h1>🕵️ Painel de Auditoria</h1>
+            <p>Relatórios dos últimos 30 dias - MC Embalagens</p>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <div class="tab active" onclick="mudarAba('pedidos', this)">🛍️ Pedidos</div>
+        <div class="tab" onclick="mudarAba('clientes', this)">👥 Clientes</div>
+        <div class="tab" onclick="mudarAba('estoque', this)">📦 Estoque Atual</div>
+        <div class="tab" onclick="mudarAba('timeline', this)">⏱️ Linha do Tempo</div>
+    </div>
+
+    <div class="content">
+        <div id="error-msg" class="alert-error"></div>
+
+        <!-- ABA PEDIDOS -->
+        <div id="aba-pedidos" class="tab-pane active">
+            <div id="load-pedidos" class="loading"><div class="spinner"></div>Carregando pedidos...</div>
+            <table id="table-pedidos" style="display:none;">
+                <thead>
+                    <tr>
+                        <th>Pedido</th>
+                        <th>Data</th>
+                        <th>Cliente</th>
+                        <th>Pagamento</th>
+                        <th>Frete</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <!-- ABA CLIENTES -->
+        <div id="aba-clientes" class="tab-pane">
+            <div id="load-clientes" class="loading"><div class="spinner"></div>Carregando clientes...</div>
+            <table id="table-clientes" style="display:none;">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Contato</th>
+                        <th>Documento</th>
+                        <th>Tipo</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <!-- ABA ESTOQUE -->
+        <div id="aba-estoque" class="tab-pane">
+            <div id="load-estoque" class="loading"><div class="spinner"></div>Carregando estoque...</div>
+            <table id="table-estoque" style="display:none;">
+                <thead>
+                    <tr>
+                        <th>Cód.</th>
+                        <th>Produto</th>
+                        <th>Categoria</th>
+                        <th>Estoque</th>
+                        <th>Vende Zerado?</th>
+                        <th>Prazo Prod.</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <!-- ABA LINHA DO TEMPO -->
+        <div id="aba-timeline" class="tab-pane">
+            <div id="load-timeline" class="loading"><div class="spinner"></div>Carregando linha do tempo...</div>
+            <table id="table-timeline" style="display:none;">
+                <thead>
+                    <tr>
+                        <th>Data/Hora</th>
+                        <th>Evento</th>
+                        <th>Referência</th>
+                        <th>Detalhe</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // CHAVES DO SEU SUPABASE
+    const supabaseUrl = 'https://ddtiraoxbxexstozncwj.supabase.co';
+    const supabaseKey = 'sb_publishable_JJBVWA5QR9N9WZTJ_PROcA_PaioDgKR';
+    const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+    // Função para converter datas (Resolve o problema do T e Z e formatos mistos)
+    function parseData(dataStr) {
+        if (!dataStr) return new Date(0);
+        
+        // Se for padrão ISO (2026-11-10T15:15:15Z)
+        if (dataStr.includes('T')) {
+            return new Date(dataStr);
+        }
+        
+        // Se for padrão BR (10/11/2026, 15:15:15)
+        if (dataStr.includes('/')) {
+            const partes = dataStr.split(',');
+            const dataPartes = partes[0].split('/');
+            if (dataPartes.length === 3) {
+                const dia = parseInt(dataPartes[0], 10);
+                const mes = parseInt(dataPartes[1], 10) - 1; // Mês no JS começa em 0
+                const ano = parseInt(dataPartes[2], 10);
+                // Retorna a data formatada corretamente
+                return new Date(ano, mes, dia);
+            }
+        }
+        return new Date(dataStr);
+    }
+
+    // Verifica se a data está nos últimos 30 dias
+    function isUltimos30Dias(dataStr) {
+        const data = parseData(dataStr);
+        const hoje = new Date();
+        const trintaDiasAtras = new Date();
+        trintaDiasAtras.setDate(hoje.getDate() - 30);
+        trintaDiasAtras.setHours(0, 0, 0, 0);
+        return data >= trintaDiasAtras;
+    }
+
+    // Formatar Data para Exibição
+    function formatarData(dataStr) {
+        if (!dataStr) return '-';
+        const data = parseData(dataStr);
+        return data.toLocaleString('pt-BR');
+    }
+
+    // Mudar de Aba
+    function mudarAba(aba, el) {
+        document.querySelectorAll('.tab-pane').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('aba-' + aba).classList.add('active');
+        el.classList.add('active');
+    }
+
+    // Mostrar erro na tela
+    function mostrarErro(msg) {
+        const err = document.getElementById('error-msg');
+        err.textContent = msg;
+        err.style.display = 'block';
+    }
+
+    // BADGES VISUAIS
+    function badgeStatus(status) {
+        const s = String(status).toLowerCase();
+        if (s.includes('pendente')) return '<span class="badge badge-warning">Pendente</span>';
+        if (s.includes('pago') || s.includes('entregue') || s.includes('concluido')) return '<span class="badge badge-success">'+status+'</span>';
+        if (s.includes('cancelado') || s.includes('erro')) return '<span class="badge badge-danger">'+status+'</span>';
+        return '<span class="badge badge-info">'+status+'</span>';
+    }
+
+    // 1. CARREGAR PEDIDOS
+    async function carregarPedidos() {
+        try {
+            const { data, error } = await supabaseClient.from('pedidos').select('*').order('id_pedido', { ascending: false });
+            if (error) throw error;
+
+            const tbody = document.querySelector('#table-pedidos tbody');
+            tbody.innerHTML = '';
+
+            const pedidosFiltrados = data.filter(p => isUltimos30Dias(p.data_pedido));
+
+            if (pedidosFiltrados.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Nenhum pedido nos últimos 30 dias.</td></tr>';
+            } else {
+                pedidosFiltrados.forEach(p => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><strong>#${p.id_pedido}</strong></td>
+                            <td>${formatarData(p.data_pedido)}</td>
+                            <td>${p.cliente_nome}<br><small style="color:#666">${p.cliente_email}</small></td>
+                            <td>${p.pagamento || '-'}</td>
+                            <td>${p.frete || '-'}</td>
+                            <td><strong style="color:#166534">R$ ${parseFloat(p.total || 0).toFixed(2)}</strong></td>
+                            <td>${badgeStatus(p.status)}</td>
+                        </tr>
+                    `;
+                });
+            }
+            document.getElementById('load-pedidos').style.display = 'none';
+            document.getElementById('table-pedidos').style.display = 'table';
+        } catch (e) {
+            mostrarErro('Erro ao carregar pedidos: ' + e.message);
+        }
+    }
+
+    // 2. CARREGAR CLIENTES
+    async function carregarClientes() {
+        try {
+            const { data, error } = await supabaseClient.from('clientes').select('*').order('id', { ascending: false });
+            if (error) throw error;
+
+            const tbody = document.querySelector('#table-clientes tbody');
+            tbody.innerHTML = '';
+
+            const clientesFiltrados = data.filter(c => isUltimos30Dias(c.data_cadastro));
+
+            if (clientesFiltrados.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Nenhum cliente nos últimos 30 dias.</td></tr>';
+            } else {
+                clientesFiltrados.forEach(c => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><strong>${c.nome}</strong></td>
+                            <td>${c.telefone}<br><small style="color:#666">${c.email}</small></td>
+                            <td>${c.cpf}</td>
+                            <td>${c.tipo_pessoa}</td>
+                            <td>${badgeStatus(c.observacoes || 'Sem status')}</td>
+                        </tr>
+                    `;
+                });
+            }
+            document.getElementById('load-clientes').style.display = 'none';
+            document.getElementById('table-clientes').style.display = 'table';
+        } catch (e) {
+            mostrarErro('Erro ao carregar clientes: ' + e.message);
+        }
+    }
+
+    // 3. CARREGAR ESTOQUE
+    async function carregarEstoque() {
+        try {
+            const { data, error } = await supabaseClient.from('produtos').select('*').order('estoque', { ascending: true });
+            if (error) throw error;
+
+            const tbody = document.querySelector('#table-estoque tbody');
+            tbody.innerHTML = '';
+
+            data.forEach(p => {
+                let badgeEstoque = '';
+                if (p.estoque <= 0) badgeEstoque = '<span class="badge badge-danger">Zerado</span>';
+                else if (p.estoque < 10) badgeEstoque = '<span class="badge badge-warning">Baixo</span>';
+                else badgeEstoque = `<strong style="color:#166534">${p.estoque}</strong>`;
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${p.codigo_produto || '-'}</td>
+                        <td><strong>${p.nome}</strong></td>
+                        <td>${p.categoria || '-'}</td>
+                        <td>${badgeEstoque}</td>
+                        <td>${p.vender_zerado}</td>
+                        <td>${p.prazo_producao || 0} dias</td>
+                    </tr>
+                `;
+            });
+            document.getElementById('load-estoque').style.display = 'none';
+            document.getElementById('table-estoque').style.display = 'table';
+        } catch (e) {
+            mostrarErro('Erro ao carregar estoque: ' + e.message);
+        }
+    }
+
+    // 4. LINHA DO TEMPO (Junta Pedidos e Clientes)
+    async function carregarTimeline() {
+        try {
+            const [resPedidos, resClientes] = await Promise.all([
+                supabaseClient.from('pedidos').select('*'),
+                supabaseClient.from('clientes').select('*')
+            ]);
+            
+            const eventos = [];
+
+            resPedidos.data.forEach(p => {
+                if (isUltimos30Dias(p.data_pedido)) {
+                    eventos.push({
+                        data: parseData(p.data_pedido),
+                        dataStr: p.data_pedido,
+                        evento: '🛍️ Pedido',
+                        ref: `#${p.id_pedido} - ${p.cliente_nome}`,
+                        detalhe: `R$ ${parseFloat(p.total || 0).toFixed(2)} via ${p.pagamento}`
+                    });
+                }
+            });
+
+            resClientes.data.forEach(c => {
+                if (isUltimos30Dias(c.data_cadastro)) {
+                    eventos.push({
+                        data: parseData(c.data_cadastro),
+                        dataStr: c.data_cadastro,
+                        evento: '👥 Novo Cliente',
+                        ref: c.nome,
+                        detalhe: c.email
+                    });
+                }
+            });
+
+            eventos.sort((a, b) => b.data - a.data);
+
+            const tbody = document.querySelector('#table-timeline tbody');
+            tbody.innerHTML = '';
+
+            if (eventos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Nenhum evento nos últimos 30 dias.</td></tr>';
+            } else {
+                eventos.forEach(ev => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${formatarData(ev.dataStr)}</td>
+                            <td><strong>${ev.evento}</strong></td>
+                            <td>${ev.ref}</td>
+                            <td>${ev.detalhe}</td>
+                        </tr>
+                    `;
+                });
+            }
+            document.getElementById('load-timeline').style.display = 'none';
+            document.getElementById('table-timeline').style.display = 'table';
+        } catch (e) {
+            mostrarErro('Erro ao carregar linha do tempo: ' + e.message);
+        }
+    }
+
+    // INICIAR TUDO
+    async function init() {
+        await Promise.all([
+            carregarPedidos(),
+            carregarClientes(),
+            carregarEstoque(),
+            carregarTimeline()
+        ]);
+    }
+
+    init();
+</script>
+</body>
+</html>
