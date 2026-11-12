@@ -5853,26 +5853,31 @@ async function cancelarPedido(id) {
                     produto = dados.produtos.find(p => p.nome && p.nome.toLowerCase().includes(item.nome.toLowerCase()));
                 }
                 
-                if (produto) {
-                    const estoqueAtual = parseInt(produto.estoque) || 0;
+                           if (produto) {
+                const estoqueAtual = parseInt(produto.estoque) || 0;
+                
+                // 🔥 NOVA REGRA DE OURO: Só devolve ao estoque se a venda original NÃO foi sob demanda (produção)
+                // E se o estoque não estourou.
+                const eraSobDemanda = item.isProducao === true || String(item.nome).includes('Produção');
+                
+                if (!eraSobDemanda) {
+                    // Verifica se o estoque atual não é menor que a quantidade (pode ter sido ajustado manualmente)
+                    const quantidadeADevolver = Math.min(item.quantidade, 9999); // Limite de segurança
+                    const novoEstoque = estoqueAtual + quantidadeADevolver;
                     
-                    // 🔥 REGRA DE OURO: Se o item foi marcado como Produção, NÃO devolve ao estoque
-                    if (!item.isProducao) {
-                        const novoEstoque = estoqueAtual + item.quantidade;
+                    const { error } = await supabaseClient
+                        .from('produtos')
+                        .update({ estoque: novoEstoque })
+                        .eq('id', produto.id);
                         
-                        const { error } = await supabaseClient
-                            .from('produtos')
-                            .update({ estoque: novoEstoque })
-                            .eq('id', produto.id);
-                            
-                        if (error) throw error;
-                        
-                        produto.estoque = novoEstoque;
-                        console.log(`✅ Estoque de "${produto.nome}" devolvido: ${estoqueAtual} + ${item.quantidade} = ${novoEstoque}`);
-                    } else {
-                        console.log(`🏭 Item "${produto.nome}" era de produção. Estoque não devolvido.`);
-                    }
+                    if (error) throw error;
+                    
+                    produto.estoque = novoEstoque;
+                    console.log(`✅ Estoque de "${produto.nome}" devolvido: ${estoqueAtual} + ${quantidadeADevolver} = ${novoEstoque}`);
+                } else {
+                    console.log(`🏭 Item "${produto.nome}" era de produção. Estoque não devolvido.`);
                 }
+            }
             }
         }
         
