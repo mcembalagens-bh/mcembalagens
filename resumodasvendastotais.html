@@ -2,78 +2,123 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Dashboard de Vendas - MC Embalagens</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background: #f0f2f5; color: #333; padding: 20px; }
+        body { background: #f0f2f5; color: #333; padding: 10px; font-size: 14px; }
         .container { max-width: 1400px; margin: 0 auto; }
         
         /* HEADER */
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
-        .header h1 { color: #1a3a5c; font-size: 24px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
+        .header h1 { color: #1a3a5c; font-size: 20px; }
+        .header .data { font-size: 12px; color: #64748b; font-weight: 600; }
         
         /* FILTROS */
-        .filtros { display: flex; gap: 10px; flex-wrap: wrap; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 20px; align-items: center;}
-        .filtros button { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.3s; background: #e2e8f0; color: #475569; }
+        .filtros { display: flex; gap: 8px; flex-wrap: wrap; background: white; padding: 10px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 15px; align-items: center; }
+        .filtros button { padding: 10px 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; transition: 0.3s; background: #e2e8f0; color: #475569; flex: 1; min-width: 80px; font-size: 13px; }
         .filtros button:hover { background: #cbd5e1; }
         .filtros button.active { background: #1a3a5c; color: white; }
-        .filtros input { padding: 8px; border: 1px solid #ccc; border-radius: 6px; }
+        .filtros .datas { display: flex; gap: 5px; align-items: center; width: 100%; margin-top: 5px; }
+        .filtros input[type="date"] { padding: 8px; border: 1px solid #ccc; border-radius: 6px; width: 100%; }
         
-        /* CARDS RESUMO */
-        .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 20px; }
-        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 4px solid #1a3a5c; }
-        .card h3 { font-size: 13px; color: #64748b; text-transform: uppercase; margin-bottom: 8px; }
-        .card .valor { font-size: 28px; font-weight: 700; color: #1a3a5c; }
-        .card .sub { font-size: 12px; color: #94a3b8; margin-top: 5px; }
+        /* CARDS RESUMO (MOBILE FIRST) */
+        .cards-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 15px; }
+        @media (min-width: 600px) { .cards-grid { grid-template-columns: 1fr 1fr; } }
+        @media (min-width: 1024px) { .cards-grid { grid-template-columns: repeat(5, 1fr); } } /* 5 colunas no PC */
+
+        .card { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 5px solid #1a3a5c; position: relative; }
+        .card h3 { font-size: 12px; color: #64748b; text-transform: uppercase; margin-bottom: 5px; font-weight: 700; }
+        .card .valor { font-size: 24px; font-weight: 800; color: #1a3a5c; }
+        .card .sub { font-size: 12px; color: #94a3b8; margin-top: 5px; font-weight: 500; }
         
-        /* DIVISÕES */
-        .divisoes-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
-        @media (max-width: 768px) { .divisoes-grid { grid-template-columns: 1fr; } }
-        .box-divisao { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .box-divisao h3 { font-size: 15px; color: #1a3a5c; margin-bottom: 15px; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; }
-        .item-divisao { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #e2e8f0; font-size: 14px; }
+        .card-pendente { border-left-color: #eab308; background: #fffbeb; }
+        .card-pendente .valor { color: #a16207; }
+        .card-revenda { border-left-color: #8b5cf6; }
+        .card-normal { border-left-color: #3b82f6; }
+        .card-cancelado { border-left-color: #ef4444; background: #fef2f2; }
+        .card-cancelado .valor { color: #b91c1c; text-decoration: line-through; }
+        
+        /* DIVISÕES (MOBILE FIRST) */
+        .divisoes-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 15px; }
+        @media (min-width: 768px) { .divisoes-grid { grid-template-columns: 1fr 1fr; } }
+
+        .box-divisao { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .box-divisao h3 { font-size: 14px; color: #1a3a5c; margin-bottom: 10px; border-bottom: 2px solid #f0f0f0; padding-bottom: 8px; }
+        .item-divisao { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #e2e8f0; font-size: 13px; }
         .item-divisao:last-child { border-bottom: none; }
         .item-divisao .nome { font-weight: 600; color: #475569; }
         .item-divisao .valor { font-weight: 700; color: #166534; }
         
-        /* TABELA */
-        .tabela-container { background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e2e8f0; }
-        th { background: #f8fafc; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 11px; }
+        /* TABELA (TRANSFORMA EM CARD NO CELULAR) */
+        .tabela-container { background: transparent; border-radius: 10px; box-shadow: none; overflow-x: auto; }
+        
+        /* Estilo padrão Desktop */
+        table { width: 100%; border-collapse: collapse; font-size: 13px; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th { background: #f8fafc; color: #64748b; font-weight: 700; text-transform: uppercase; font-size: 11px; }
         tr:hover { background: #f1f5f9; }
         
-        .badge { padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; }
+        /* Tabela de Cancelados */
+        .tabela-cancelados th { background: #fef2f2; color: #991b1b; }
+        .tabela-cancelados tr:hover { background: #fff1f2; }
+        .linha-cancelada td { color: #991b1b; }
+
+        /* Estilo Mobile (Cards) */
+        @media (max-width: 768px) {
+            table, thead, tbody, th, td, tr { display: block; }
+            thead tr { position: absolute; top: -9999px; left: -9999px; }
+            tr { background: white; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.08); padding: 10px; border: 1px solid #e2e8f0; }
+            td { border: none; border-bottom: 1px solid #f1f5f9; position: relative; padding: 8px 8px 8px 40%; text-align: right; font-size: 13px; min-height: 35px; }
+            td:last-child { border-bottom: none; }
+            td:before { 
+                position: absolute; 
+                top: 8px; 
+                left: 8px; 
+                width: 35%; 
+                padding-right: 10px; 
+                white-space: nowrap; 
+                text-align: left; 
+                font-weight: 700; 
+                color: #64748b;
+                content: attr(data-label);
+            }
+            .tabela-cancelados tr { border-color: #fecaca; background: #fef2f2; }
+        }
+
+        .badge { padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; display: inline-block; }
         .badge-rev { background: #e0e7ff; color: #3730a3; }
         .badge-normal { background: #f1f5f9; color: #475569; }
         .badge-pago { background: #dcfce7; color: #166534; }
         .badge-pendente { background: #fef9c3; color: #854d0e; }
+        .badge-cancelado { background: #fee2e2; color: #991b1b; }
         
         .loading { text-align: center; padding: 40px; color: #64748b; }
-        .erro { background: #fee2e2; color: #991b1b; padding: 15px; border-radius: 8px; display: none; margin-bottom: 20px; }
+        .erro { background: #fee2e2; color: #991b1b; padding: 15px; border-radius: 8px; display: none; margin-bottom: 20px; font-size: 13px; }
+        
+        .titulo-secao { color: #1a3a5c; margin-bottom: 10px; margin-top: 25px; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+        .titulo-secao.cancelados { color: #991b1b; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header">
-        <h1>📊 Dashboard de Vendas - MC Embalagens</h1>
-        <div id="dataAtual" style="color: #64748b; font-weight: 600;"></div>
+        <h1>📊 Vendas</h1>
+        <div class="data" id="dataAtual"></div>
     </div>
 
     <!-- FILTROS -->
     <div class="filtros">
         <button class="active" onclick="filtrarPeriodo('hoje', this)">Hoje</button>
         <button onclick="filtrarPeriodo('ontem', this)">Ontem</button>
-        <button onclick="filtrarPeriodo('semana', this)">Últimos 7 Dias</button>
-        <button onclick="filtrarPeriodo('mes', this)">Este Mês</button>
+        <button onclick="filtrarPeriodo('semana', this)">7 Dias</button>
+        <button onclick="filtrarPeriodo('mes', this)">Mês</button>
         
-        <div style="margin-left: auto; display: flex; gap: 5px; align-items: center;">
-            <span style="font-size: 13px; color: #64748b;">De:</span>
+        <div class="datas">
             <input type="date" id="dataInicio" onchange="filtrarPorDataCustom()">
-            <span style="font-size: 13px; color: #64748b;">Até:</span>
+            <span style="font-size: 12px; color: #64748b;">a</span>
             <input type="date" id="dataFim" onchange="filtrarPorDataCustom()">
         </div>
     </div>
@@ -83,41 +128,47 @@
     <!-- CARDS DE RESUMO -->
     <div class="cards-grid">
         <div class="card">
-            <h3>Faturamento Total</h3>
+            <h3>Faturamento Real</h3>
             <div class="valor" id="totalVendas">R$ 0,00</div>
-            <div class="sub" id="qtdPedidos">0 pedidos realizados</div>
+            <div class="sub" id="qtdPedidos">0 pedidos pagos</div>
         </div>
-        <div class="card" style="border-left-color: #27ae60;">
-            <h3>Ticket Médio</h3>
-            <div class="valor" id="ticketMedio">R$ 0,00</div>
-            <div class="sub">Por pedido</div>
+        <div class="card card-pendente">
+            <h3>A Receber (Pendentes)</h3>
+            <div class="valor" id="totalPendente">R$ 0,00</div>
+            <div class="sub" id="qtdPendentes">0 pedidos pendentes</div>
         </div>
-        <div class="card" style="border-left-color: #8b5cf6;">
+        <div class="card card-revenda">
             <h3>Vendas Revenda</h3>
             <div class="valor" id="totalRevenda">R$ 0,00</div>
             <div class="sub" id="qtdRevenda">0 pedidos</div>
         </div>
-        <div class="card" style="border-left-color: #f59e0b;">
+        <div class="card card-normal">
             <h3>Vendas Normais</h3>
             <div class="valor" id="totalNormal">R$ 0,00</div>
             <div class="sub" id="qtdNormal">0 pedidos</div>
+        </div>
+        <!-- CARD DE CANCELADOS -->
+        <div class="card card-cancelado">
+            <h3>Cancelados</h3>
+            <div class="valor" id="totalCancelado">R$ 0,00</div>
+            <div class="sub" id="qtdCancelados">0 pedidos cancelados</div>
         </div>
     </div>
 
     <!-- DIVISÕES -->
     <div class="divisoes-grid">
         <div class="box-divisao">
-            <h3>💳 Por Forma de Pagamento</h3>
+            <h3>💳 Pagamentos (Faturados)</h3>
             <div id="listaPagamentos"></div>
         </div>
         <div class="box-divisao">
-            <h3>📦 Status dos Pedidos</h3>
+            <h3>📦 Status dos Pedidos (Ativos)</h3>
             <div id="listaStatus"></div>
         </div>
     </div>
 
-    <!-- TABELA DE PEDIDOS -->
-    <h3 style="color: #1a3a5c; margin-bottom: 10px; margin-top: 20px;">📋 Detalhamento dos Pedidos</h3>
+    <!-- TABELA DE PEDIDOS ATIVOS -->
+    <h3 class="titulo-secao">📋 Pedidos Realizados (Pagos e Pendentes)</h3>
     <div class="tabela-container">
         <table>
             <thead>
@@ -136,19 +187,37 @@
             </tbody>
         </table>
     </div>
+
+    <!-- TABELA DE PEDIDOS CANCELADOS (BEM SEPARADA) -->
+    <h3 class="titulo-secao cancelados">🚫 Histórico de Pedidos Cancelados (Não contabilizados)</h3>
+    <div class="tabela-container">
+        <table class="tabela-cancelados">
+            <thead>
+                <tr>
+                    <th>Pedido</th>
+                    <th>Data</th>
+                    <th>Cliente</th>
+                    <th>Perfil</th>
+                    <th>Pagamento</th>
+                    <th>Status</th>
+                    <th>Valor</th>
+                </tr>
+            </thead>
+            <tbody id="tabelaCancelados">
+                <tr><td colspan="7" class="loading">Carregando cancelados...</td></tr>
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <script>
-    // CONEXÃO COM O SUPABASE
     const supabaseUrl = 'https://ddtiraoxbxexstozncwj.supabase.co';
     const supabaseKey = 'sb_publishable_JJBVWA5QR9N9WZTJ_PROcA_PaioDgKR';
     const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
     let todosPedidos = [];
     let todosClientes = [];
-    let periodoAtual = 'hoje';
 
-    // Formata Data
     function parseData(dataStr) {
         if (!dataStr) return new Date(0);
         if (dataStr.includes('T')) return new Date(dataStr);
@@ -163,10 +232,14 @@
         return 'R$ ' + parseFloat(valor || 0).toFixed(2).replace('.', ',');
     }
 
-    // Inicia
     async function init() {
-        document.getElementById('dataAtual').textContent = new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        const hoje = new Date();
+        document.getElementById('dataAtual').textContent = hoje.toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' });
         
+        const primeiroDiaMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+        document.getElementById('dataInicio').value = primeiroDiaMes.toISOString().split('T')[0];
+        document.getElementById('dataFim').value = hoje.toISOString().split('T')[0];
+
         try {
             const [resPedidos, resClientes] = await Promise.all([
                 supabaseClient.from('pedidos').select('*'),
@@ -179,26 +252,18 @@
             todosPedidos = resPedidos.data || [];
             todosClientes = resClientes.data || [];
 
-            // Define datas padrão para o filtro customizado
-            const hoje = new Date();
-            const primeiroDiaMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-            document.getElementById('dataInicio').value = primeiroDiaMes.toISOString().split('T')[0];
-            document.getElementById('dataFim').value = hoje.toISOString().split('T')[0];
-
             filtrarPeriodo('hoje', document.querySelector('.filtros button.active'));
 
         } catch (error) {
             document.getElementById('erro').style.display = 'block';
-            document.getElementById('erro').textContent = 'Erro ao carregar dados: ' + error.message;
+            document.getElementById('erro').textContent = 'Erro ao carregar: ' + error.message;
             document.querySelectorAll('.loading').forEach(el => el.textContent = 'Erro ao carregar.');
         }
     }
 
     function filtrarPeriodo(tipo, btn) {
-        // Atualiza visual dos botões
         document.querySelectorAll('.filtros button').forEach(b => b.classList.remove('active'));
         if (btn) btn.classList.add('active');
-        periodoAtual = tipo;
 
         const agora = new Date();
         let inicio = new Date();
@@ -238,102 +303,29 @@
     }
 
     function processarDados(inicio, fim) {
-        // Filtra pedidos
         const pedidosFiltrados = todosPedidos.filter(p => {
             const dataPedido = parseData(p.data_pedido);
             return dataPedido >= inicio && dataPedido <= fim;
         });
 
-        // Variáveis de cálculo
-        let totalVendas = 0;
-        let qtdPedidos = pedidosFiltrados.length;
+        let totalFaturado = 0, qtdPagos = 0;
+        let totalPendente = 0, qtdPendentes = 0;
+        let totalCancelado = 0, qtdCancelados = 0;
         let totalRevenda = 0, qtdRevenda = 0;
         let totalNormal = 0, qtdNormal = 0;
         
         let pagamentos = {};
         let statusCount = {};
 
-        // Processa cada pedido
+        const pedidosAtivos = [];
+        const pedidosCanceladosArr = [];
+
         pedidosFiltrados.forEach(p => {
             const valor = parseFloat(String(p.total).replace(',', '.')) || 0;
-            if (valor <= 0) return; // Ignora pedidos de brinde/retirada zerada
+            if (valor <= 0) return; // Ignora brindes/zerados
 
-            totalVendas += valor;
-            
-            // Identifica se é revenda
-            let isRev = false;
-            if (p.cliente_email) {
-                const c = todosClientes.find(x => x.email && x.email.toLowerCase() === p.cliente_email.toLowerCase());
-                if (c && String(c.observacoes || '').toUpperCase().includes('REVENDA')) isRev = true;
-            }
-            if (!isRev && String(p.observacoes || '').toUpperCase().includes('REVENDEDOR')) isRev = true;
-
-            if (isRev) {
-                totalRevenda += valor;
-                qtdRevenda++;
-            } else {
-                totalNormal += valor;
-                qtdNormal++;
-            }
-
-            // Formas de pagamento
-            let pgto = p.pagamento || 'Não informado';
-            // Limpa o texto para agrupar
-            if (pgto.toUpperCase().includes('PIX')) pgto = 'PIX';
-            else if (pgto.toUpperCase().includes('CARTÃO') || pgto.toUpperCase().includes('CARTAO')) pgto = 'Cartão';
-            else if (pgto.toUpperCase().includes('BOLETO')) pgto = 'Boleto';
-            else if (pgto.toUpperCase().includes('DINHEIRO')) pgto = 'Dinheiro';
-            
-            pagamentos[pgto] = (pagamentos[pgto] || 0) + valor;
-
-            // Status
-            let st = p.status || 'Pendente';
-            statusCount[st] = (statusCount[st] || 0) + 1;
-        });
-
-        // Atualiza Cards
-        document.getElementById('totalVendas').textContent = formatarMoeda(totalVendas);
-        document.getElementById('qtdPedidos').textContent = qtdPedidos + ' pedidos';
-        
-        const ticket = qtdPedidos > 0 ? (totalVendas / qtdPedidos) : 0;
-        document.getElementById('ticketMedio').textContent = formatarMoeda(ticket);
-
-        document.getElementById('totalRevenda').textContent = formatarMoeda(totalRevenda);
-        document.getElementById('qtdRevenda').textContent = qtdRevenda + ' pedidos';
-
-        document.getElementById('totalNormal').textContent = formatarMoeda(totalNormal);
-        document.getElementById('qtdNormal').textContent = qtdNormal + ' pedidos';
-
-        // Atualiza Lista de Pagamentos
-        const listaPgto = document.getElementById('listaPagamentos');
-        listaPgto.innerHTML = Object.keys(pagamentos).sort((a,b) => pagamentos[b] - pagamentos[a]).map(k => `
-            <div class="item-divisao">
-                <span class="nome">${k}</span>
-                <span class="valor">${formatarMoeda(pagamentos[k])}</span>
-            </div>
-        `).join('') || '<div style="text-align:center; color:#999; padding:10px;">Nenhum pagamento</div>';
-
-        // Atualiza Lista de Status
-        const listaStatus = document.getElementById('listaStatus');
-        listaStatus.innerHTML = Object.keys(statusCount).sort((a,b) => statusCount[b] - statusCount[a]).map(k => `
-            <div class="item-divisao">
-                <span class="nome">${k}</span>
-                <span class="valor">${statusCount[k]} pedido(s)</span>
-            </div>
-        `).join('') || '<div style="text-align:center; color:#999; padding:10px;">Nenhum pedido</div>';
-
-        // Atualiza Tabela de Pedidos
-        const tbody = document.getElementById('tabelaPedidos');
-        if (pedidosFiltrados.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="loading" style="padding: 20px; text-align:center;">Nenhum pedido neste período.</td></tr>';
-            return;
-        }
-
-        // Ordena do mais recente para o mais antigo
-        pedidosFiltrados.sort((a,b) => parseData(b.data_pedido) - parseData(a.data_pedido));
-
-        tbody.innerHTML = pedidosFiltrados.map(p => {
-            const valor = parseFloat(String(p.total).replace(',', '.')) || 0;
+            const isCancelado = p.status === 'Cancelado';
+            const isPendente = p.status === 'Pendente' || !p.status;
             
             // Verifica Revenda
             let isRev = false;
@@ -343,28 +335,123 @@
             }
             if (!isRev && String(p.observacoes || '').toUpperCase().includes('REVENDEDOR')) isRev = true;
 
-            const badgePerfil = isRev ? '<span class="badge badge-rev">👑 Revenda</span>' : '<span class="badge badge-normal">Normal</span>';
+            if (isCancelado) {
+                totalCancelado += valor;
+                qtdCancelados++;
+                pedidosCanceladosArr.push({ ...p, isRev });
+                return; // Pula o resto (não soma em faturamento, pagamentos, etc)
+            }
+
+            pedidosAtivos.push({ ...p, isRev });
+
+            if (isPendente) {
+                totalPendente += valor;
+                qtdPendentes++;
+                return; // Pendentes não entram no faturamento real
+            }
+
+            // Se chegou aqui, é Pago ou Concluído
+            totalFaturado += valor;
+            qtdPagos++;
+
+            if (isRev) {
+                totalRevenda += valor;
+                qtdRevenda++;
+            } else {
+                totalNormal += valor;
+                qtdNormal++;
+            }
+
+            // Formas de pagamento (só faturados)
+            let pgto = p.pagamento || 'Não informado';
+            if (pgto.toUpperCase().includes('PIX')) pgto = 'PIX';
+            else if (pgto.toUpperCase().includes('CARTÃO') || pgto.toUpperCase().includes('CARTAO')) pgto = 'Cartão';
+            else if (pgto.toUpperCase().includes('BOLETO')) pgto = 'Boleto';
+            else if (pgto.toUpperCase().includes('DINHEIRO')) pgto = 'Dinheiro';
+            
+            pagamentos[pgto] = (pagamentos[pgto] || 0) + valor;
+
+            // Status (só faturados)
+            let st = p.status || 'Pago';
+            statusCount[st] = (statusCount[st] || 0) + 1;
+        });
+
+        // Atualiza os Cards
+        document.getElementById('totalVendas').textContent = formatarMoeda(totalFaturado);
+        document.getElementById('qtdPedidos').textContent = qtdPagos + ' pedidos pagos';
+
+        document.getElementById('totalPendente').textContent = formatarMoeda(totalPendente);
+        document.getElementById('qtdPendentes').textContent = qtdPendentes + ' pedidos aguardando';
+
+        document.getElementById('totalRevenda').textContent = formatarMoeda(totalRevenda);
+        document.getElementById('qtdRevenda').textContent = qtdRevenda + ' pedidos';
+
+        document.getElementById('totalNormal').textContent = formatarMoeda(totalNormal);
+        document.getElementById('qtdNormal').textContent = qtdNormal + ' pedidos';
+
+        document.getElementById('totalCancelado').textContent = formatarMoeda(totalCancelado);
+        document.getElementById('qtdCancelados').textContent = qtdCancelados + ' pedidos cancelados';
+
+        // Lista de Pagamentos
+        const listaPgto = document.getElementById('listaPagamentos');
+        listaPgto.innerHTML = Object.keys(pagamentos).sort((a,b) => pagamentos[b] - pagamentos[a]).map(k => `
+            <div class="item-divisao">
+                <span class="nome">${k}</span>
+                <span class="valor">${formatarMoeda(pagamentos[k])}</span>
+            </div>
+        `).join('') || '<div style="text-align:center; color:#999; padding:10px; font-size:12px;">Nenhum valor faturado</div>';
+
+        // Lista de Status
+        const listaStatus = document.getElementById('listaStatus');
+        listaStatus.innerHTML = Object.keys(statusCount).sort((a,b) => statusCount[b] - statusCount[a]).map(k => `
+            <div class="item-divisao">
+                <span class="nome">${k}</span>
+                <span class="valor">${statusCount[k]} pedido(s)</span>
+            </div>
+        `).join('') || '<div style="text-align:center; color:#999; padding:10px; font-size:12px;">Nenhum pedido faturado</div>';
+
+        // Tabela Ativos
+        renderizarTabela('tabelaPedidos', pedidosAtivos);
+        
+        // Tabela Cancelados
+        renderizarTabela('tabelaCancelados', pedidosCanceladosArr, true);
+    }
+
+    function renderizarTabela(idTbody, lista, isCancelado = false) {
+        const tbody = document.getElementById(idTbody);
+        
+        if (lista.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="7" class="loading" style="padding: 20px; text-align:center;">Nenhum pedido ${isCancelado ? 'cancelado' : 'neste período'}.</td></tr>`;
+            return;
+        }
+
+        lista.sort((a,b) => parseData(b.data_pedido) - parseData(a.data_pedido));
+
+        tbody.innerHTML = lista.map(p => {
+            const valor = parseFloat(String(p.total).replace(',', '.')) || 0;
+            const badgePerfil = p.isRev ? '<span class="badge badge-rev">👑 Revenda</span>' : '<span class="badge badge-normal">Normal</span>';
             
             let badgeStatus = '<span class="badge badge-pendente">Pendente</span>';
             if (p.status === 'Pago') badgeStatus = '<span class="badge badge-pago">Pago</span>';
             else if (p.status === 'Concluído') badgeStatus = '<span class="badge badge-pago">Concluído</span>';
-            else if (p.status === 'Cancelado') badgeStatus = '<span class="badge" style="background:#fee2e2;color:#991b1b;">Cancelado</span>';
+            else if (p.status === 'Cancelado') badgeStatus = '<span class="badge badge-cancelado">Cancelado</span>';
 
             return `
-                <tr>
-                    <td><strong>#${p.id_pedido}</strong></td>
-                    <td>${parseData(p.data_pedido).toLocaleString('pt-BR')}</td>
-                    <td>${p.cliente_nome}</td>
-                    <td>${badgePerfil}</td>
-                    <td>${p.pagamento || '-'}</td>
-                    <td>${badgeStatus}</td>
-                    <td style="font-weight: 700; color: #166534;">${valor === 0 ? 'R$ 0,00' : formatarMoeda(valor)}</td>
+                <tr class="${isCancelado ? 'linha-cancelada' : ''}">
+                    <td data-label="Pedido"><strong>#${p.id_pedido}</strong></td>
+                    <td data-label="Data">${parseData(p.data_pedido).toLocaleDateString('pt-BR')}</td>
+                    <td data-label="Cliente">${p.cliente_nome}</td>
+                    <td data-label="Perfil">${badgePerfil}</td>
+                    <td data-label="Pagamento">${p.pagamento || '-'}</td>
+                    <td data-label="Status">${badgeStatus}</td>
+                    <td data-label="Valor" style="font-weight: 800; color: ${isCancelado ? '#b91c1c' : '#166534'}; ${isCancelado ? 'text-decoration: line-through;' : ''}">
+                        ${formatarMoeda(valor)}
+                    </td>
                 </tr>
             `;
         }).join('');
     }
 
-    // Start
     init();
 </script>
 </body>
