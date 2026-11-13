@@ -8244,30 +8244,32 @@ async function pmFinalizarPedido() {
     let textoItens = [];
     
     pmCarrinho.forEach(item => {
-        // Lógica para extrair a quantidade de berços da descrição do produto
-        let qtdBercoPorCaixa = 0;
-        let gomosBerco = 0;
+        // 🔥 A MÁGICA ACONTECE AQUI: Busca a descrição direto do banco de dados
+        const produtoNoBanco = dados.produtos.find(p => parseInt(p.id) === parseInt(item.produtoId));
+        const descricaoProduto = produtoNoBanco ? (produtoNoBanco.descricao || '') : '';
+        const nomeProduto = produtoNoBanco ? (produtoNoBanco.nome || '') : item.nome;
         
-        // Procura no nome ou na descrição do produto
-        const textoBusca = (item.nome + ' ' + (item.descricao || '')).toLowerCase();
+        // Junta nome e descrição para procurar a palavra "berço"
+        const textoBusca = (nomeProduto + ' ' + descricaoProduto).toLowerCase();
         
         // Regex para pegar padrões como "2 berços 4 gomos" ou "berço 2 gomos"
         const matchBerco = textoBusca.match(/(\d*)\s*berços?\s*(?:de\s*)?(\d+)\s*gomos/i);
         
+        let qtdBercoPorCaixa = 0;
+        let gomosBerco = 0;
+        
         if (matchBerco) {
-            qtdBercoPorCaixa = matchBerco[1] ? parseInt(matchBerco[1]) : 1; // Se não tiver número, assume 1
+            qtdBercoPorCaixa = matchBerco[1] ? parseInt(matchBerco[1]) : 1;
             gomosBerco = parseInt(matchBerco[2]);
         }
 
         if (item.isProducao) {
             if (item.queroLevar && item.estoqueTotal > 0) {
-                // Vai levar uma parte e produzir o resto
                 const qtdProduzir = item.quantidade - item.estoqueTotal;
                 
-                textoItens.push(`${item.nome} (Disponível) (${item.estoqueTotal}x 1 un) - R$ ${(item.estoqueTotal * item.precoUnitario).toFixed(2)}`);
-                textoItens.push(`${item.nome} (Produção ${item.prazoProducao} dias) (${qtdProduzir}x 1 un) - R$ ${(qtdProduzir * item.precoUnitario).toFixed(2)}`);
+                textoItens.push(`${nomeProduto} (Disponível) (${item.estoqueTotal}x 1 un) - R$ ${(item.estoqueTotal * item.precoUnitario).toFixed(2)}`);
+                textoItens.push(`${nomeProduto} (Produção ${item.prazoProducao} dias) (${qtdProduzir}x 1 un) - R$ ${(qtdProduzir * item.precoUnitario).toFixed(2)}`);
 
-                // Separação dos Berços
                 if (qtdBercoPorCaixa > 0 && gomosBerco > 0) {
                     const bercosDisp = item.estoqueTotal * qtdBercoPorCaixa;
                     const bercosProd = qtdProduzir * qtdBercoPorCaixa;
@@ -8275,20 +8277,16 @@ async function pmFinalizarPedido() {
                     textoItens.push(`BERÇO ${gomosBerco} GOMOS (Produção ${item.prazoProducao} dias) (${bercosProd} un)`);
                 }
             } else {
-                // Vai produzir tudo
-                textoItens.push(`${item.nome} (Produção ${item.prazoProducao} dias) (${item.quantidade}x 1 un) - R$ ${item.precoTotal.toFixed(2)}`);
+                textoItens.push(`${nomeProduto} (Produção ${item.prazoProducao} dias) (${item.quantidade}x 1 un) - R$ ${item.precoTotal.toFixed(2)}`);
 
-                // Separação dos Berços (Tudo para produção)
                 if (qtdBercoPorCaixa > 0 && gomosBerco > 0) {
                     const bercosProd = item.quantidade * qtdBercoPorCaixa;
                     textoItens.push(`BERÇO ${gomosBerco} GOMOS (Produção ${item.prazoProducao} dias) (${bercosProd} un)`);
                 }
             }
         } else {
-            // Estoque normal (Disponível)
-            textoItens.push(`${item.nome} (Disponível) (${item.quantidade}x 1 un) - R$ ${item.precoTotal.toFixed(2)}`);
+            textoItens.push(`${nomeProduto} (Disponível) (${item.quantidade}x 1 un) - R$ ${item.precoTotal.toFixed(2)}`);
 
-            // Separação dos Berços (Tudo disponível)
             if (qtdBercoPorCaixa > 0 && gomosBerco > 0) {
                 const bercosDisp = item.quantidade * qtdBercoPorCaixa;
                 textoItens.push(`BERÇO ${gomosBerco} GOMOS (Disponível) (${bercosDisp} un)`);
@@ -8343,7 +8341,7 @@ async function pmFinalizarPedido() {
 
         if (error) throw error;
 
-        // 7. BAIXA DE ESTOQUE (Regra de Ouro)
+        // 7. BAIXA DE ESTOQUE (A Regra de Ouro)
         for (const item of pmCarrinho) {
             const produtoNoBanco = dados.produtos.find(p => parseInt(p.id) === parseInt(item.produtoId));
             if (!produtoNoBanco) continue;
