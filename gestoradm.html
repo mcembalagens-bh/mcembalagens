@@ -5815,23 +5815,12 @@ async function cancelarPedido(id) {
     const pedido = dados.pedidos.find(p => parseInt(p.id_pedido) === parseInt(id));
     if (!pedido) { alert('Pedido não encontrado!'); return; }
     
-    if (!confirm(`⚠️ Deseja realmente CANCELAR o pedido #${id}?\n\nIsso vai devolver os produtos ao estoque (se aplicável).`)) return;
+    if (!confirm(`⚠️ Deseja realmente CANCELAR o pedido #${id}?\n\nO sistema devolverá ao estoque apenas os itens marcados como 'Disponível' (os de Produção não serão devolvidos).`)) return;
     
     mostrarSpinner('Cancelando e devolvendo estoque...');
     
-            // TRAVA DE SEGURANÇA: Se a observação do pedido diz que tem produção, bloqueia o cancelamento
-        const textoObs = String(pedido.observacoes || '').toUpperCase();
-        const textoItens = String(pedido.itens || '').toUpperCase();
-        
-        if (textoObs.includes('TEM PRODUCAO') || textoItens.includes('(PRODUÇÃO)') || textoItens.includes('(PRODUCAO)')) {
-            if (!confirm(`⚠️ ATENÇÃO: Este pedido foi feito SOB DEMANDA (Produção).\n\nAo cancelar, o sistema NÃO devolverá o estoque para não bagunçar as contas.\n\nDeseja continuar com o cancelamento?`)) {
-                esconderSpinner();
-                return;
-            }
-        }
-
-    
     try {
+        // O processarItensPedido do Gestor vai ler o texto e separar as linhas
         const itens = processarItensPedido(pedido.itens);
         
         for (const item of itens) {
@@ -5842,47 +5831,46 @@ async function cancelarPedido(id) {
                 if (item.productId) {
                     produto = dados.produtos.find(p => parseInt(p.id) === parseInt(item.productId));
                 }
-                
-                // 2. Se não achou, tenta pelo nome exato
+                // 2. Tenta pelo nome exato
                 if (!produto) {
-                    produto = dados.produtos.find(p => p.nome && p.nome.toLowerCase() === item.nome.toLowerCase());
+                    let nomeBusca = item.nome.split(' (Produção')[0].split(' (Disponível')[0].split(' (BERÇO')[0].trim();
+                    produto = dados.produtos.find(p => p.nome && p.nome.toLowerCase() === nomeBusca.toLowerCase());
                 }
-                
-                // 3. Se não achou, tenta por parte do nome
+                // 3. Tenta por parte do nome
                 if (!produto) {
                     produto = dados.produtos.find(p => p.nome && p.nome.toLowerCase().includes(item.nome.toLowerCase()));
                 }
                 
-                                      if (produto) {
-                const estoqueAtual = parseInt(produto.estoque) || 0;
-                
-                // 🔥 TRAVA DE SEGURANÇA MÁXIMA:
-                // Verifica se o pedido tinha a etiqueta de Produção em qualquer lugar do texto
-                const textoPedido = String(pedido.itens || '').toUpperCase() + ' ' + String(pedido.observacoes || '').toUpperCase();
-                const eraProducao = item.isProducao === true || 
-                                    textoPedido.includes('PRODUÇÃO') || 
-                                    textoPedido.includes('PRODUCAO') ||
-                                    textoPedido.includes('SOB DEMANDA');
-
-                if (!eraProducao) {
-                    const novoEstoque = estoqueAtual + item.quantidade;
+                if (produto) {
+                    const estoqueAtual = parseInt(produto.estoque) || 0;
                     
-                    const { error } = await supabaseClient
-                        .from('produtos')
-                        .update({ estoque: novoEstoque })
-                        .eq('id', produto.id);
+                    // 🔥 A MÁGICA ACONTECE AQUI
+                    // O item lido pelo parser vai vir com a palavra 'Disponível' ou 'Produção' no nome? 
+                    // Vamos checar no texto original da linha.
+                    const nomeDoItem = String(item.nome).toUpperCase();
+                    
+                    // Se a linha do item tiver "PRODUÇÃO", NÃO devolve.
+                    // Se tiver "DISPONÍVEL", devolve.
+                    if (!nomeDoItem.includes('PRODUÇÃO') && !nomeDoItem.includes('PRODUCAO')) {
+                        const novoEstoque = estoqueAtual + item.quantidade;
                         
-                    if (error) throw error;
-                    
-                    produto.estoque = novoEstoque;
-                    console.log(`✅ Estoque de "${produto.nome}" devolvido: ${estoqueAtual} + ${item.quantidade} = ${novoEstoque}`);
-                } else {
-                    console.log(`🏭 Item "${produto.nome}" era de produção. Estoque preservado.`);
+                        const { error } = await supabaseClient
+                            .from('produtos')
+                            .update({ estoque: novoEstoque })
+                            .eq('id', produto.id);
+                            
+                        if (error) throw error;
+                        
+                        produto.estoque = novoEstoque;
+                        console.log(`✅ Estoque de "${produto.nome}" devolvido: ${estoqueAtual} + ${item.quantidade} = ${novoEstoque} (Linha: ${item.nome})`);
+                    } else {
+                        console.log(`🏭 Item "${item.nome}" era de produção (${item.quantidade} un). Estoque não devolvido.`);
+                    }
                 }
-            }
             }
         }
         
+        // Atualiza o status do pedido
         const { error: erroStatus } = await supabaseClient
             .from('pedidos')
             .update({ status: 'Cancelado' })
