@@ -2349,150 +2349,133 @@
     </div>
 </div>
 
-<!-- MODAL PEDIDO MANUAL -->
+<!-- MODAL PEDIDO MANUAL (NOVO) -->
 <div class="modal-overlay" id="modalPedidoManual">
-    <div class="modal">
-        <div class="modal-header">
-            <h2><i class="fas fa-hand-holding"></i> Pedido Manual</h2>
+    <div class="modal" style="max-width: 1300px; width: 98%; max-height: 95vh; display: flex; flex-direction: column; padding: 15px;">
+        
+        <!-- CABEÇALHO -->
+        <div class="modal-header" style="padding-bottom: 10px; margin-bottom: 10px; border-bottom: 2px solid #eee;">
+            <h2><i class="fas fa-cash-register"></i> Novo Pedido Manual / Balcão</h2>
             <button class="modal-close" onclick="fecharModal('modalPedidoManual')">&times;</button>
         </div>
-        <div id="pedidoManualContent">
+
+        <!-- ÁREA 1: CLIENTE (TOPO) -->
+        <div style="background: #f0f4f8; border-radius: 8px; padding: 10px 15px; margin-bottom: 15px; border: 1px solid #d1d5db; flex-shrink: 0;">
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <label style="font-weight: 700; color: var(--primary-blue); white-space: nowrap;"><i class="fas fa-search"></i> Cliente:</label>
+                
+                <div style="flex: 1; min-width: 250px; position: relative;">
+                    <input type="text" id="pmBuscaCliente" placeholder="Digite Nome, CPF/CNPJ, Email, Telefone ou 'Balcão'..." 
+                           style="width: 100%; padding: 8px 12px; border: 2px solid #ddd; border-radius: 6px; font-size: 14px;"
+                           oninput="pmBuscarCliente()" autocomplete="off">
+                    
+                    <!-- Lista suspensa de resultados -->
+                    <div id="pmResultadoClientes" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ccc; border-radius: 0 0 6px 6px; max-height: 200px; overflow-y: auto; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                        <!-- Preenchido via JS -->
+                    </div>
+                </div>
+
+                <button onclick="pmAbrirCadastroCliente()" class="btn-sm btn-success" style="padding: 8px 15px; font-size: 13px; white-space: nowrap;">
+                    <i class="fas fa-user-plus"></i> Cadastrar Novo Cliente
+                </button>
+            </div>
+
+            <!-- Dados do cliente selecionado (aparece após selecionar) -->
+            <div id="pmClienteSelecionado" style="display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #ccc; font-size: 13px; color: #333;">
+                <strong>Selecionado:</strong> <span id="pmNomeClienteSel" style="color: var(--primary-blue); font-weight: 700;"></span> 
+                <span id="pmDocClienteSel" style="color: #666; margin-left: 10px;"></span>
+                <button onclick="pmLimparCliente()" style="background:none; border:none; color: #e74c3c; cursor: pointer; font-size: 12px; margin-left: 15px; text-decoration: underline;">Limpar</button>
+            </div>
+        </div>
+
+        <!-- ÁREA 2: PRODUTOS E CARRINHO (MEIO) -->
+        <div style="display: flex; gap: 15px; flex: 1; min-height: 400px; overflow: hidden; margin-bottom: 15px;">
             
-            <!-- 🔥 BUSCA DE CLIENTES -->
-            <div class="form-group" style="background:#f0f4f8;padding:12px;border-radius:8px;border:2px solid var(--primary-blue);margin-bottom:12px;">
-                <label style="font-weight:700;color:var(--primary-blue);">
-                    <i class="fas fa-user-search"></i> Buscar Cliente
-                </label>
-                <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                    <input type="text" id="buscaClienteManual" placeholder="Digite nome, email ou telefone..." 
-                           style="flex:1;min-width:180px;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;"
-                           oninput="buscarClientesManual()">
-                    <button onclick="buscarClientesManual()" class="btn-sm btn-edit" style="padding:8px 16px;">
-                        <i class="fas fa-search"></i> Buscar
-                    </button>
-                </div>
-                <div id="listaClientesManual" style="margin-top:8px;max-height:150px;overflow-y:auto;display:none;border:1px solid #ddd;border-radius:6px;background:white;">
-                    <!-- Resultados da busca -->
-                </div>
-                <div style="margin-top:6px;font-size:11px;color:#888;">
-                    <i class="fas fa-info-circle"></i> Digite para buscar clientes cadastrados
-                </div>
-            </div>
-            
-            <!-- DADOS DO CLIENTE -->
-            <div style="background:#f8f9fa;border-radius:8px;padding:12px;margin-bottom:12px;border:1px solid #e0e0e0;">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Cliente</label>
-                        <input type="text" id="visClienteNome" placeholder="Nome do cliente" 
-                               style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
-                    </div>
-                    <div class="form-group">
-                        <label>Telefone</label>
-                        <input type="text" id="visClienteTelefone" placeholder="(00) 00000-0000"
-                               style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" id="visClienteEmail" placeholder="email@exemplo.com"
-                               style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
-                    </div>
-                    <div class="form-group">
-                        <label>CPF/CNPJ</label>
-                        <input type="text" id="visClienteDocumento" placeholder="000.000.000-00"
-                               style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Endereço Completo</label>
-                    <input type="text" id="visClienteEndereco" placeholder="Rua, Número, Bairro, Cidade - UF"
-                           style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
-                </div>
-                <div class="form-group">
-                    <label>Forma de Pagamento</label>
-                    <select id="visPagamento" style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
-                        <option value="À vista">À vista</option>
-                        <option value="Pix">Pix</option>
-                        <option value="Cartão de Crédito">Cartão de Crédito</option>
-                        <option value="Boleto">Boleto</option>
-                        <option value="Depósito/Transferência">Depósito/Transferência</option>
-                    </select>
-                </div>
-
-                <!-- 🔥 NOVO: FRETE -->
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Frete</label>
-                        <input type="text" id="visFrete" placeholder="Ex: Entrega própria, PAC, Jadlog..." 
-                               style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
-                    </div>
-                    <div class="form-group">
-                        <label>Valor do Frete (R$)</label>
-                        <input type="number" id="visFreteValor" step="0.01" min="0" 
-                               placeholder="0,00" style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Prazo do Frete (dias úteis)</label>
-                    <input type="number" id="visFretePrazo" min="0" placeholder="Ex: 5" 
-                           style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
-                    <small style="color:#888;font-size:11px;">Dias úteis para entrega do frete (será somado ao prazo de produção)</small>
-                </div>
-
-                <div class="form-group">
-                    <label>Observações do Pedido</label>
-                    <textarea id="visObs" rows="2" placeholder="Informações internas sobre o pedido..." 
-                              style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;resize:vertical;"></textarea>
-                </div>
-            </div>
-            
-            <!-- BUSCA DE PRODUTOS -->
-            <div class="form-group">
-                <label>🔍 Buscar Produto</label>
-                <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                    <input type="text" id="buscaProdutoManual" placeholder="Digite o nome ou código do produto..." 
-                           style="flex:1;min-width:180px;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;"
-                           oninput="filtrarProdutosManual()">
-                    <select id="filtroCategoriaManual" style="padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;background:white;min-width:130px;" onchange="filtrarProdutosManual()">
-                        <option value="">Todas categorias</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="produto-lista-container">
-                <div id="listaProdutosManual">
-                    <div style="text-align:center;padding:15px;color:#999;">
-                        <i class="fas fa-spinner fa-spin"></i> Carregando produtos...
-                    </div>
-                </div>
-            </div>
-
-            <!-- CARRINHO -->
-            <div style="border-top:2px solid #eee;padding-top:12px;margin-top:8px;">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
-                    <h4 style="color:var(--primary-blue);font-size:14px;"><i class="fas fa-shopping-cart"></i> Itens do Pedido</h4>
-                    <div style="display:flex;gap:12px;align-items:center;">
-                        <span id="totalItensManual" style="font-size:12px;color:#888;">0 itens</span>
-                        <span id="totalManual" style="font-weight:700;color:var(--primary-blue);font-size:15px;">R$ 0,00</span>
-                    </div>
-                </div>
-                <div id="carrinhoManual" style="max-height:180px;overflow-y:auto;border:1px solid #eee;border-radius:6px;padding:8px;background:white;min-height:50px;">
-                    <div style="text-align:center;padding:12px;color:#999;font-size:12px;">
-                        Nenhum item adicionado
+            <!-- LADO ESQUERDO: BUSCA E LISTA DE PRODUTOS -->
+            <div style="flex: 1; display: flex; flex-direction: column; border: 1px solid #e0e0e0; border-radius: 8px; background: #fafafa;">
+                <div style="padding: 10px; border-bottom: 1px solid #e0e0e0; background: white; border-radius: 8px 8px 0 0;">
+                    <div style="position: relative;">
+                        <i class="fas fa-search" style="position: absolute; left: 10px; top: 10px; color: #999;"></i>
+                        <input type="text" id="pmBuscaProduto" placeholder="Buscar produto por nome ou código..." 
+                               style="width: 100%; padding: 8px 10px 8px 32px; border: 2px solid #ddd; border-radius: 6px; font-size: 13px;"
+                               oninput="pmFiltrarProdutos()">
                     </div>
                 </div>
                 
-                <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
-                    <button onclick="limparCarrinhoManual()" class="btn-sm" style="background:#e74c3c;color:white;padding:8px 14px;">
-                        <i class="fas fa-trash"></i> Limpar
-                    </button>
-                    <button onclick="visualizarPedidoManual()" class="btn-sm btn-view" style="padding:8px 16px;font-weight:600;">
-                        <i class="fas fa-eye"></i> Visualizar
-                    </button>
-                    <button onclick="finalizarPedidoManual()" class="btn-sm btn-success" style="padding:8px 16px;font-weight:600;">
-                        <i class="fas fa-save"></i> Salvar Pedido
+                <div id="pmListaProdutos" style="flex: 1; overflow-y: auto; padding: 10px;">
+                    <!-- Preenchido via JS -->
+                </div>
+            </div>
+
+            <!-- LADO DIREITO: CARRINHO -->
+            <div style="flex: 1.2; display: flex; flex-direction: column; border: 1px solid #e0e0e0; border-radius: 8px; background: white;">
+                <div style="padding: 10px 15px; border-bottom: 1px solid #e0e0e0; background: var(--primary-blue); color: white; border-radius: 8px 8px 0 0; display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="margin: 0; font-size: 15px;"><i class="fas fa-shopping-cart"></i> Carrinho</h3>
+                    <span id="pmTotalItens" style="font-size: 12px; background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 12px;">0 itens</span>
+                </div>
+                
+                <div id="pmCarrinho" style="flex: 1; overflow-y: auto; padding: 10px;">
+                    <div style="text-align: center; padding: 30px; color: #999;">
+                        <i class="fas fa-box-open" style="font-size: 30px; display: block; margin-bottom: 10px; color: #ddd;"></i>
+                        Nenhum produto adicionado
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ÁREA 3: FRETE, PAGAMENTO E TOTAIS (RODAPÉ) -->
+        <div style="display: flex; gap: 15px; flex-shrink: 0; border-top: 2px solid #eee; padding-top: 15px;">
+            
+            <!-- FRETE -->
+            <div style="flex: 1; background: #f8f9fa; border-radius: 8px; padding: 12px; border: 1px solid #e0e0e0;">
+                <h4 style="margin-bottom: 8px; color: var(--primary-dark); font-size: 14px;"><i class="fas fa-truck"></i> Frete</h4>
+                <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                    <input type="text" id="pmCep" placeholder="CEP (só números)" maxlength="8" style="flex: 1; padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px;">
+                    <button onclick="pmCalcularFrete()" class="btn-sm btn-edit" style="padding: 6px 12px;">Calcular</button>
+                </div>
+                <div id="pmResultadoFrete" style="font-size: 12px; color: #555; max-height: 100px; overflow-y: auto;">
+                    <!-- Preenchido via JS -->
+                </div>
+            </div>
+
+            <!-- PAGAMENTO E DESCONTO -->
+            <div style="flex: 1; background: #f8f9fa; border-radius: 8px; padding: 12px; border: 1px solid #e0e0e0;">
+                <h4 style="margin-bottom: 8px; color: var(--primary-dark); font-size: 14px;"><i class="fas fa-credit-card"></i> Pagamento</h4>
+                
+                <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                    <select id="pmFormaPagamento" style="flex: 1; padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px;">
+                        <option value="PIX">PIX</option>
+                        <option value="Cartão">Cartão</option>
+                        <option value="Boleto">Boleto</option>
+                        <option value="Dinheiro">Dinheiro</option>
+                    </select>
+                    
+                    <div style="display: flex; align-items: center; gap: 4px;">
+                        <span style="font-size: 12px; font-weight: 600;">Desc %:</span>
+                        <input type="number" id="pmDescontoPerc" placeholder="0" min="0" max="100" style="width: 50px; padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- TOTAIS E AÇÃO -->
+            <div style="flex: 1.5; display: flex; flex-direction: column; justify-content: center; align-items: flex-end;">
+                <div style="font-size: 13px; color: #666; margin-bottom: 4px;">
+                    Subtotal Produtos: <span id="pmSubtotal" style="font-weight: 600;">R$ 0,00</span>
+                </div>
+                <div style="font-size: 13px; color: #666; margin-bottom: 4px;">
+                    Desconto: <span id="pmDescontoValor" style="font-weight: 600; color: #e74c3c;">R$ 0,00</span>
+                </div>
+                <div style="font-size: 13px; color: #666; margin-bottom: 8px;">
+                    Frete: <span id="pmFreteValor" style="font-weight: 600;">R$ 0,00</span>
+                </div>
+                <div style="font-size: 22px; font-weight: 700; color: var(--primary-blue); margin-bottom: 10px;">
+                    TOTAL: <span id="pmTotalGeral">R$ 0,00</span>
+                </div>
+                
+                <div style="display: flex; gap: 10px; width: 100%;">
+                    <button onclick="fecharModal('modalPedidoManual')" style="flex: 1; padding: 12px; background: #e0e0e0; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">Cancelar</button>
+                    <button onclick="pmFinalizarPedido()" style="flex: 2; padding: 12px; background: var(--success); color: white; border: none; border-radius: 6px; font-weight: 700; font-size: 16px; cursor: pointer;">
+                        <i class="fas fa-check-circle"></i> Finalizar Pedido
                     </button>
                 </div>
             </div>
@@ -7499,7 +7482,119 @@ console.log('💡 EXECUTE: forcarCorrecaoBusca() para corrigir automaticamente')
 // 🚀 INICIALIZAÇÃO
 // ============================================================
 carregarDados();
+// ============================================================
+// LÓGICA DO NOVO PEDIDO MANUAL - CLIENTES (ETAPA 1)
+// ============================================================
+let pmClienteSelecionado = null;
 
+function abrirPedidoManual() {
+    // Limpa a tela ao abrir
+    document.getElementById('pmBuscaCliente').value = '';
+    document.getElementById('pmClienteSelecionado').style.display = 'none';
+    document.getElementById('pmResultadoClientes').style.display = 'none';
+    pmClienteSelecionado = null;
+    
+    // Abre o modal
+    document.getElementById('modalPedidoManual').classList.add('open');
+}
+
+function pmBuscarCliente() {
+    const termo = document.getElementById('pmBuscaCliente').value.toLowerCase().trim();
+    const container = document.getElementById('pmResultadoClientes');
+    
+    if (termo.length < 2) {
+        container.style.display = 'none';
+        return;
+    }
+
+    // MÁGICA DO BALCÃO: Se digitar "balcão" ou "balcao", cria um cliente fake
+    if ('balcao'.includes(termo) || 'balcão'.includes(termo)) {
+        container.innerHTML = `
+            <div onclick="pmSelecionarClienteBalcao()" style="padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; background: #fff3cd;">
+                <strong style="color: #856404;"><i class="fas fa-store"></i> VENDA NO BALCÃO (Sem cadastro)</strong>
+                <div style="font-size: 11px; color: #888;">Clique para usar como cliente</div>
+            </div>
+        `;
+        container.style.display = 'block';
+        return; // Para por aqui e não buscar no banco
+    }
+
+    // Busca no banco de dados (clientes já carregados na memória)
+    const resultados = dados.clientes.filter(c => {
+        const nome = String(c.nome || '').toLowerCase();
+        const email = String(c.email || '').toLowerCase();
+        const doc = String(c.cpf || c.documento || '').replace(/\D/g, '');
+        const tel = String(c.telefone || '').replace(/\D/g, '');
+        
+        return nome.includes(termo) || email.includes(termo) || doc.includes(termo) || tel.includes(termo);
+    }).slice(0, 10); // Mostra no máximo 10
+
+    if (resultados.length === 0) {
+        container.innerHTML = `<div style="padding: 10px; text-align: center; color: #999; font-size: 12px;">Nenhum cliente encontrado. Cadastre um novo.</div>`;
+    } else {
+        container.innerHTML = resultados.map(c => {
+            const docFormatado = formatarDocumento(c.cpf || c.documento);
+            return `
+                <div onclick="pmSelecionarCliente(${c.id_cliente})" style="padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f0f4f8'" onmouseout="this.style.background='white'">
+                    <div style="font-weight: 600; color: var(--primary-dark);">${c.nome}</div>
+                    <div style="font-size: 11px; color: #666;">${c.email || 'Sem email'} | ${c.telefone || 'Sem tel'}</div>
+                    ${docFormatado !== '---' ? `<div style="font-size: 10px; color: #999;">Doc: ${docFormatado}</div>` : ''}
+                </div>
+            `;
+        }).join('');
+    }
+    container.style.display = 'block';
+}
+
+function pmSelecionarCliente(id) {
+    pmClienteSelecionado = dados.clientes.find(c => parseInt(c.id_cliente) === parseInt(id));
+    if (!pmClienteSelecionado) return;
+    
+    document.getElementById('pmBuscaCliente').value = pmClienteSelecionado.nome;
+    document.getElementById('pmResultadoClientes').style.display = 'none';
+    
+    document.getElementById('pmNomeClienteSel').textContent = pmClienteSelecionado.nome;
+    document.getElementById('pmDocClienteSel').textContent = formatarDocumento(pmClienteSelecionado.cpf || pmClienteSelecionado.documento);
+    document.getElementById('pmClienteSelecionado').style.display = 'block';
+}
+
+function pmSelecionarClienteBalcao() {
+    pmClienteSelecionado = {
+        id_cliente: -1, // ID fake para saber que é balcão
+        nome: 'Cliente Balcão',
+        cpf: '',
+        documento: '',
+        email: '',
+        telefone: '',
+        endereco: 'Retirada no Balcão'
+    };
+    
+    document.getElementById('pmBuscaCliente').value = 'BALCÃO';
+    document.getElementById('pmResultadoClientes').style.display = 'none';
+    
+    document.getElementById('pmNomeClienteSel').textContent = 'VENDA NO BALCÃO';
+    document.getElementById('pmDocClienteSel').textContent = 'Sem cadastro';
+    document.getElementById('pmClienteSelecionado').style.display = 'block';
+    
+    // Foca no campo de busca de produto para agilizar a venda
+    document.getElementById('pmBuscaProduto').focus();
+}
+
+function pmLimparCliente() {
+    pmClienteSelecionado = null;
+    document.getElementById('pmBuscaCliente').value = '';
+    document.getElementById('pmClienteSelecionado').style.display = 'none';
+}
+
+// Fecha a lista suspensa de clientes se clicar fora
+document.addEventListener('click', function(e) {
+    const container = document.getElementById('pmResultadoClientes');
+    const input = document.getElementById('pmBuscaCliente');
+    if (container && input && !container.contains(e.target) && e.target !== input) {
+        container.style.display = 'none';
+    }
+});
+    
 </script>
 
 </body>
