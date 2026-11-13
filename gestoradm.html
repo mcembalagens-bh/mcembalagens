@@ -8244,38 +8244,21 @@ async function pmFinalizarPedido() {
     let textoItens = [];
     
     pmCarrinho.forEach(item => {
-        // Busca o nome completo do produto no banco de dados (dados.produtos)
+        // Busca o produto no banco de dados
         const produtoNoBanco = dados.produtos.find(p => parseInt(p.id) === parseInt(item.produtoId));
         const nomeProduto = produtoNoBanco ? (produtoNoBanco.nome || '') : item.nome;
+        const descricaoProduto = produtoNoBanco ? (produtoNoBanco.descricao || '') : '';
         
-        // 🔥 LOG DE TESTE: Isso vai aparecer no console do navegador para você ver o nome real
-        console.log("DEBUG NOME PRODUTO:", nomeProduto);
-        
-        // Procura a palavra "divisória", "divisoria", "berço" ou "berco" no nome
-        const textoBusca = nomeProduto.toLowerCase();
-        const temBerco = textoBusca.includes('divisória') || textoBusca.includes('divisoria') || textoBusca.includes('berço') || textoBusca.includes('berco');
-        
-        // Se tiver, tenta extrair o número (ex: "4 divisórias")
+        // 🔥 A MÁGICA: Procura a quantidade de berços e gomos EXATAMENTE na descrição
         let qtdBercoPorCaixa = 0;
         let gomosBerco = 0;
         
-        if (temBerco) {
-            // Tenta achar o número antes da palavra (ex: 4 divisórias)
-            const matchQtd = textoBusca.match(/(\d+)\s*(?:divisórias|divisorias|berços|bercos)/);
-            if (matchQtd) {
-                qtdBercoPorCaixa = parseInt(matchQtd[1]);
-            } else {
-                qtdBercoPorCaixa = 1; // Se não achar o número, assume 1
-            }
-            
-            // Tenta achar quantos gomos tem (ex: 4 gomos)
-            const matchGomos = textoBusca.match(/(\d+)\s*gomos/);
-            if (matchGomos) {
-                gomosBerco = parseInt(matchGomos[1]);
-            } else {
-                // Se não achou "gomos", usa o mesmo número das divisórias (ex: 4 divisórias = 4 gomos)
-                gomosBerco = qtdBercoPorCaixa; 
-            }
+        // Regex para achar "2 berços 2 gomos", "1 berço 4 gomos", etc.
+        const matchBerco = descricaoProduto.match(/(\d*)\s*berços?\s*(?:de\s*)?(\d+)\s*gomos/i);
+        
+        if (matchBerco) {
+            qtdBercoPorCaixa = matchBerco[1] ? parseInt(matchBerco[1]) : 1;
+            gomosBerco = parseInt(matchBerco[2]);
         }
 
         if (item.isProducao) {
