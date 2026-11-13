@@ -7803,8 +7803,11 @@ function pmAtualizarCarrinho() {
         `;
     }).join('');
 
-    totalItensEl.textContent = `${totalItens} itens`;
+       totalItensEl.textContent = `${totalItens} itens`;
     pmCalcularTotais();
+    
+    // 👇 A MÁGICA ACONTECE AQUI: Salva o rascunho toda vez que o carrinho for desenhado
+    pmSalvarRascunho(); 
 }
 
 function pmAlterarQtd(index, delta) {
@@ -8183,6 +8186,155 @@ function abrirPedidoManual() {
     document.getElementById('modalPedidoManual').classList.add('open');
     pmFiltrarProdutos(); // Carrega a lista de produtos à esquerda
 }
+
+// ============================================================
+// LÓGICA DO NOVO PEDIDO MANUAL - FINALIZAR E ESTOQUE (ETAPA 6)
+// ============================================================
+
+async function pmFinalizarPedido() {
+    // 1. Validações
+    if (!pmClienteSelecionado) {
+        alert('⚠️ Selecione um cliente (ou a opção Balcão) antes de finalizar.');
+        return;
+    }
+    if (pmCarrinho.length === 0) {
+        alert('⚠️ Adicione pelo menos um produto ao carrinho.');
+        return;
+    }
+
+    const formaPagamento = document.getElementById('pmFormaPagamento').value;
+    const percDesconto = parseFloat(document.getElementById('pmDescontoPerc').value) || 0;
+    
+    // 2. Cálculos Finais
+    let subtotal = pmCarrinho.reduce((acc, item) => acc + item.precoTotal, 0);
+    const valorDesconto = subtotal * (percDesconto / 100);
+    const subtotalComDesc = subtotal - valorDesconto;
+    const frete = pmFreteSelecionado ? pmFreteSelecionado.valor : 0;
+    const totalGeral = subtotalComDesc + frete;
+    
+    // Prazo total (Maior prazo de produção + Prazo do frete)
+    let maiorPrazoProducao = 0;
+    pmCarrinho.forEach(item => {
+        if (item.isProducao && item.prazoProducao > maiorPrazoProducao) {
+            maiorPrazoProducao = item.prazoProducao;
+        }
+    });
+    const prazoFrete = pmFreteSelecionado ? pmFreteSelecionado.prazo : 0;
+    const prazoTotal = maiorPrazoProducao + prazoFrete;
+
+    // 3. Monta o texto dos itens para salvar no banco
+    let textoItens = [];
+    
+    pmCarrinho.forEach(item => {
+        if (item.isProducao) {
+            if (item.queroLevar && item.estoqueTotal > 0) {
+                // Vai levar uma parte e produzir o resto
+                const qtdProduzir = item.quantidade - item.estoqueTotal;
+                textoItens.push(`${item.nome} (Disponível) (${item.estoqueTotal}x 1 un) - R$ ${(item.estoqueTotal * item.precoUnitario).toFixed(2)}`);
+                textoItens.push(`${item.nome} (Produção ${item.prazoProducao} dias) (${qtdProduzir}x 1 un) - R$ ${(qtdProduzir * item.precoUnitario).toFixed(2)}`);
+            } else {
+                // Vai produzir tudo
+                textoItens.push(`${item.nome} (Produção ${item.prazoProducao} dias) (${item.quantidade}x 1 un) - R$ ${item.precoTotal.toFixed(2)}`);
+            }
+        } else {
+            // Estoque normal
+            textoItens.push(`${item.nome} (Disponível) (${item.quantidade}x 1 un) - R$ ${item.precoTotal.toFixed(2)}`);
+        }
+    });
+    
+    const stringItens = textoItens.join(' | ');
+
+    // 4. Monta as observações
+    let obs = `Frete: ${pmFreteSelecionado ? pmFreteSelecionado.nome : 'Retirada'} (R$ ${frete.toFixed(2)}) | Pagamento: ${formaPagamento}`;
+    if (valorDesconto > 0) obs += ` | Desconto: ${percDesconto}% (R$ ${valorDesconto.toFixed(2)})`;
+    obs += ` | Pedido Manual / Balcão | Prazo Total: ${prazoTotal} dias`;
+
+    // 5. Prepara os dados do pedido
+    const agora = new Date();
+    const dataPedido = agora.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+    
+    const pedidoData = {
+        cliente_nome: pmClienteSelecionado.nome,
+        cliente_email: pmClienteSelecionado.email || 'balcao@embalagens.com',
+        cliente_telefone: pmClienteSelecionado.telefone || '',
+        cliente_documento: pmClienteSelecionado.cpf || pmClienteSelecionado.documento || '',
+        itens: stringItens,
+        total: String(totalGeral.toFixed(2)),
+        total_produtos: String(subtotal.toFixed(2)),
+        desconto: String(valorDesconto.toFixed(2)),
+        endereco_entrega: pmClienteSelecionado.endereco || 'Retirada no Balcão',
+        frete: pmFreteSelecionado ? pmFreteSelecionado.nome : 'Retirada na Loja',
+        frete_valor: String(frete.toFixed(2)),
+        observacoes: obs,
+        prazo_entrega: prazoTotal,
+        producao_dias: maiorPrazoProducao,
+        pagamento: formaPagamento,
+        status: 'Pendente', // Entra como pendente para o gestor ver
+        data_pedido: dataPedido
+    };
+
+    // Desabilita o botão para não clicar duas vezes
+    const btnSalvar = document.querySelector('button[onclick="pmFinalizarPedido()"]');
+    const textoOriginal = btnSalvar.innerHTML;
+    btnSalvar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+    btnSalvar.disabled = true;
+
+    try {
+        // 6. Salva o pedido no Supabase
+        const { data: pedidoSalvo, error } = await supabaseClient
+            .from('pedidos')
+            .insert([pedidoData])
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        // 7. BAIXA DE ESTOQUE (A Regra de Ouro)
+        for (const item of pmCarrinho) {
+            const produtoNoBanco = dados.produtos.find(p => parseInt(p.id) === parseInt(item.produtoId));
+            if (!produtoNoBanco) continue;
+
+            const estoqueAtual = parseInt(produtoNoBanco.estoque) || 0;
+            let novoEstoque = estoqueAtual;
+
+            if (!item.isProducao) {
+                // Se é tudo disponível, baixa a quantidade total
+                novoEstoque = estoqueAtual - item.quantidade;
+            } else if (item.queroLevar) {
+                // Se tem produção, mas marcou "quero levar", ZERA o estoque atual
+                novoEstoque = 0;
+            } else {
+                // Se é tudo produção e NÃO marcou quero levar, não mexe no estoque
+                novoEstoque = estoqueAtual;
+            }
+
+            // Atualiza no banco (só se o estoque mudou)
+            if (novoEstoque !== estoqueAtual) {
+                await supabaseClient
+                    .from('produtos')
+                    .update({ estoque: novoEstoque })
+                    .eq('id', produtoNoBanco.id);
+            }
+        }
+
+        // 8. Limpa tudo e fecha
+        alert(`✅ Pedido #${pedidoSalvo.id_pedido} salvo com sucesso!\n\nO estoque foi atualizado conforme as regras.`);
+        
+        pmLimparTudo(); // Limpa o carrinho e o rascunho
+        fecharModal('modalPedidoManual');
+        
+        // Atualiza a tela de fundo do gestor para mostrar o novo pedido
+        carregarDadosParcial();
+
+    } catch (error) {
+        console.error('Erro ao salvar pedido:', error);
+        alert('❌ Erro ao salvar o pedido: ' + (error.message || 'Tente novamente.'));
+    } finally {
+        btnSalvar.innerHTML = textoOriginal;
+        btnSalvar.disabled = false;
+    }
+}
+
     
 </script>
 
