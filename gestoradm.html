@@ -8240,27 +8240,42 @@ async function pmFinalizarPedido() {
     const prazoFrete = pmFreteSelecionado ? pmFreteSelecionado.prazo : 0;
     const prazoTotal = maiorPrazoProducao + prazoFrete;
 
-    // 3. Monta o texto dos itens para salvar no banco (COM A SEPARAÇÃO DE BERÇOS)
+    // 3. Monta o texto dos itens para salvar no banco
     let textoItens = [];
     
     pmCarrinho.forEach(item => {
-        // 🔥 A MÁGICA ACONTECE AQUI: Busca a descrição direto do banco de dados
+        // Busca o nome completo do produto no banco de dados (dados.produtos)
         const produtoNoBanco = dados.produtos.find(p => parseInt(p.id) === parseInt(item.produtoId));
-        const descricaoProduto = produtoNoBanco ? (produtoNoBanco.descricao || '') : '';
         const nomeProduto = produtoNoBanco ? (produtoNoBanco.nome || '') : item.nome;
         
-        // Junta nome e descrição para procurar a palavra "berço"
-        const textoBusca = (nomeProduto + ' ' + descricaoProduto).toLowerCase();
+        // 🔥 LOG DE TESTE: Isso vai aparecer no console do navegador para você ver o nome real
+        console.log("DEBUG NOME PRODUTO:", nomeProduto);
         
-        // Regex para pegar padrões como "2 berços 4 gomos" ou "berço 2 gomos"
-        const matchBerco = textoBusca.match(/(\d*)\s*berços?\s*(?:de\s*)?(\d+)\s*gomos/i);
+        // Procura a palavra "divisória", "divisoria", "berço" ou "berco" no nome
+        const textoBusca = nomeProduto.toLowerCase();
+        const temBerco = textoBusca.includes('divisória') || textoBusca.includes('divisoria') || textoBusca.includes('berço') || textoBusca.includes('berco');
         
+        // Se tiver, tenta extrair o número (ex: "4 divisórias")
         let qtdBercoPorCaixa = 0;
         let gomosBerco = 0;
         
-        if (matchBerco) {
-            qtdBercoPorCaixa = matchBerco[1] ? parseInt(matchBerco[1]) : 1;
-            gomosBerco = parseInt(matchBerco[2]);
+        if (temBerco) {
+            // Tenta achar o número antes da palavra (ex: 4 divisórias)
+            const matchQtd = textoBusca.match(/(\d+)\s*(?:divisórias|divisorias|berços|bercos)/);
+            if (matchQtd) {
+                qtdBercoPorCaixa = parseInt(matchQtd[1]);
+            } else {
+                qtdBercoPorCaixa = 1; // Se não achar o número, assume 1
+            }
+            
+            // Tenta achar quantos gomos tem (ex: 4 gomos)
+            const matchGomos = textoBusca.match(/(\d+)\s*gomos/);
+            if (matchGomos) {
+                gomosBerco = parseInt(matchGomos[1]);
+            } else {
+                // Se não achou "gomos", usa o mesmo número das divisórias (ex: 4 divisórias = 4 gomos)
+                gomosBerco = qtdBercoPorCaixa; 
+            }
         }
 
         if (item.isProducao) {
@@ -8350,17 +8365,13 @@ async function pmFinalizarPedido() {
             let novoEstoque = estoqueAtual;
 
             if (!item.isProducao) {
-                // Se é tudo disponível, baixa a quantidade total
                 novoEstoque = estoqueAtual - item.quantidade;
             } else if (item.queroLevar) {
-                // Se tem produção, mas marcou "quero levar", ZERA o estoque atual
                 novoEstoque = 0;
             } else {
-                // Se é tudo produção e NÃO marcou quero levar, não mexe no estoque
                 novoEstoque = estoqueAtual;
             }
 
-            // Atualiza no banco (só se o estoque mudou)
             if (novoEstoque !== estoqueAtual) {
                 await supabaseClient
                     .from('produtos')
@@ -8369,13 +8380,11 @@ async function pmFinalizarPedido() {
             }
         }
 
-        // 8. Limpa tudo e fecha automaticamente (sem perguntar)
+        // 8. Limpa tudo e fecha automaticamente
         alert(`✅ Pedido #${pedidoSalvo.id_pedido} salvo com sucesso!\n\nO estoque foi atualizado e o carrinho será limpo.`);
         
-        pmLimparTudo(); // Limpa o carrinho e o rascunho sem perguntar
+        pmLimparTudo(); 
         fecharModal('modalPedidoManual');
-        
-        // Atualiza a tela de fundo do gestor para mostrar o novo pedido
         carregarDadosParcial();
 
     } catch (error) {
