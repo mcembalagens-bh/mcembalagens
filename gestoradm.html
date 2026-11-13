@@ -7594,6 +7594,241 @@ document.addEventListener('click', function(e) {
         container.style.display = 'none';
     }
 });
+
+// ============================================================
+// LÓGICA DO NOVO PEDIDO MANUAL - PRODUTOS E CARRINHO (ETAPA 2)
+// ============================================================
+let pmCarrinho = [];
+
+function pmFiltrarProdutos() {
+    const termo = document.getElementById('pmBuscaProduto').value.toLowerCase().trim();
+    const container = document.getElementById('pmListaProdutos');
+    
+    if (!dados.produtos || dados.produtos.length === 0) {
+        container.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">Carregando produtos...</div>';
+        return;
+    }
+
+    // Filtra os produtos
+    let filtrados = dados.produtos.filter(p => {
+        const nome = String(p.nome || '').toLowerCase();
+        const cod = String(p.codigo_produto || '').toLowerCase();
+        return nome.includes(termo) || cod.includes(termo);
+    });
+
+    // Ordena alfabeticamente
+    filtrados.sort((a, b) => String(a.nome).localeCompare(String(b.nome)));
+
+    if (filtrados.length === 0) {
+        container.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">Nenhum produto encontrado.</div>';
+        return;
+    }
+
+    container.innerHTML = filtrados.map(p => {
+        const estoque = parseInt(p.estoque) || 0;
+        const corEstoque = estoque > 0 ? '#27ae60' : '#e74c3c';
+        
+        return `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #eee; transition: background 0.2s;" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background='transparent'">
+                <div style="flex: 1; min-width: 0; padding-right: 10px;">
+                    <div style="font-weight: 600; font-size: 13px; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${p.nome}">${p.nome}</div>
+                    <div style="font-size: 11px; color: #888;">Cód: ${p.codigo_produto || '---'} | Estoque: <span style="color: ${corEstoque}; font-weight: bold;">${estoque}</span></div>
+                </div>
+                <button onclick="pmAdicionarAoCarrinho(${p.id})" class="btn-sm btn-success" style="padding: 6px 10px; white-space: nowrap;">
+                    <i class="fas fa-cart-plus"></i> Add
+                </button>
+            </div>
+        `;
+    }).join('');
+}
+
+function pmAdicionarAoCarrinho(produtoId) {
+    const p = dados.produtos.find(x => parseInt(x.id) === parseInt(produtoId));
+    if (!p) return;
+
+    // Verifica se o produto já está no carrinho. Se sim, apenas aumenta a quantidade.
+    const itemExistente = pmCarrinho.find(i => i.produtoId === produtoId);
+    
+    if (itemExistente) {
+        itemExistente.quantidade++;
+        itemExistente.precoTotal = itemExistente.quantidade * itemExistente.precoUnitario;
+    } else {
+        // REGRA DE PREÇO UNITÁRIO BASE
+        // Pega os pacotes (10, 50, 100) e calcula o valor da unidade
+        let precoUnit10 = 0, precoUnit50 = 0, precoUnit100 = 0;
+        
+        const precosStr = p.preco_venda || '';
+        precosStr.split(';').forEach(item => {
+            const parts = item.split(':');
+            if (parts.length === 2) {
+                const qtd = parseInt(parts[0]);
+                const valorPacote = parseFloat(parts[1]);
+                if (qtd === 10) precoUnit10 = valorPacote / 10;
+                if (qtd === 50) precoUnit50 = valorPacote / 50;
+                if (qtd === 100) precoUnit100 = valorPacote / 100;
+            }
+        });
+
+        // Se o produto tiver pacote de 10, usa ele como base inicial.
+        let precoBase = precoUnit10 > 0 ? precoUnit10 : (precoUnit50 > 0 ? precoUnit50 : precoUnit100);
+
+        pmCarrinho.push({
+            produtoId: p.id,
+            nome: p.nome,
+            quantidade: 1, // Sempre começa com 1 unidade
+            estoqueTotal: parseInt(p.estoque) || 0,
+            precoUnitario: precoBase,
+            precoTotal: precoBase,
+            precoUnit10: precoUnit10,
+            precoUnit50: precoUnit50,
+            precoUnit100: precoUnit100,
+            isProducao: false,
+            queroLevar: false,
+            prazoProducao: parseInt(p.prazo_producao) || 7
+        });
+    }
+
+    pmAtualizarCarrinho();
+}
+
+function pmAtualizarCarrinho() {
+    const container = document.getElementById('pmCarrinho');
+    const totalItensEl = document.getElementById('pmTotalItens');
+    
+    if (pmCarrinho.length === 0) {
+        container.innerHTML = '<div style="text-align: center; padding: 30px; color: #999;"><i class="fas fa-box-open" style="font-size: 30px; display: block; margin-bottom: 10px; color: #ddd;"></i>Nenhum produto adicionado</div>';
+        totalItensEl.textContent = '0 itens';
+        pmCalcularTotais();
+        return;
+    }
+
+    let totalItens = 0;
+
+    container.innerHTML = pmCarrinho.map((item, index) => {
+        totalItens += item.quantidade;
+
+        // REGRA DE PREÇO DINÂMICO
+        // Atualiza o preço unitário baseado na quantidade atual
+        if (item.quantidade >= 100 && item.precoUnit100 > 0) {
+            item.precoUnitario = item.precoUnit100;
+        } else if (item.quantidade >= 50 && item.precoUnit50 > 0) {
+            item.precoUnitario = item.precoUnit50;
+        } else if (item.precoUnit10 > 0) {
+            item.precoUnitario = item.precoUnit10;
+        }
+        
+        // Se o usuário não editou manualmente (vou considerar que se ele editar, o valor muda, mas para simplificar vamos deixar a edição mandar)
+        // Neste modelo, o input de preço reflete o item.precoUnitario.
+
+        item.precoTotal = item.quantidade * item.precoUnitario;
+
+        // Lógica do "Quero Levar"
+        const podeLevar = item.quantidade <= item.estoqueTotal;
+        let avisoEstoque = '';
+        
+        if (!podeLevar) {
+            item.isProducao = true;
+            // Se não marcou "quero levar", o estoque todo fica pra produção
+            if (!item.queroLevar) {
+                avisoEstoque = `<span style="color:#e67e22; font-size:10px; font-weight:bold;"><i class="fas fa-clock"></i> Produção (${item.prazoProducao} dias)</span>`;
+            } else {
+                // Se marcou "quero levar", o estoque vai zerar, mas parte vai pra produção
+                avisoEstoque = `<span style="color:#e74c3c; font-size:10px; font-weight:bold;"><i class="fas fa-exclamation-triangle"></i> Produção (${item.quantidade - item.estoqueTotal} un)</span>`;
+            }
+        } else {
+            item.isProducao = false;
+            avisoEstoque = `<span style="color:#27ae60; font-size:10px; font-weight:bold;"><i class="fas fa-check-circle"></i> Disponível</span>`;
+        }
+
+        return `
+            <div style="border: 1px solid #e0e0e0; border-radius: 6px; padding: 10px; margin-bottom: 10px; background: #fff;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div style="font-weight: 600; font-size: 13px; color: #333; flex: 1; padding-right: 10px;">${item.nome}</div>
+                    <button onclick="pmRemoverDoCarrinho(${index})" style="background: none; border: none; color: #e74c3c; cursor: pointer;"><i class="fas fa-trash"></i></button>
+                </div>
+                
+                <div style="display: flex; align-items: center; gap: 10px; margin-top: 8px;">
+                    <!-- Controle de Quantidade -->
+                    <div style="display: flex; align-items: center; border: 1px solid #ddd; border-radius: 4px; overflow: hidden;">
+                        <button onclick="pmAlterarQtd(${index}, -1)" style="background: #f0f0f0; border: none; padding: 4px 8px; cursor: pointer;">-</button>
+                        <input type="number" value="${item.quantidade}" min="1" onchange="pmMudarQtdManual(${index}, this.value)" style="width: 40px; text-align: center; border: none; padding: 4px; font-weight: bold;">
+                        <button onclick="pmAlterarQtd(${index}, 1)" style="background: #f0f0f0; border: none; padding: 4px 8px; cursor: pointer;">+</button>
+                    </div>
+
+                    <!-- Preço Unitário -->
+                    <div style="display: flex; align-items: center; gap: 4px;">
+                        <span style="font-size: 11px; color: #666;">R$</span>
+                        <input type="number" step="0.01" value="${item.precoUnitario.toFixed(2)}" onchange="pmMudarPrecoManual(${index}, this.value)" style="width: 70px; border: 1px solid #ddd; border-radius: 4px; padding: 4px; text-align: right; font-size: 13px; font-weight: 600; color: var(--primary-blue);">
+                    </div>
+                    
+                    <!-- Total -->
+                    <div style="margin-left: auto; font-weight: 700; color: var(--primary-blue); font-size: 14px;">
+                        R$ ${item.precoTotal.toFixed(2)}
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; border-top: 1px dashed #eee; padding-top: 8px;">
+                    <div>${avisoEstoque}</div>
+                    
+                    <!-- Checkbox Quero Levar (só aparece se faltar estoque) -->
+                    ${item.isProducao ? `
+                        <label style="font-size: 11px; font-weight: 600; color: #e67e22; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                            <input type="checkbox" ${item.queroLevar ? 'checked' : ''} onchange="pmToggleQueroLevar(${index})">
+                            Quero levar o que tem
+                        </label>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    totalItensEl.textContent = `${totalItens} itens`;
+    pmCalcularTotais();
+}
+
+function pmAlterarQtd(index, delta) {
+    const item = pmCarrinho[index];
+    if (item.quantidade + delta < 1) return;
+    item.quantidade += delta;
+    item.precoTotal = item.quantidade * item.precoUnitario;
+    pmAtualizarCarrinho();
+}
+
+function pmMudarQtdManual(index, valor) {
+    const qtd = parseInt(valor);
+    if (isNaN(qtd) || qtd < 1) return;
+    pmCarrinho[index].quantidade = qtd;
+    pmAtualizarCarrinho();
+}
+
+function pmMudarPrecoManual(index, valor) {
+    const preco = parseFloat(valor);
+    if (isNaN(preco) || preco < 0) return;
+    pmCarrinho[index].precoUnitario = preco;
+    pmAtualizarCarrinho();
+}
+
+function pmToggleQueroLevar(index) {
+    pmCarrinho[index].queroLevar = !pmCarrinho[index].queroLevar;
+    pmAtualizarCarrinho();
+}
+
+function pmRemoverDoCarrinho(index) {
+    pmCarrinho.splice(index, 1);
+    pmAtualizarCarrinho();
+}
+
+function pmCalcularTotais() {
+    let subtotal = 0;
+    pmCarrinho.forEach(item => subtotal += item.precoTotal);
+    
+    document.getElementById('pmSubtotal').textContent = `R$ ${subtotal.toFixed(2)}`;
+    
+    // O desconto e o frete vão ser calculados na próxima etapa,
+    // mas já preparamos os campos para não dar erro.
+    document.getElementById('pmTotalGeral').textContent = `R$ ${subtotal.toFixed(2)}`;
+    document.getElementById('pmTotalItens').textContent = `${pmCarrinho.reduce((acc, i) => acc + i.quantidade, 0)} itens`;
+}
     
 </script>
 
