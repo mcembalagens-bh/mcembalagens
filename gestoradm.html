@@ -5815,44 +5815,42 @@ async function cancelarPedido(id) {
     const pedido = dados.pedidos.find(p => parseInt(p.id_pedido) === parseInt(id));
     if (!pedido) { alert('Pedido não encontrado!'); return; }
     
-    if (!confirm(`⚠️ Deseja realmente CANCELAR o pedido #${id}?\n\nO sistema devolverá ao estoque apenas os itens marcados como 'Disponível' (os de Produção não serão devolvidos).`)) return;
+    if (!confirm(`⚠️ Deseja realmente CANCELAR o pedido #${id}?\n\nO sistema devolverá ao estoque apenas os itens que estavam marcados como 'Disponível'.`)) return;
     
     mostrarSpinner('Cancelando e devolvendo estoque...');
     
     try {
-        // O processarItensPedido do Gestor vai ler o texto e separar as linhas
-        const itens = processarItensPedido(pedido.itens);
+        // 🔥 A MÁGICA: Lê o texto bruto do pedido e separa pelas barras verticais
+        const linhasPedido = String(pedido.itens || '').split(' | ');
         
-        for (const item of itens) {
-            if (item.quantidade > 0) {
-                let produto = null;
+        for (const linha of linhasPedido) {
+            const linhaUpper = linha.toUpperCase();
+            
+            // Só processa linhas que tenham a palavra DISPONÍVEL e NÃO tenham PRODUÇÃO
+            if (linhaUpper.includes('DISPONÍVEL') && !linhaUpper.includes('PRODUÇÃO') && !linhaUpper.includes('PRODUCAO')) {
                 
-                // 1. Tenta achar pelo ID
-                if (item.productId) {
-                    produto = dados.produtos.find(p => parseInt(p.id) === parseInt(item.productId));
-                }
-                // 2. Tenta pelo nome exato
-                if (!produto) {
-                    let nomeBusca = item.nome.split(' (Produção')[0].split(' (Disponível')[0].split(' (BERÇO')[0].trim();
-                    produto = dados.produtos.find(p => p.nome && p.nome.toLowerCase() === nomeBusca.toLowerCase());
-                }
-                // 3. Tenta por parte do nome
-                if (!produto) {
-                    produto = dados.produtos.find(p => p.nome && p.nome.toLowerCase().includes(item.nome.toLowerCase()));
-                }
+                // Tenta extrair o nome do produto e a quantidade dessa linha
+                // Exemplo: "Caixa 08x08x04 (Disponível) (30x 1 un) - R$ 48.74"
                 
-                if (produto) {
-                    const estoqueAtual = parseInt(produto.estoque) || 0;
+                // 1. Pega o nome do produto (tudo antes do parêntese)
+                const partesNome = linha.split('(');
+                const nomeProduto = partesNome[0].trim();
+                
+                // 2. Pega a quantidade total. Procura o padrão "xx un"
+                const matchQtd = linha.match(/\((\d+)x\s*1\s*un\)/i) || linha.match(/\((\d+)\s*un\)/i);
+                const quantidadeDisponivel = matchQtd ? parseInt(matchQtd[1]) : 0;
+                
+                if (quantidadeDisponivel > 0) {
+                    // Acha o produto no banco
+                    let produto = dados.produtos.find(p => p.nome && p.nome.toLowerCase() === nomeProduto.toLowerCase());
                     
-                    // 🔥 A MÁGICA ACONTECE AQUI
-                    // O item lido pelo parser vai vir com a palavra 'Disponível' ou 'Produção' no nome? 
-                    // Vamos checar no texto original da linha.
-                    const nomeDoItem = String(item.nome).toUpperCase();
+                    if (!produto) {
+                        produto = dados.produtos.find(p => p.nome && p.nome.toLowerCase().includes(nomeProduto.toLowerCase()));
+                    }
                     
-                    // Se a linha do item tiver "PRODUÇÃO", NÃO devolve.
-                    // Se tiver "DISPONÍVEL", devolve.
-                    if (!nomeDoItem.includes('PRODUÇÃO') && !nomeDoItem.includes('PRODUCAO')) {
-                        const novoEstoque = estoqueAtual + item.quantidade;
+                    if (produto) {
+                        const estoqueAtual = parseInt(produto.estoque) || 0;
+                        const novoEstoque = estoqueAtual + quantidadeDisponivel;
                         
                         const { error } = await supabaseClient
                             .from('produtos')
@@ -5862,11 +5860,11 @@ async function cancelarPedido(id) {
                         if (error) throw error;
                         
                         produto.estoque = novoEstoque;
-                        console.log(`✅ Estoque de "${produto.nome}" devolvido: ${estoqueAtual} + ${item.quantidade} = ${novoEstoque} (Linha: ${item.nome})`);
-                    } else {
-                        console.log(`🏭 Item "${item.nome}" era de produção (${item.quantidade} un). Estoque não devolvido.`);
+                        console.log(`✅ DEVOLVIDO: "${nomeProduto}" + ${quantidadeDisponivel} = ${novoEstoque}`);
                     }
                 }
+            } else if (linhaUpper.includes('PRODUÇÃO') || linhaUpper.includes('PRODUCAO')) {
+                console.log(`🏭 IGNORADO (Produção): ${linha.substring(0, 30)}...`);
             }
         }
         
