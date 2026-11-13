@@ -6838,38 +6838,47 @@ function imprimirCupom(idPedido) {
     const isRevendedor = isClienteRevendedor(pedido);
     const badgeRevendedor = isRevendedor ? ' 👑 REVENDEDOR' : '';
     
+    // 🔥 NOVO: Identifica se o pedido foi feito pelo Novo Pedido Manual
+    const isPedidoManual = String(pedido.observacoes || '').toUpperCase().includes('PEDIDO MANUAL') || 
+                           String(pedido.observacoes || '').toUpperCase().includes('BALCÃO') ||
+                           String(pedido.observacoes || '').toUpperCase().includes('BALCAO');
+
     const printArea = document.getElementById('printArea');
     let itensHtml = '';
     let subtotal = 0;
     let maiorPrazoProducao = 0;
-    let isProducaoGeral = false;
     
+    // Variável que guarda a soma dos berços (só será usada se for pedido do site)
     const totalBerçosPorGomos = {};
     
-    function extrairESomarBerços(descricao, totalUnidades) {
-        if (!descricao || totalUnidades <= 0) return;
-        const regex = /[Bb]erços?\s*:\s*([^\n]*)/;
-        const match = descricao.match(regex);
-        if (!match) return;
-        
-        let conteudo = match[1].replace(/\s/g, '');
-        const partes = conteudo.split(',').map(p => p.trim());
-        
-        partes.forEach(part => {
-            const partLimpa = part.replace(/[^0-9x]/gi, '');
-            const subPartes = partLimpa.split('x').map(Number);
-            if (subPartes.length === 2) {
-                const qtdBerçosPorUnidade = subPartes[0];
-                const gomos = subPartes[1];
-                if (qtdBerçosPorUnidade > 0 && gomos > 0) {
-                    const totalBerços = totalUnidades * qtdBerçosPorUnidade;
-                    if (!totalBerçosPorGomos[gomos]) totalBerçosPorGomos[gomos] = 0;
-                    totalBerçosPorGomos[gomos] += totalBerços;
+    // 🔥 TRAVA DE SEGURANÇA: Só roda a soma antiga se NÃO for pedido manual
+    if (!isPedidoManual) {
+        function extrairESomarBerços(descricao, totalUnidades) {
+            if (!descricao || totalUnidades <= 0) return;
+            const regex = /[Bb]erços?\s*:\s*([^\n]*)/;
+            const match = descricao.match(regex);
+            if (!match) return;
+            
+            let conteudo = match[1].replace(/\s/g, '');
+            const partes = conteudo.split(',').map(p => p.trim());
+            
+            partes.forEach(part => {
+                const partLimpa = part.replace(/[^0-9x]/gi, '');
+                const subPartes = partLimpa.split('x').map(Number);
+                if (subPartes.length === 2) {
+                    const qtdBerçosPorUnidade = subPartes[0];
+                    const gomos = subPartes[1];
+                    if (qtdBerçosPorUnidade > 0 && gomos > 0) {
+                        const totalBerços = totalUnidades * qtdBerçosPorUnidade;
+                        if (!totalBerçosPorGomos[gomos]) totalBerçosPorGomos[gomos] = 0;
+                        totalBerçosPorGomos[gomos] += totalBerços;
+                    }
                 }
-            }
-        });
+            });
+        }
     }
     
+    // Processa os itens que vieram do banco de dados
     const itens = processarItensPedido(pedido.itens);
     
     itens.forEach((item, index) => {
@@ -6881,24 +6890,20 @@ function imprimirCupom(idPedido) {
         subtotal += preco;
         
         if (item.isProducao && item.prazoProducao > maiorPrazoProducao) maiorPrazoProducao = item.prazoProducao;
-        if (item.isProducao) isProducaoGeral = true;
         
         let codigoProduto = '';
         
-        // 🔥 CORREÇÃO: Remove o sufixo "(Produção X dias)" do nome para achar o produto certo no banco
+        // Remove o sufixo "(Produção X dias)" do nome para achar o produto certo no banco
         let nomeBusca = item.nome.split(' (Produção')[0].trim();
-        
         const produtoEncontrado = dados.produtos.find(p => p.nome && p.nome.toLowerCase() === nomeBusca.toLowerCase());
         
         if (produtoEncontrado) {
             codigoProduto = produtoEncontrado.codigo_produto || '';
             
-            // 🔥 CORREÇÃO: Busca berços na descrição E no nome do produto
-            if (produtoEncontrado.descricao) {
-                extrairESomarBerços(produtoEncontrado.descricao, totalUnidades);
-            }
-            if (produtoEncontrado.nome) {
-                extrairESomarBerços(produtoEncontrado.nome, totalUnidades);
+            // 🔥 TRAVA DE SEGURANÇA: Só soma os berços se for pedido do site
+            if (!isPedidoManual) {
+                if (produtoEncontrado.descricao) extrairESomarBerços(produtoEncontrado.descricao, totalUnidades);
+                if (produtoEncontrado.nome) extrairESomarBerços(produtoEncontrado.nome, totalUnidades);
             }
         }
         
@@ -6929,35 +6934,38 @@ function imprimirCupom(idPedido) {
         `;
     });
     
-    const gomosOrdenados = Object.keys(totalBerçosPorGomos).map(Number).sort((a, b) => a - b);
-    
-    if (gomosOrdenados.length > 0) {
-        let itemIndex = itens.length + 1;
-        itensHtml += `
-            <div style="border-top:1px dashed #000;margin:3px 0;width:100%;"></div>
-            <div style="font-size:7px;font-weight:bold;color:#000;text-align:center;padding:2px 0;background:#f5f5f5;width:100%;">
-                📦 BERÇOS PARA SEPARAÇÃO
-            </div>
-        `;
-        gomosOrdenados.forEach(gomos => {
-            const totalBerços = totalBerçosPorGomos[gomos];
+    // 🔥 TRAVA DE SEGURANÇA: Só desenha o bloco extra de berços se for pedido do site
+    if (!isPedidoManual) {
+        const gomosOrdenados = Object.keys(totalBerçosPorGomos).map(Number).sort((a, b) => a - b);
+        
+        if (gomosOrdenados.length > 0) {
+            let itemIndex = itens.length + 1;
             itensHtml += `
-                <div style="display:flex;flex-direction:column;padding:2px 0;border-bottom:1px dotted #000;width:100%;max-width:100%;background:#fafffa;">
-                    <div style="display:flex;justify-content:space-between;width:100%;align-items:flex-start;">
-                        <div style="flex:1;min-width:0;padding-right:6px;">
-                            <span style="font-size:9px;font-weight:bold;color:#000;display:block;word-wrap:break-word;white-space:normal;line-height:1.3;">
-                                ${itemIndex}. 🧩 BERÇO ${gomos} GOMOS
-                            </span>
-                            <span style="font-size:8px;font-weight:bold;color:#000;display:block;">
-                                ${totalBerços} unidades
-                            </span>
-                        </div>
-                        <span style="font-size:9px;font-weight:bold;color:#000;flex-shrink:0;white-space:nowrap;">R$ 0,00</span>
-                    </div>
+                <div style="border-top:1px dashed #000;margin:3px 0;width:100%;"></div>
+                <div style="font-size:7px;font-weight:bold;color:#000;text-align:center;padding:2px 0;background:#f5f5f5;width:100%;">
+                    📦 BERÇOS PARA SEPARAÇÃO
                 </div>
             `;
-            itemIndex++;
-        });
+            gomosOrdenados.forEach(gomos => {
+                const totalBerços = totalBerçosPorGomos[gomos];
+                itensHtml += `
+                    <div style="display:flex;flex-direction:column;padding:2px 0;border-bottom:1px dotted #000;width:100%;max-width:100%;background:#fafffa;">
+                        <div style="display:flex;justify-content:space-between;width:100%;align-items:flex-start;">
+                            <div style="flex:1;min-width:0;padding-right:6px;">
+                                <span style="font-size:9px;font-weight:bold;color:#000;display:block;word-wrap:break-word;white-space:normal;line-height:1.3;">
+                                    ${itemIndex}. 🧩 BERÇO ${gomos} GOMOS
+                                </span>
+                                <span style="font-size:8px;font-weight:bold;color:#000;display:block;">
+                                    ${totalBerços} unidades
+                                </span>
+                            </div>
+                            <span style="font-size:9px;font-weight:bold;color:#000;flex-shrink:0;white-space:nowrap;">R$ 0,00</span>
+                        </div>
+                    </div>
+                `;
+                itemIndex++;
+            });
+        }
     }
     
     // ============================================================
@@ -6993,11 +7001,9 @@ function imprimirCupom(idPedido) {
         }
     }
     
-    // Monta a string de observações igual ao modelo antigo, puxando as colunas do banco
     let obsLimpa = pedido.observacoes || '';
     obsLimpa = obsLimpa.replace(/Prazo:\s*undefined\s*dias/gi, '').trim();
     
-    // Se a observação não tiver o texto de Frete e Pagamento, adiciona
     if (!obsLimpa.includes('Frete:') && !obsLimpa.includes('Pagamento:')) {
         let textoObs = `Frete: ${freteNome} (R$ ${freteValor.toFixed(2)}) | Pagamento: ${pagamento}`;
         if (parseInt(pedido.desconto) > 0) textoObs += ` | Desconto PIX: R$ ${parseFloat(pedido.desconto).toFixed(2)}`;
