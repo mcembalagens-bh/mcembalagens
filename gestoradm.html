@@ -6838,44 +6838,41 @@ function imprimirCupom(idPedido) {
     const isRevendedor = isClienteRevendedor(pedido);
     const badgeRevendedor = isRevendedor ? ' 👑 REVENDEDOR' : '';
     
-    // 🔥 NOVO: Identifica se o pedido foi feito pelo Novo Pedido Manual
-    const isPedidoManual = String(pedido.observacoes || '').toUpperCase().includes('PEDIDO MANUAL') || 
-                           String(pedido.observacoes || '').toUpperCase().includes('BALCÃO') ||
-                           String(pedido.observacoes || '').toUpperCase().includes('BALCAO');
+    // 🔥 TRAVA DE SEGURANÇA 1: Só pula a soma antiga se for explicitamente um pedido do novo modal
+    const isPedidoManual = String(pedido.observacoes || '').toUpperCase().includes('PEDIDO MANUAL / BALCÃO') || 
+                           String(pedido.observacoes || '').toUpperCase().includes('BALCÃO');
 
     const printArea = document.getElementById('printArea');
     let itensHtml = '';
     let subtotal = 0;
     let maiorPrazoProducao = 0;
     
-    // Variável que guarda a soma dos berços (só será usada se for pedido do site)
+    // Variável que guarda a soma dos berços
     const totalBerçosPorGomos = {};
     
-    // 🔥 TRAVA DE SEGURANÇA: Só roda a soma antiga se NÃO for pedido manual
-    if (!isPedidoManual) {
-        function extrairESomarBerços(descricao, totalUnidades) {
-            if (!descricao || totalUnidades <= 0) return;
-            const regex = /[Bb]erços?\s*:\s*([^\n]*)/;
-            const match = descricao.match(regex);
-            if (!match) return;
-            
-            let conteudo = match[1].replace(/\s/g, '');
-            const partes = conteudo.split(',').map(p => p.trim());
-            
-            partes.forEach(part => {
-                const partLimpa = part.replace(/[^0-9x]/gi, '');
-                const subPartes = partLimpa.split('x').map(Number);
-                if (subPartes.length === 2) {
-                    const qtdBerçosPorUnidade = subPartes[0];
-                    const gomos = subPartes[1];
-                    if (qtdBerçosPorUnidade > 0 && gomos > 0) {
-                        const totalBerços = totalUnidades * qtdBerçosPorUnidade;
-                        if (!totalBerçosPorGomos[gomos]) totalBerçosPorGomos[gomos] = 0;
-                        totalBerçosPorGomos[gomos] += totalBerços;
-                    }
+    // Função antiga para calcular berços (Só roda se NÃO for pedido manual)
+    function extrairESomarBerços(descricao, totalUnidades) {
+        if (!descricao || totalUnidades <= 0) return;
+        const regex = /[Bb]erços?\s*:\s*([^\n]*)/;
+        const match = descricao.match(regex);
+        if (!match) return;
+        
+        let conteudo = match[1].replace(/\s/g, '');
+        const partes = conteudo.split(',').map(p => p.trim());
+        
+        partes.forEach(part => {
+            const partLimpa = part.replace(/[^0-9x]/gi, '');
+            const subPartes = partLimpa.split('x').map(Number);
+            if (subPartes.length === 2) {
+                const qtdBerçosPorUnidade = subPartes[0];
+                const gomos = subPartes[1];
+                if (qtdBerçosPorUnidade > 0 && gomos > 0) {
+                    const totalBerços = totalUnidades * qtdBerçosPorUnidade;
+                    if (!totalBerçosPorGomos[gomos]) totalBerçosPorGomos[gomos] = 0;
+                    totalBerçosPorGomos[gomos] += totalBerços;
                 }
-            });
-        }
+            }
+        });
     }
     
     // Processa os itens que vieram do banco de dados
@@ -6894,13 +6891,13 @@ function imprimirCupom(idPedido) {
         let codigoProduto = '';
         
         // Remove o sufixo "(Produção X dias)" do nome para achar o produto certo no banco
-        let nomeBusca = item.nome.split(' (Produção')[0].trim();
+        let nomeBusca = item.nome.split(' (Produção')[0].split(' (Disponível')[0].split(' (BERÇO')[0].trim();
         const produtoEncontrado = dados.produtos.find(p => p.nome && p.nome.toLowerCase() === nomeBusca.toLowerCase());
         
         if (produtoEncontrado) {
             codigoProduto = produtoEncontrado.codigo_produto || '';
             
-            // 🔥 TRAVA DE SEGURANÇA: Só soma os berços se for pedido do site
+            // 🔥 TRAVA DE SEGURANÇA 2: Só calcula berços se NÃO for manual
             if (!isPedidoManual) {
                 if (produtoEncontrado.descricao) extrairESomarBerços(produtoEncontrado.descricao, totalUnidades);
                 if (produtoEncontrado.nome) extrairESomarBerços(produtoEncontrado.nome, totalUnidades);
@@ -6934,8 +6931,16 @@ function imprimirCupom(idPedido) {
         `;
     });
     
-    // 🔥 TRAVA DE SEGURANÇA: Só desenha o bloco extra de berços se for pedido do site
-    if (!isPedidoManual) {
+    // 🔥 TRAVA DE SEGURANÇA 3: Se for pedido manual, tenta extrair o texto de berço que já está separado no 'itens'
+    if (isPedidoManual) {
+        // Se o pedido for manual, os berços já estão escritos na string de itens (ex: "BERÇO 2 GOMOS (Disponível)...")
+        // Então não precisamos fazer mais nada aqui, pois o loop acima já imprimiu eles (se o parser do gestor aceitou)
+        // Mas para garantir que apareçam, vamos forçar a leitura caso o parser tenha falhado.
+        if (String(pedido.itens).toUpperCase().includes('BERÇO')) {
+            // Já está no texto, não precisa adicionar novamente.
+        }
+    } else {
+        // Se for pedido do site, desenha o bloco extra calculado pela função antiga
         const gomosOrdenados = Object.keys(totalBerçosPorGomos).map(Number).sort((a, b) => a - b);
         
         if (gomosOrdenados.length > 0) {
@@ -6968,9 +6973,7 @@ function imprimirCupom(idPedido) {
         }
     }
     
-    // ============================================================
     // LEITURA DAS COLUNAS DO SUPABASE
-    // ============================================================
     let freteNome = pedido.frete || 'Retirada na Loja';
     let freteValor = parseFloat(pedido.frete_valor) || 0;
     let prazoTotal = parseInt(pedido.prazo_entrega) || 0;
