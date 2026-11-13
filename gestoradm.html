@@ -7865,9 +7865,10 @@ function pmCalcularPesoDimensoes() {
         const p = dados.produtos.find(x => parseInt(x.id) === parseInt(item.produtoId));
         if (!p) return;
 
+        // Quantidade que realmente vai ser enviada (se "quero levar" está ativo, enviamos só o estoque)
         let qtdEnviar = item.quantidade;
         if (item.queroLevar && item.quantidade > item.estoqueTotal) {
-            qtdEnviar = item.estoqueTotal; 
+            qtdEnviar = item.estoqueTotal; // Só envia o que tem
         }
         if (qtdEnviar <= 0) return; // Se não vai enviar nada, pula
 
@@ -7875,6 +7876,7 @@ function pmCalcularPesoDimensoes() {
         let peso10 = 0, peso50 = 0, peso100 = 0;
         let dim10 = {a:16,l:16,c:16}, dim50 = {a:16,l:16,c:16}, dim100 = {a:16,l:16,c:16};
 
+        // Extrai os dados do banco de dados
         if (pesoStr) {
             pesoStr.split(';').forEach(regra => {
                 const parts = regra.split(':');
@@ -7882,17 +7884,22 @@ function pmCalcularPesoDimensoes() {
                     const qtd = parseInt(parts[0]);
                     const dados = parts[1].split('-');
                     const peso = parseFloat(String(dados[0]).replace(/[^0-9.]/g, '')) || 0;
-                    const dims = dados[1] ? dados[1].split('x') : ['16','16','16']; // Padrão
+                    const dims = dados[1] ? dados[1].split('x') : ['16','16','16']; // Padrão se não tiver dimensão
 
-                    if (qtd === 10) { peso10 = peso; dim10 = {a: parseInt(dims[0])||16, l: parseInt(dims[1])||16, c: parseInt(dims[2])||16}; }
-                    if (qtd === 50) { peso50 = peso; dim50 = {a: parseInt(dims[0])||16, l: parseInt(dims[1])||16, c: parseInt(dims[2])||16}; }
-                    if (qtd === 100) { peso100 = peso; dim100 = {a: parseInt(dims[0])||16, l: parseInt(dims[1])||16, c: parseInt(dims[2])||16}; }
+                    const a = parseInt(dims[0]) || 16;
+                    const l = parseInt(dims[1]) || 16;
+                    const c = parseInt(dims[2]) || 16;
+
+                    if (qtd === 10) { peso10 = peso; dim10 = {a: a, l: l, c: c}; }
+                    if (qtd === 50) { peso50 = peso; dim50 = {a: a, l: l, c: c}; }
+                    if (qtd === 100) { peso100 = peso; dim100 = {a: a, l: l, c: c}; }
                 }
             });
         }
 
         let restante = qtdEnviar;
         
+        // REGRA 1: Pega os pacotes de 100 inteiros
         if (peso100 > 0) {
             const qtd100 = Math.floor(restante / 100);
             if (qtd100 > 0) {
@@ -7902,7 +7909,8 @@ function pmCalcularPesoDimensoes() {
             }
         }
         
-        if (restante > 0 && peso50 > 0) {
+        // REGRA 2: Pega os pacotes de 50 inteiros
+        if (restante >= 50 && peso50 > 0) {
             const qtd50 = Math.floor(restante / 50);
             if (qtd50 > 0) {
                 pesoTotal += (qtd50 * peso50);
@@ -7911,8 +7919,11 @@ function pmCalcularPesoDimensoes() {
             }
         }
 
+        // REGRA 3: O que sobrar (1 a 49, ou 51 a 99) usa o pacote de 10 arredondado pra cima
         if (restante > 0) {
             const qtd10 = Math.ceil(restante / 10); 
+            
+            // Pega o peso do pacote de 10. Se não tiver, tenta o de 50 ou 100.
             const pesoBase = peso10 > 0 ? peso10 : (peso50 > 0 ? peso50 : (peso100 > 0 ? peso100 : 0.5));
             const dimBase = peso10 > 0 ? dim10 : (peso50 > 0 ? dim50 : (peso100 > 0 ? dim100 : {a:16,l:16,c:16}));
             
@@ -7921,6 +7932,7 @@ function pmCalcularPesoDimensoes() {
         }
     });
 
+    // Monta o volume final (soma alturas, pega a maior base)
     let alturaFinal = 0, larguraFinal = 16, comprimentoFinal = 16;
     volumes.forEach(vol => {
         if (vol.dim.a > 0) {
@@ -7930,8 +7942,13 @@ function pmCalcularPesoDimensoes() {
         }
     });
 
-    if (alturaFinal === 0) alturaFinal = 16;
-    if (pesoTotal === 0) pesoTotal = 0.5;
+    // TRAVA DE SEGURANÇA PARA OS CORREIOS (Mínimo aceitável)
+    if (alturaFinal < 2) alturaFinal = 2;
+    if (larguraFinal < 11) larguraFinal = 11;
+    if (comprimentoFinal < 16) comprimentoFinal = 16;
+    if (pesoTotal < 0.3) pesoTotal = 0.3; // Peso mínimo de 300g
+
+    console.log("Cálculo do Frete:", { peso: pesoTotal, altura: alturaFinal, largura: larguraFinal, comprimento: comprimentoFinal });
 
     return { peso: pesoTotal, altura: alturaFinal, largura: larguraFinal, comprimento: comprimentoFinal };
 }
