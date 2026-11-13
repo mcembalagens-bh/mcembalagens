@@ -2353,10 +2353,15 @@
 <div class="modal-overlay" id="modalPedidoManual">
     <div class="modal" style="max-width: 1300px; width: 98%; max-height: 95vh; display: flex; flex-direction: column; padding: 15px;">
         
-        <!-- CABEÇALHO -->
-        <div class="modal-header" style="padding-bottom: 10px; margin-bottom: 10px; border-bottom: 2px solid #eee;">
+               <!-- CABEÇALHO -->
+        <div class="modal-header" style="padding-bottom: 10px; margin-bottom: 10px; border-bottom: 2px solid #eee; display: flex; justify-content: space-between; align-items: center;">
             <h2><i class="fas fa-cash-register"></i> Novo Pedido Manual / Balcão</h2>
-            <button class="modal-close" onclick="fecharModal('modalPedidoManual')">&times;</button>
+            <div style="display: flex; gap: 10px;">
+                <button onclick="pmLimparTudo()" class="btn-sm" style="background: #e74c3c; color: white; padding: 8px 15px; font-size: 13px; border: none; border-radius: 6px; cursor: pointer;">
+                    <i class="fas fa-trash"></i> Limpar Tudo
+                </button>
+                <button class="modal-close" onclick="fecharModal('modalPedidoManual')" style="position: static; font-size: 24px; box-shadow: none;">&times;</button>
+            </div>
         </div>
 
         <!-- ÁREA 1: CLIENTE (TOPO) -->
@@ -7556,6 +7561,20 @@ function pmSelecionarCliente(id) {
     document.getElementById('pmNomeClienteSel').textContent = pmClienteSelecionado.nome;
     document.getElementById('pmDocClienteSel').textContent = formatarDocumento(pmClienteSelecionado.cpf || pmClienteSelecionado.documento);
     document.getElementById('pmClienteSelecionado').style.display = 'block';
+
+    // 👇 AQUI ESTÁ A NOVA LÓGICA DO CEP AUTOMÁTICO 👇
+    const cepCliente = pmClienteSelecionado.cep || '';
+    document.getElementById('pmCep').value = cepCliente;
+
+    // Se o cliente tiver um CEP válido, calcula o frete automaticamente após 500ms
+    if (cepCliente && cepCliente.replace(/\D/g, '').length === 8) {
+        setTimeout(() => {
+            pmCalcularFrete();
+        }, 500);
+    }
+
+    // Salva o rascunho com os dados do cliente e o CEP
+    pmSalvarRascunho();
 }
 
 function pmSelecionarClienteBalcao() {
@@ -7834,48 +7853,46 @@ function pmCalcularTotais() {
 
 
 // ============================================================
-// LÓGICA DO NOVO PEDIDO MANUAL - FRETE (ETAPA 4)
+// LÓGICA DO NOVO PEDIDO MANUAL - FRETE E AUTO-SAVE (ETAPA 4 ATUALIZADA)
 // ============================================================
 
-// Função para calcular o Peso e Volume (Dimensões) dinamicamente
+// Função blindada contra erros de produto sem peso/dimensão
 function pmCalcularPesoDimensoes() {
     let pesoTotal = 0;
-    let volumes = []; // Guarda as caixas para calcular a dimensão final
+    let volumes = []; 
     
-    // Agrupa todos os itens do carrinho por produto
     pmCarrinho.forEach(item => {
         const p = dados.produtos.find(x => parseInt(x.id) === parseInt(item.produtoId));
         if (!p) return;
 
-        // Quantidade que realmente vai ser enviada (se "quero levar" está ativo, enviamos só o estoque)
         let qtdEnviar = item.quantidade;
         if (item.queroLevar && item.quantidade > item.estoqueTotal) {
-            qtdEnviar = item.estoqueTotal; // Só envia o que tem
+            qtdEnviar = item.estoqueTotal; 
         }
+        if (qtdEnviar <= 0) return; // Se não vai enviar nada, pula
 
-        // Busca as regras de peso/medida no cadastro do produto
         const pesoStr = String(p.pesos_medidas || '');
         let peso10 = 0, peso50 = 0, peso100 = 0;
-        let dim10 = {a:0,l:0,c:0}, dim50 = {a:0,l:0,c:0}, dim100 = {a:0,l:0,c:0};
+        let dim10 = {a:16,l:16,c:16}, dim50 = {a:16,l:16,c:16}, dim100 = {a:16,l:16,c:16};
 
-        pesoStr.split(';').forEach(regra => {
-            const parts = regra.split(':');
-            if (parts.length === 2) {
-                const qtd = parseInt(parts[0]);
-                const dados = parts[1].split('-');
-                const peso = parseFloat(String(dados[0]).replace(/[^0-9.]/g, '')) || 0;
-                const dims = dados[1] ? dados[1].split('x') : [];
+        if (pesoStr) {
+            pesoStr.split(';').forEach(regra => {
+                const parts = regra.split(':');
+                if (parts.length === 2) {
+                    const qtd = parseInt(parts[0]);
+                    const dados = parts[1].split('-');
+                    const peso = parseFloat(String(dados[0]).replace(/[^0-9.]/g, '')) || 0;
+                    const dims = dados[1] ? dados[1].split('x') : ['16','16','16']; // Padrão
 
-                if (qtd === 10) { peso10 = peso; dim10 = {a: parseInt(dims[0])||0, l: parseInt(dims[1])||0, c: parseInt(dims[2])||0}; }
-                if (qtd === 50) { peso50 = peso; dim50 = {a: parseInt(dims[0])||0, l: parseInt(dims[1])||0, c: parseInt(dims[2])||0}; }
-                if (qtd === 100) { peso100 = peso; dim100 = {a: parseInt(dims[0])||0, l: parseInt(dims[1])||0, c: parseInt(dims[2])||0}; }
-            }
-        });
+                    if (qtd === 10) { peso10 = peso; dim10 = {a: parseInt(dims[0])||16, l: parseInt(dims[1])||16, c: parseInt(dims[2])||16}; }
+                    if (qtd === 50) { peso50 = peso; dim50 = {a: parseInt(dims[0])||16, l: parseInt(dims[1])||16, c: parseInt(dims[2])||16}; }
+                    if (qtd === 100) { peso100 = peso; dim100 = {a: parseInt(dims[0])||16, l: parseInt(dims[1])||16, c: parseInt(dims[2])||16}; }
+                }
+            });
+        }
 
-        // REGRA DE ARREDONDAMENTO INTELIGENTE (Preenche de trás pra frente)
         let restante = qtdEnviar;
         
-        // 1. Tenta preencher com caixas de 100
         if (peso100 > 0) {
             const qtd100 = Math.floor(restante / 100);
             if (qtd100 > 0) {
@@ -7885,7 +7902,6 @@ function pmCalcularPesoDimensoes() {
             }
         }
         
-        // 2. Tenta preencher com caixas de 50
         if (restante > 0 && peso50 > 0) {
             const qtd50 = Math.floor(restante / 50);
             if (qtd50 > 0) {
@@ -7895,119 +7911,74 @@ function pmCalcularPesoDimensoes() {
             }
         }
 
-        // 3. O que sobrar, arredonda para cima usando a caixa de 10
         if (restante > 0) {
-            const qtd10 = Math.ceil(restante / 10); // Arredonda pra cima (ex: 5 vira 1 caixa de 10)
-            const pesoBase = peso10 > 0 ? peso10 : (peso50 > 0 ? peso50 : peso100);
-            const dimBase = peso10 > 0 ? dim10 : (peso50 > 0 ? dim50 : dim100);
+            const qtd10 = Math.ceil(restante / 10); 
+            const pesoBase = peso10 > 0 ? peso10 : (peso50 > 0 ? peso50 : (peso100 > 0 ? peso100 : 0.5));
+            const dimBase = peso10 > 0 ? dim10 : (peso50 > 0 ? dim50 : (peso100 > 0 ? dim100 : {a:16,l:16,c:16}));
             
             pesoTotal += (qtd10 * pesoBase);
             volumes.push({ qtd: qtd10, dim: dimBase });
         }
     });
 
-    // Calcula a dimensão final (empilhando as caixas)
-    let alturaFinal = 0, larguraFinal = 0, comprimentoFinal = 0;
+    let alturaFinal = 0, larguraFinal = 16, comprimentoFinal = 16;
     volumes.forEach(vol => {
         if (vol.dim.a > 0) {
-            // Lógica simples: a altura é a soma de todas as caixas empilhadas, 
-            // e a base é a maior caixa (ou a média).
             alturaFinal += (vol.qtd * vol.dim.a);
             if (vol.dim.l > larguraFinal) larguraFinal = vol.dim.l;
             if (vol.dim.c > comprimentoFinal) comprimentoFinal = vol.dim.c;
         }
     });
 
-    // Se não tiver dimensões cadastradas, usa um padrão de segurança
-    if (alturaFinal === 0) { alturaFinal = 16; larguraFinal = 16; comprimentoFinal = 16; pesoTotal = pesoTotal || 0.5; }
+    if (alturaFinal === 0) alturaFinal = 16;
+    if (pesoTotal === 0) pesoTotal = 0.5;
 
-    return {
-        peso: pesoTotal,
-        altura: alturaFinal,
-        largura: larguraFinal,
-        comprimento: comprimentoFinal
-    };
+    return { peso: pesoTotal, altura: alturaFinal, largura: larguraFinal, comprimento: comprimentoFinal };
 }
 
 async function pmCalcularFrete() {
     const cep = document.getElementById('pmCep').value.replace(/\D/g, '');
     const container = document.getElementById('pmResultadoFrete');
     
-    if (cep.length !== 8) {
-        container.innerHTML = '<span style="color: #e74c3c;">Digite um CEP válido (8 dígitos).</span>';
-        return;
-    }
-    
-    if (pmCarrinho.length === 0) {
-        container.innerHTML = '<span style="color: #e74c3c;">Adicione produtos antes de calcular o frete.</span>';
-        return;
-    }
+    if (cep.length !== 8) return container.innerHTML = '<span style="color: #e74c3c;">CEP inválido.</span>';
+    if (pmCarrinho.length === 0) return container.innerHTML = '<span style="color: #e74c3c;">Adicione produtos primeiro.</span>';
 
     container.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Calculando...';
     const dims = pmCalcularPesoDimensoes();
     const totalProdutos = pmCarrinho.reduce((acc, i) => acc + i.precoTotal, 0);
 
     try {
-        // Chama a função de cálculo de frete do Supabase
         const { data, error } = await supabaseClient.functions.invoke('calcular-frete', {
-            body: { 
-                cepDestino: cep, 
-                peso: dims.peso, 
-                altura: dims.altura, 
-                largura: dims.largura, 
-                comprimento: dims.comprimento 
-            }
+            body: { cepDestino: cep, peso: dims.peso, altura: dims.altura, largura: dims.largura, comprimento: dims.comprimento }
         });
         
         if (error) throw error;
         
         let opcoes = [];
         if (data && data.opcoes) {
-            data.opcoes.forEach(op => {
-                opcoes.push({
-                    id: op.codigo || 'FRETE',
-                    nome: op.nome || 'Frete',
-                    valor: parseFloat(String(op.preco).replace(',', '.')) || 0,
-                    prazo: parseInt(op.prazo) || 0
-                });
-            });
+            data.opcoes.forEach(op => opcoes.push({ id: op.codigo || 'F', nome: op.nome || 'Frete', valor: parseFloat(String(op.preco).replace(',', '.')) || 0, prazo: parseInt(op.prazo) || 0 }));
         }
 
-        // Adiciona a opção de Entrega Própria se for BH e região
         const cidade = obterCidadePorCep(cep);
         if (cidade) {
             const ep = calcularEntregaPropria(cidade, totalProdutos);
-            if (ep.encontrado) {
-                opcoes.push({
-                    id: 'ENTREGA_PROPRIA',
-                    nome: ep.cost === 0 ? 'Entrega Própria (Grátis)' : 'Entrega Própria',
-                    valor: ep.cost,
-                    prazo: 1
-                });
-            }
+            if (ep.encontrado) opcoes.push({ id: 'ENTREGA_PROPRIA', nome: ep.cost === 0 ? 'Entrega Própria (Grátis)' : 'Entrega Própria', valor: ep.cost, prazo: 1 });
         }
-
-        // Adiciona a opção de Retirada (sempre)
         opcoes.push({ id: 'RETIRADA', nome: 'Retirada na Loja', valor: 0, prazo: 1 });
 
-        if (opcoes.length === 0) {
-            container.innerHTML = '<span style="color: #e74c3c;">Nenhuma opção de frete disponível para este CEP.</span>';
-            return;
-        }
+        if (opcoes.length === 0) return container.innerHTML = '<span style="color: #e74c3c;">Nenhuma opção disponível.</span>';
 
-        // Desenha as opções na tela
         container.innerHTML = opcoes.map(op => `
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px; border-bottom: 1px solid #eee; background: white; margin-bottom: 4px; border-radius: 4px; border: 1px solid #ddd;">
-                <div style="cursor: pointer; flex: 1;" onclick="pmSelecionarFrete('${op.id}', '${op.nome}', ${op.valor}, ${op.prazo})">
+                <div style="cursor: pointer; flex: 1;" onclick="pmSelecionarFrete('${op.id}', '${op.nome}', ${op.valor}, ${op.prazo}, this)">
                     <strong style="font-size: 12px; color: var(--primary-dark);">${op.nome}</strong>
                     <div style="font-size: 10px; color: #888;">Prazo: ${op.prazo} dias</div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 4px;">
                     <span style="font-size: 11px; color: #666;">R$</span>
                     <input type="number" step="0.01" value="${op.valor.toFixed(2)}" id="pmFreteInput_${op.id}" 
-                           style="width: 65px; text-align: right; border: 1px solid #ccc; border-radius: 4px; padding: 4px; font-size: 12px; font-weight: bold; color: #27ae60;"
-                           onchange="pmEditarValorFrete(this.value)">
-                    <button onclick="pmSelecionarFrete('${op.id}', '${op.nome}', parseFloat(document.getElementById('pmFreteInput_${op.id}').value), ${op.prazo})" class="btn-sm btn-success" style="padding: 4px 8px;">
+                           style="width: 65px; text-align: right; border: 1px solid #ccc; border-radius: 4px; padding: 4px; font-size: 12px; font-weight: bold; color: #27ae60;">
+                    <button onclick="pmSelecionarFrete('${op.id}', '${op.nome}', parseFloat(document.getElementById('pmFreteInput_${op.id}').value), ${op.prazo}, this)" class="btn-sm btn-success" style="padding: 4px 8px;">
                         <i class="fas fa-check"></i>
                     </button>
                 </div>
@@ -8016,44 +7987,34 @@ async function pmCalcularFrete() {
 
     } catch (error) {
         console.error('Erro no frete:', error);
-        container.innerHTML = '<span style="color: #e74c3c;">Erro ao calcular o frete. Tente novamente.</span>';
+        container.innerHTML = '<span style="color: #e74c3c;">Erro ao calcular. Verifique o peso dos produtos.</span>';
     }
 }
 
 let pmFreteSelecionado = null;
 
-function pmSelecionarFrete(id, nome, valor, prazo) {
+function pmSelecionarFrete(id, nome, valor, prazo, btnElement) {
     pmFreteSelecionado = { id, nome, valor: parseFloat(valor), prazo };
     
-    // Atualiza o visual para mostrar que foi selecionado
+    // Limpa a borda de todos e marca o selecionado
     document.querySelectorAll('#pmResultadoFrete > div').forEach(el => el.style.border = '1px solid #ddd');
-    if (event && event.currentTarget) {
-        // Tenta achar a div pai para destacar
-        let parent = event.currentTarget.closest('div[style*="display: flex"]');
+    if (btnElement) {
+        const parent = btnElement.closest('div[style*="display: flex"]');
         if (parent) parent.style.border = '2px solid #27ae60';
     }
 
     document.getElementById('pmFreteValor').textContent = `R$ ${pmFreteSelecionado.valor.toFixed(2)}`;
     pmCalcularTotaisFinais();
-}
-
-function pmEditarValorFrete(novoValor) {
-    // Como o input já está na tela, o valor só é aplicado quando clicar no botão de check
-    // Mas essa função serve para garantir que o HTML está atualizado.
+    pmSalvarRascunho();
 }
 
 function pmCalcularTotaisFinais() {
     let subtotal = pmCarrinho.reduce((acc, item) => acc + item.precoTotal, 0);
-    
-    // Calcula o desconto percentual
     const percDesc = parseFloat(document.getElementById('pmDescontoPerc').value) || 0;
     const valorDesconto = subtotal * (percDesc / 100);
     const subtotalComDesc = subtotal - valorDesconto;
-    
-    // Pega o frete
     const frete = pmFreteSelecionado ? pmFreteSelecionado.valor : 0;
     
-    // Atualiza a tela
     document.getElementById('pmSubtotal').textContent = `R$ ${subtotal.toFixed(2)}`;
     document.getElementById('pmDescontoValor').textContent = `- R$ ${valorDesconto.toFixed(2)}`;
     document.getElementById('pmFreteValor').textContent = `R$ ${frete.toFixed(2)}`;
@@ -8062,12 +8023,106 @@ function pmCalcularTotaisFinais() {
     document.getElementById('pmTotalGeral').textContent = `R$ ${totalGeral.toFixed(2)}`;
 }
 
-// Escuta as mudanças no campo de desconto para atualizar o total em tempo real
 document.addEventListener('input', function(e) {
     if (e.target && e.target.id === 'pmDescontoPerc') {
         pmCalcularTotaisFinais();
+        pmSalvarRascunho();
     }
 });
+
+// ============================================================
+// AUTO-SAVE E CARREGAMENTO DO RASCUNHO
+// ============================================================
+function pmSalvarRascunho() {
+    try {
+        const rascunho = {
+            cliente: pmClienteSelecionado,
+            carrinho: pmCarrinho,
+            frete: pmFreteSelecionado,
+            cep: document.getElementById('pmCep').value,
+            formaPagamento: document.getElementById('pmFormaPagamento').value,
+            descontoPerc: document.getElementById('pmDescontoPerc').value
+        };
+        localStorage.setItem('pm_rascunho', JSON.stringify(rascunho));
+    } catch (e) {}
+}
+
+function pmCarregarRascunho() {
+    try {
+        const data = localStorage.getItem('pm_rascunho');
+        if (!data) return false;
+        const r = JSON.parse(data);
+        
+        if (!r.carrinho || r.carrinho.length === 0) return false;
+
+        // Restaura os dados
+        pmClienteSelecionado = r.cliente;
+        pmCarrinho = r.carrinho;
+        pmFreteSelecionado = r.frete;
+        
+        if (pmClienteSelecionado) {
+            document.getElementById('pmBuscaCliente').value = pmClienteSelecionado.nome;
+            document.getElementById('pmNomeClienteSel').textContent = pmClienteSelecionado.nome;
+            document.getElementById('pmClienteSelecionado').style.display = 'block';
+            document.getElementById('pmCep').value = r.cep || '';
+        }
+        
+        document.getElementById('pmFormaPagamento').value = r.formaPagamento || 'PIX';
+        document.getElementById('pmDescontoPerc').value = r.descontoPerc || '';
+        
+        pmAtualizarCarrinho();
+        pmCalcularTotaisFinais();
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+
+function pmLimparTudo() {
+    if (!confirm('Tem certeza que deseja limpar TODO o pedido? O rascunho será apagado.')) return;
+    
+    localStorage.removeItem('pm_rascunho');
+    pmClienteSelecionado = null;
+    pmCarrinho = [];
+    pmFreteSelecionado = null;
+    
+    document.getElementById('pmBuscaCliente').value = '';
+    document.getElementById('pmClienteSelecionado').style.display = 'none';
+    document.getElementById('pmCep').value = '';
+    document.getElementById('pmResultadoFrete').innerHTML = '';
+    document.getElementById('pmFormaPagamento').value = 'PIX';
+    document.getElementById('pmDescontoPerc').value = '';
+    
+    pmAtualizarCarrinho();
+    pmCalcularTotaisFinais();
+}
+
+// ============================================================
+// ATUALIZAÇÃO DA FUNÇÃO DE ABRIR O MODAL
+// ============================================================
+function abrirPedidoManual() {
+    // Tenta carregar o rascunho. Se não tiver, limpa tudo.
+    if (!pmCarregarRascunho()) {
+        pmLimparTudo();
+    } else {
+        // Se tem rascunho, atualiza os estoques dos produtos por segurança
+        pmCarrinho.forEach(item => {
+            const p = dados.produtos.find(x => parseInt(x.id) === parseInt(item.produtoId));
+            if (p) {
+                item.estoqueTotal = parseInt(p.estoque) || 0;
+                // Se o estoque diminuiu e o item era disponível, recalcula a produção
+                if (item.quantidade > item.estoqueTotal) {
+                    item.isProducao = true;
+                }
+            }
+        });
+        pmAtualizarCarrinho();
+    }
+    
+    // Abre o modal
+    document.getElementById('modalPedidoManual').classList.add('open');
+    pmFiltrarProdutos(); // Carrega a lista de produtos à esquerda
+}
     
 </script>
 
