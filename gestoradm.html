@@ -4622,6 +4622,20 @@ function renderizarPendentes() {
                 <button class="btn-sm btn-print" onclick="imprimirCupom(${p.id_pedido})" title="Imprimir">
                     <i class="fas fa-print"></i>
                 </button>
+                                <button class="btn-sm btn-status" onclick="abrirModalStatus(${p.id_pedido}, '${p.status || 'Pendente'}')" title="Mudar Status">
+                    <i class="fas fa-exchange-alt"></i>
+                </button>
+                
+                <!-- 🔥 NOVO BOTÃO DE APROVAR PAGAMENTO -->
+                ${p.status !== 'Pago' ? `
+                <button class="btn-sm" onclick="aprovarPagamentoManual(${p.id_pedido})" style="background: #27ae60; color: white; margin-left: 4px;" title="Aprovar Pagamento Manual">
+                    <i class="fas fa-money-bill-wave"></i>
+                </button>
+                ` : ''}
+
+                <button class="btn-sm btn-print" onclick="imprimirCupom(${p.id_pedido})" title="Imprimir">
+                    <i class="fas fa-print"></i>
+                </button>
             </td>
         </tr>
     `}).join('');
@@ -8356,6 +8370,54 @@ async function pmFinalizarPedido() {
     }
 }
 
+  // ============================================================
+// APROVAÇÃO MANUAL DE PAGAMENTO
+// ============================================================
+async function aprovarPagamentoManual(idPedido) {
+    // Pede o nome de quem autorizou
+    const autorizador = prompt(`💰 Aprovar pagamento do Pedido #${idPedido}\n\nDigite o nome de quem conferiu e autorizou o pagamento:`);
+    
+    if (autorizador === null) return; // Se clicar em cancelar, para tudo
+    if (autorizador.trim() === '') {
+        alert('⚠️ Você precisa digitar o nome de quem autorizou o pagamento.');
+        return;
+    }
+
+    mostrarSpinner('Aprovando pagamento...');
+
+    try {
+        const pedido = dados.pedidos.find(p => parseInt(p.id_pedido) === parseInt(idPedido));
+        if (!pedido) throw new Error('Pedido não encontrado');
+
+        // Pega as observações atuais e adiciona a nota de aprovação
+        let obsAtual = pedido.observacoes || '';
+        const dataAprovacao = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+        
+        obsAtual += ` | ✅ PAGAMENTO APROVADO MANUALMENTE por ${autorizador.trim()} em ${dataAprovacao}`;
+
+        // Atualiza o pedido no Supabase
+        const { error } = await supabaseClient
+            .from('pedidos')
+            .update({ 
+                status: 'Pago',
+                observacoes: obsAtual
+            })
+            .eq('id_pedido', idPedido);
+
+        if (error) throw error;
+
+        esconderSpinner();
+        mostrarNotificacao(`✅ Pagamento do Pedido #${idPedido} aprovado por ${autorizador.trim()}!`, 'success');
+        
+        // Recarrega os dados para atualizar a tela
+        await carregarDadosParcial();
+
+    } catch (error) {
+        console.error('Erro ao aprovar pagamento:', error);
+        esconderSpinner();
+        alert('⚠️ Erro ao aprovar pagamento: ' + error.message);
+    }
+}
     
 </script>
 
