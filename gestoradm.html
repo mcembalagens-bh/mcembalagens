@@ -4546,13 +4546,13 @@ function toggleFiltros() {
 }
 
 // ============================================================
-// RENDERIZAR PENDENTES - CORRIGIDO (COM BADGE REV)
+// RENDERIZAR PENDENTES - CORRIGIDO (COM BADGE REV E APROVAR PAGAMENTO)
 // ============================================================
 function renderizarPendentes() {
     const tbody = document.getElementById('pendentesTable');
     const busca = document.getElementById('buscaPendentes')?.value?.toLowerCase() || '';
     
-    // 🔥 ALTERADO: Filtra Pendentes e Pagos
+    // Filtra Pendentes e Pagos
     const pendentes = dados.pedidos.filter(p => p.status === 'Pendente' || p.status === 'Pago' || !p.status);
     
     let filtrados = pendentes;
@@ -4584,7 +4584,7 @@ function renderizarPendentes() {
         const isRev = isClienteRevendedor(p);
         const badgeRev = isRev ? '<span class="badge-revendedor">👑 REV</span>' : '';
         
-        // 🔥 ALTERADO: Define as cores com base no novo status "Pago"
+        // Define as cores com base no status
         let statusColor = '#f39c12';
         let statusExibido = p.status || 'Pendente';
         
@@ -4606,9 +4606,9 @@ function renderizarPendentes() {
             <td><strong>#${p.id_pedido}</strong></td>
             <td>${p.cliente_nome || 'Cliente não identificado'} ${badgeRev}</td>
             <td>${p.cliente_telefone || '-'}</td>
-           <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${p.itens || ''}">
-    ${processarItensPedido(p.itens).map(i => `${i.quantidade}x ${i.nome.substring(0, 15)}`).join(', ') || '-'}
-</td>
+            <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${p.itens || ''}">
+                ${processarItensPedido(p.itens).map(i => `${i.quantidade}x ${i.nome.substring(0, 15)}`).join(', ') || '-'}
+            </td>
             <td><strong>R$ ${parseFloat(String(p.total).replace(',', '.')) || 0}</strong></td>
             <td style="font-size:11px;">${p.data_pedido ? formatarDataHoraBR(p.data_pedido) : '-'}</td>
             <td>
@@ -4616,23 +4616,20 @@ function renderizarPendentes() {
                     ${statusExibido}
                 </span>
                 <br>
+                
+                <!-- BOTÃO MUDAR STATUS -->
                 <button class="btn-sm btn-status" onclick="abrirModalStatus(${p.id_pedido}, '${p.status || 'Pendente'}')" title="Mudar Status">
                     <i class="fas fa-exchange-alt"></i>
                 </button>
-                <button class="btn-sm btn-print" onclick="imprimirCupom(${p.id_pedido})" title="Imprimir">
-                    <i class="fas fa-print"></i>
-                </button>
-                                <button class="btn-sm btn-status" onclick="abrirModalStatus(${p.id_pedido}, '${p.status || 'Pendente'}')" title="Mudar Status">
-                    <i class="fas fa-exchange-alt"></i>
-                </button>
-                
-                <!-- 🔥 NOVO BOTÃO DE APROVAR PAGAMENTO -->
+
+                <!-- BOTÃO APROVAR PAGAMENTO (Só aparece se não estiver Pago) -->
                 ${p.status !== 'Pago' ? `
                 <button class="btn-sm" onclick="aprovarPagamentoManual(${p.id_pedido})" style="background: #27ae60; color: white; margin-left: 4px;" title="Aprovar Pagamento Manual">
                     <i class="fas fa-money-bill-wave"></i>
                 </button>
                 ` : ''}
 
+                <!-- BOTÃO IMPRIMIR -->
                 <button class="btn-sm btn-print" onclick="imprimirCupom(${p.id_pedido})" title="Imprimir">
                     <i class="fas fa-print"></i>
                 </button>
