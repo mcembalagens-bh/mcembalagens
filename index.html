@@ -5552,8 +5552,9 @@ async function finalizarPedidoCheckout() {
             frete: freteNome,
             frete_valor: String(freteValor.toFixed(2)),
             observacoes: obs,
-            prazo_entrega: prazoEnvio + (temProducao ? maiorPrazo : producaoDias), // <-- MUDOU AQUI
-            producao_dias: temProducao ? maiorPrazo : 0, // <-- MUDOU AQUI
+          // ✅ CERTO (linhas corrigidas)
+prazo_entrega: prazoEnvio + (temProducao ? maiorPrazo : checkoutState.producaoDias),
+producao_dias: temProducao ? maiorPrazo : 0,
             pagamento: checkoutState.pagamentoSelecionado,
             status: 'Pendente',
             data_pedido: new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
