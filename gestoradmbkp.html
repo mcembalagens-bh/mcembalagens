@@ -2349,150 +2349,138 @@
     </div>
 </div>
 
-<!-- MODAL PEDIDO MANUAL -->
+<!-- MODAL PEDIDO MANUAL (NOVO) -->
 <div class="modal-overlay" id="modalPedidoManual">
-    <div class="modal">
-        <div class="modal-header">
-            <h2><i class="fas fa-hand-holding"></i> Pedido Manual</h2>
-            <button class="modal-close" onclick="fecharModal('modalPedidoManual')">&times;</button>
+    <div class="modal" style="max-width: 1300px; width: 98%; max-height: 95vh; display: flex; flex-direction: column; padding: 15px;">
+        
+               <!-- CABEÇALHO -->
+        <div class="modal-header" style="padding-bottom: 10px; margin-bottom: 10px; border-bottom: 2px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+            <h2><i class="fas fa-cash-register"></i> Novo Pedido Manual / Balcão</h2>
+            <div style="display: flex; gap: 10px;">
+                <button onclick="pmLimparTudo()" class="btn-sm" style="background: #e74c3c; color: white; padding: 8px 15px; font-size: 13px; border: none; border-radius: 6px; cursor: pointer;">
+                    <i class="fas fa-trash"></i> Limpar Tudo
+                </button>
+                <button class="modal-close" onclick="fecharModal('modalPedidoManual')" style="position: static; font-size: 24px; box-shadow: none;">&times;</button>
+            </div>
         </div>
-        <div id="pedidoManualContent">
+
+        <!-- ÁREA 1: CLIENTE (TOPO) -->
+        <div style="background: #f0f4f8; border-radius: 8px; padding: 10px 15px; margin-bottom: 15px; border: 1px solid #d1d5db; flex-shrink: 0;">
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <label style="font-weight: 700; color: var(--primary-blue); white-space: nowrap;"><i class="fas fa-search"></i> Cliente:</label>
+                
+                <div style="flex: 1; min-width: 250px; position: relative;">
+                    <input type="text" id="pmBuscaCliente" placeholder="Digite Nome, CPF/CNPJ, Email, Telefone ou 'Balcão'..." 
+                           style="width: 100%; padding: 8px 12px; border: 2px solid #ddd; border-radius: 6px; font-size: 14px;"
+                           oninput="pmBuscarCliente()" autocomplete="off">
+                    
+                    <!-- Lista suspensa de resultados -->
+                    <div id="pmResultadoClientes" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ccc; border-radius: 0 0 6px 6px; max-height: 200px; overflow-y: auto; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                        <!-- Preenchido via JS -->
+                    </div>
+                </div>
+
+                <button onclick="pmAbrirCadastroCliente()" class="btn-sm btn-success" style="padding: 8px 15px; font-size: 13px; white-space: nowrap;">
+                    <i class="fas fa-user-plus"></i> Cadastrar Novo Cliente
+                </button>
+            </div>
+
+            <!-- Dados do cliente selecionado (aparece após selecionar) -->
+            <div id="pmClienteSelecionado" style="display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #ccc; font-size: 13px; color: #333;">
+                <strong>Selecionado:</strong> <span id="pmNomeClienteSel" style="color: var(--primary-blue); font-weight: 700;"></span> 
+                <span id="pmDocClienteSel" style="color: #666; margin-left: 10px;"></span>
+                <button onclick="pmLimparCliente()" style="background:none; border:none; color: #e74c3c; cursor: pointer; font-size: 12px; margin-left: 15px; text-decoration: underline;">Limpar</button>
+            </div>
+        </div>
+
+        <!-- ÁREA 2: PRODUTOS E CARRINHO (MEIO) -->
+        <div style="display: flex; gap: 15px; flex: 1; min-height: 550px; overflow: hidden; margin-bottom: 15px;">
             
-            <!-- 🔥 BUSCA DE CLIENTES -->
-            <div class="form-group" style="background:#f0f4f8;padding:12px;border-radius:8px;border:2px solid var(--primary-blue);margin-bottom:12px;">
-                <label style="font-weight:700;color:var(--primary-blue);">
-                    <i class="fas fa-user-search"></i> Buscar Cliente
-                </label>
-                <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                    <input type="text" id="buscaClienteManual" placeholder="Digite nome, email ou telefone..." 
-                           style="flex:1;min-width:180px;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;"
-                           oninput="buscarClientesManual()">
-                    <button onclick="buscarClientesManual()" class="btn-sm btn-edit" style="padding:8px 16px;">
-                        <i class="fas fa-search"></i> Buscar
-                    </button>
-                </div>
-                <div id="listaClientesManual" style="margin-top:8px;max-height:150px;overflow-y:auto;display:none;border:1px solid #ddd;border-radius:6px;background:white;">
-                    <!-- Resultados da busca -->
-                </div>
-                <div style="margin-top:6px;font-size:11px;color:#888;">
-                    <i class="fas fa-info-circle"></i> Digite para buscar clientes cadastrados
-                </div>
-            </div>
-            
-            <!-- DADOS DO CLIENTE -->
-            <div style="background:#f8f9fa;border-radius:8px;padding:12px;margin-bottom:12px;border:1px solid #e0e0e0;">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Cliente</label>
-                        <input type="text" id="visClienteNome" placeholder="Nome do cliente" 
-                               style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
-                    </div>
-                    <div class="form-group">
-                        <label>Telefone</label>
-                        <input type="text" id="visClienteTelefone" placeholder="(00) 00000-0000"
-                               style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" id="visClienteEmail" placeholder="email@exemplo.com"
-                               style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
-                    </div>
-                    <div class="form-group">
-                        <label>CPF/CNPJ</label>
-                        <input type="text" id="visClienteDocumento" placeholder="000.000.000-00"
-                               style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Endereço Completo</label>
-                    <input type="text" id="visClienteEndereco" placeholder="Rua, Número, Bairro, Cidade - UF"
-                           style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
-                </div>
-                <div class="form-group">
-                    <label>Forma de Pagamento</label>
-                    <select id="visPagamento" style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
-                        <option value="À vista">À vista</option>
-                        <option value="Pix">Pix</option>
-                        <option value="Cartão de Crédito">Cartão de Crédito</option>
-                        <option value="Boleto">Boleto</option>
-                        <option value="Depósito/Transferência">Depósito/Transferência</option>
-                    </select>
-                </div>
-
-                <!-- 🔥 NOVO: FRETE -->
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Frete</label>
-                        <input type="text" id="visFrete" placeholder="Ex: Entrega própria, PAC, Jadlog..." 
-                               style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
-                    </div>
-                    <div class="form-group">
-                        <label>Valor do Frete (R$)</label>
-                        <input type="number" id="visFreteValor" step="0.01" min="0" 
-                               placeholder="0,00" style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Prazo do Frete (dias úteis)</label>
-                    <input type="number" id="visFretePrazo" min="0" placeholder="Ex: 5" 
-                           style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;">
-                    <small style="color:#888;font-size:11px;">Dias úteis para entrega do frete (será somado ao prazo de produção)</small>
-                </div>
-
-                <div class="form-group">
-                    <label>Observações do Pedido</label>
-                    <textarea id="visObs" rows="2" placeholder="Informações internas sobre o pedido..." 
-                              style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;resize:vertical;"></textarea>
-                </div>
-            </div>
-            
-            <!-- BUSCA DE PRODUTOS -->
-            <div class="form-group">
-                <label>🔍 Buscar Produto</label>
-                <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                    <input type="text" id="buscaProdutoManual" placeholder="Digite o nome ou código do produto..." 
-                           style="flex:1;min-width:180px;padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;"
-                           oninput="filtrarProdutosManual()">
-                    <select id="filtroCategoriaManual" style="padding:8px 12px;border:2px solid #ddd;border-radius:6px;font-size:13px;background:white;min-width:130px;" onchange="filtrarProdutosManual()">
-                        <option value="">Todas categorias</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="produto-lista-container">
-                <div id="listaProdutosManual">
-                    <div style="text-align:center;padding:15px;color:#999;">
-                        <i class="fas fa-spinner fa-spin"></i> Carregando produtos...
-                    </div>
-                </div>
-            </div>
-
-            <!-- CARRINHO -->
-            <div style="border-top:2px solid #eee;padding-top:12px;margin-top:8px;">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
-                    <h4 style="color:var(--primary-blue);font-size:14px;"><i class="fas fa-shopping-cart"></i> Itens do Pedido</h4>
-                    <div style="display:flex;gap:12px;align-items:center;">
-                        <span id="totalItensManual" style="font-size:12px;color:#888;">0 itens</span>
-                        <span id="totalManual" style="font-weight:700;color:var(--primary-blue);font-size:15px;">R$ 0,00</span>
-                    </div>
-                </div>
-                <div id="carrinhoManual" style="max-height:180px;overflow-y:auto;border:1px solid #eee;border-radius:6px;padding:8px;background:white;min-height:50px;">
-                    <div style="text-align:center;padding:12px;color:#999;font-size:12px;">
-                        Nenhum item adicionado
+            <!-- LADO ESQUERDO: BUSCA E LISTA DE PRODUTOS -->
+            <div style="flex: 1.2; display: flex; flex-direction: column; border: 1px solid #e0e0e0; border-radius: 8px; background: #fafafa;">
+                <div style="padding: 10px; border-bottom: 1px solid #e0e0e0; background: white; border-radius: 8px 8px 0 0;">
+                    <div style="position: relative;">
+                        <i class="fas fa-search" style="position: absolute; left: 10px; top: 10px; color: #999;"></i>
+                        <input type="text" id="pmBuscaProduto" placeholder="Buscar produto por nome ou código..." 
+                               style="width: 100%; padding: 8px 10px 8px 32px; border: 2px solid #ddd; border-radius: 6px; font-size: 13px;"
+                               oninput="pmFiltrarProdutos()">
                     </div>
                 </div>
                 
-                <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
-                    <button onclick="limparCarrinhoManual()" class="btn-sm" style="background:#e74c3c;color:white;padding:8px 14px;">
-                        <i class="fas fa-trash"></i> Limpar
-                    </button>
-                    <button onclick="visualizarPedidoManual()" class="btn-sm btn-view" style="padding:8px 16px;font-weight:600;">
-                        <i class="fas fa-eye"></i> Visualizar
-                    </button>
-                    <button onclick="finalizarPedidoManual()" class="btn-sm btn-success" style="padding:8px 16px;font-weight:600;">
-                        <i class="fas fa-save"></i> Salvar Pedido
+                <div id="pmListaProdutos" style="flex: 1; overflow-y: auto; padding: 10px;">
+                    <!-- Preenchido via JS -->
+                </div>
+            </div>
+
+            <!-- LADO DIREITO: CARRINHO -->
+            <div style="flex: 1.8; display: flex; flex-direction: column; border: 1px solid #e0e0e0; border-radius: 8px; background: white;">
+                <div style="padding: 10px 15px; border-bottom: 1px solid #e0e0e0; background: var(--primary-blue); color: white; border-radius: 8px 8px 0 0; display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="margin: 0; font-size: 15px;"><i class="fas fa-shopping-cart"></i> Carrinho</h3>
+                    <span id="pmTotalItens" style="font-size: 12px; background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 12px;">0 itens</span>
+                </div>
+                
+                <div id="pmCarrinho" style="flex: 1; overflow-y: auto; padding: 10px;">
+                    <div style="text-align: center; padding: 30px; color: #999;">
+                        <i class="fas fa-box-open" style="font-size: 30px; display: block; margin-bottom: 10px; color: #ddd;"></i>
+                        Nenhum produto adicionado
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ÁREA 3: FRETE, PAGAMENTO E TOTAIS (RODAPÉ) -->
+        <div style="display: flex; gap: 15px; flex-shrink: 0; border-top: 2px solid #eee; padding-top: 15px;">
+            
+            <!-- FRETE -->
+            <div style="flex: 1; background: #f8f9fa; border-radius: 8px; padding: 12px; border: 1px solid #e0e0e0;">
+                <h4 style="margin-bottom: 8px; color: var(--primary-dark); font-size: 14px;"><i class="fas fa-truck"></i> Frete</h4>
+                <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                    <input type="text" id="pmCep" placeholder="CEP (só números)" maxlength="8" style="flex: 1; padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px;">
+                    <button onclick="pmCalcularFrete()" class="btn-sm btn-edit" style="padding: 6px 12px;">Calcular</button>
+                </div>
+                <div id="pmResultadoFrete" style="font-size: 12px; color: #555; max-height: 100px; overflow-y: auto;">
+                    <!-- Preenchido via JS -->
+                </div>
+            </div>
+
+            <!-- PAGAMENTO E DESCONTO -->
+            <div style="flex: 1; background: #f8f9fa; border-radius: 8px; padding: 12px; border: 1px solid #e0e0e0;">
+                <h4 style="margin-bottom: 8px; color: var(--primary-dark); font-size: 14px;"><i class="fas fa-credit-card"></i> Pagamento</h4>
+                
+                <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                    <select id="pmFormaPagamento" style="flex: 1; padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px;">
+                        <option value="PIX">PIX</option>
+                        <option value="Cartão">Cartão</option>
+                        <option value="Boleto">Boleto</option>
+                        <option value="Dinheiro">Dinheiro</option>
+                    </select>
+                    
+                    <div style="display: flex; align-items: center; gap: 4px;">
+                        <span style="font-size: 12px; font-weight: 600;">Desc %:</span>
+                        <input type="number" id="pmDescontoPerc" placeholder="0" min="0" max="100" style="width: 50px; padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- TOTAIS E AÇÃO -->
+            <div style="flex: 1.5; display: flex; flex-direction: column; justify-content: center; align-items: flex-end;">
+                <div style="font-size: 13px; color: #666; margin-bottom: 4px;">
+                    Subtotal Produtos: <span id="pmSubtotal" style="font-weight: 600;">R$ 0,00</span>
+                </div>
+                <div style="font-size: 13px; color: #666; margin-bottom: 4px;">
+                    Desconto: <span id="pmDescontoValor" style="font-weight: 600; color: #e74c3c;">R$ 0,00</span>
+                </div>
+                <div style="font-size: 13px; color: #666; margin-bottom: 8px;">
+                    Frete: <span id="pmFreteValor" style="font-weight: 600;">R$ 0,00</span>
+                </div>
+                <div style="font-size: 22px; font-weight: 700; color: var(--primary-blue); margin-bottom: 10px;">
+                    TOTAL: <span id="pmTotalGeral">R$ 0,00</span>
+                </div>
+                
+                <div style="display: flex; gap: 10px; width: 100%;">
+                    <button onclick="fecharModal('modalPedidoManual')" style="flex: 1; padding: 12px; background: #e0e0e0; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">Cancelar</button>
+                    <button onclick="pmFinalizarPedido()" style="flex: 2; padding: 12px; background: var(--success); color: white; border: none; border-radius: 6px; font-weight: 700; font-size: 16px; cursor: pointer;">
+                        <i class="fas fa-check-circle"></i> Finalizar Pedido
                     </button>
                 </div>
             </div>
@@ -4558,13 +4546,13 @@ function toggleFiltros() {
 }
 
 // ============================================================
-// RENDERIZAR PENDENTES - CORRIGIDO (COM BADGE REV)
+// RENDERIZAR PENDENTES - CORRIGIDO (COM BADGE REV E APROVAR PAGAMENTO)
 // ============================================================
 function renderizarPendentes() {
     const tbody = document.getElementById('pendentesTable');
     const busca = document.getElementById('buscaPendentes')?.value?.toLowerCase() || '';
     
-    // 🔥 ALTERADO: Filtra Pendentes e Pagos
+    // Filtra Pendentes e Pagos
     const pendentes = dados.pedidos.filter(p => p.status === 'Pendente' || p.status === 'Pago' || !p.status);
     
     let filtrados = pendentes;
@@ -4596,7 +4584,7 @@ function renderizarPendentes() {
         const isRev = isClienteRevendedor(p);
         const badgeRev = isRev ? '<span class="badge-revendedor">👑 REV</span>' : '';
         
-        // 🔥 ALTERADO: Define as cores com base no novo status "Pago"
+        // Define as cores com base no status
         let statusColor = '#f39c12';
         let statusExibido = p.status || 'Pendente';
         
@@ -4618,9 +4606,9 @@ function renderizarPendentes() {
             <td><strong>#${p.id_pedido}</strong></td>
             <td>${p.cliente_nome || 'Cliente não identificado'} ${badgeRev}</td>
             <td>${p.cliente_telefone || '-'}</td>
-           <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${p.itens || ''}">
-    ${processarItensPedido(p.itens).map(i => `${i.quantidade}x ${i.nome.substring(0, 15)}`).join(', ') || '-'}
-</td>
+            <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${p.itens || ''}">
+                ${processarItensPedido(p.itens).map(i => `${i.quantidade}x ${i.nome.substring(0, 15)}`).join(', ') || '-'}
+            </td>
             <td><strong>R$ ${parseFloat(String(p.total).replace(',', '.')) || 0}</strong></td>
             <td style="font-size:11px;">${p.data_pedido ? formatarDataHoraBR(p.data_pedido) : '-'}</td>
             <td>
@@ -4628,9 +4616,20 @@ function renderizarPendentes() {
                     ${statusExibido}
                 </span>
                 <br>
+                
+                <!-- BOTÃO MUDAR STATUS -->
                 <button class="btn-sm btn-status" onclick="abrirModalStatus(${p.id_pedido}, '${p.status || 'Pendente'}')" title="Mudar Status">
                     <i class="fas fa-exchange-alt"></i>
                 </button>
+
+                <!-- BOTÃO APROVAR PAGAMENTO (Só aparece se não estiver Pago) -->
+                ${p.status !== 'Pago' ? `
+                <button class="btn-sm" onclick="aprovarPagamentoManual(${p.id_pedido})" style="background: #27ae60; color: white; margin-left: 4px;" title="Aprovar Pagamento Manual">
+                    <i class="fas fa-money-bill-wave"></i>
+                </button>
+                ` : ''}
+
+                <!-- BOTÃO IMPRIMIR -->
                 <button class="btn-sm btn-print" onclick="imprimirCupom(${p.id_pedido})" title="Imprimir">
                     <i class="fas fa-print"></i>
                 </button>
@@ -5827,74 +5826,60 @@ async function cancelarPedido(id) {
     const pedido = dados.pedidos.find(p => parseInt(p.id_pedido) === parseInt(id));
     if (!pedido) { alert('Pedido não encontrado!'); return; }
     
-    if (!confirm(`⚠️ Deseja realmente CANCELAR o pedido #${id}?\n\nIsso vai devolver os produtos ao estoque (se aplicável).`)) return;
+    if (!confirm(`⚠️ Deseja realmente CANCELAR o pedido #${id}?\n\nO sistema devolverá ao estoque apenas os itens que estavam marcados como 'Disponível'.`)) return;
     
     mostrarSpinner('Cancelando e devolvendo estoque...');
     
-            // TRAVA DE SEGURANÇA: Se a observação do pedido diz que tem produção, bloqueia o cancelamento
-        const textoObs = String(pedido.observacoes || '').toUpperCase();
-        const textoItens = String(pedido.itens || '').toUpperCase();
-        
-        if (textoObs.includes('TEM PRODUCAO') || textoItens.includes('(PRODUÇÃO)') || textoItens.includes('(PRODUCAO)')) {
-            if (!confirm(`⚠️ ATENÇÃO: Este pedido foi feito SOB DEMANDA (Produção).\n\nAo cancelar, o sistema NÃO devolverá o estoque para não bagunçar as contas.\n\nDeseja continuar com o cancelamento?`)) {
-                esconderSpinner();
-                return;
-            }
-        }
-
-    
     try {
-        const itens = processarItensPedido(pedido.itens);
+        // 🔥 A MÁGICA: Lê o texto bruto do pedido e separa pelas barras verticais
+        const linhasPedido = String(pedido.itens || '').split(' | ');
         
-        for (const item of itens) {
-            if (item.quantidade > 0) {
-                let produto = null;
+        for (const linha of linhasPedido) {
+            const linhaUpper = linha.toUpperCase();
+            
+            // Só processa linhas que tenham a palavra DISPONÍVEL e NÃO tenham PRODUÇÃO
+            if (linhaUpper.includes('DISPONÍVEL') && !linhaUpper.includes('PRODUÇÃO') && !linhaUpper.includes('PRODUCAO')) {
                 
-                // 1. Tenta achar pelo ID
-                if (item.productId) {
-                    produto = dados.produtos.find(p => parseInt(p.id) === parseInt(item.productId));
-                }
+                // Tenta extrair o nome do produto e a quantidade dessa linha
+                // Exemplo: "Caixa 08x08x04 (Disponível) (30x 1 un) - R$ 48.74"
                 
-                // 2. Se não achou, tenta pelo nome exato
-                if (!produto) {
-                    produto = dados.produtos.find(p => p.nome && p.nome.toLowerCase() === item.nome.toLowerCase());
-                }
+                // 1. Pega o nome do produto (tudo antes do parêntese)
+                const partesNome = linha.split('(');
+                const nomeProduto = partesNome[0].trim();
                 
-                // 3. Se não achou, tenta por parte do nome
-                if (!produto) {
-                    produto = dados.produtos.find(p => p.nome && p.nome.toLowerCase().includes(item.nome.toLowerCase()));
-                }
+                // 2. Pega a quantidade total. Procura o padrão "xx un"
+                const matchQtd = linha.match(/\((\d+)x\s*1\s*un\)/i) || linha.match(/\((\d+)\s*un\)/i);
+                const quantidadeDisponivel = matchQtd ? parseInt(matchQtd[1]) : 0;
                 
-                                      if (produto) {
-                const estoqueAtual = parseInt(produto.estoque) || 0;
-                
-                // 🔥 TRAVA DE SEGURANÇA MÁXIMA:
-                // Verifica se o pedido tinha a etiqueta de Produção em qualquer lugar do texto
-                const textoPedido = String(pedido.itens || '').toUpperCase() + ' ' + String(pedido.observacoes || '').toUpperCase();
-                const eraProducao = item.isProducao === true || 
-                                    textoPedido.includes('PRODUÇÃO') || 
-                                    textoPedido.includes('PRODUCAO') ||
-                                    textoPedido.includes('SOB DEMANDA');
-
-                if (!eraProducao) {
-                    const novoEstoque = estoqueAtual + item.quantidade;
+                if (quantidadeDisponivel > 0) {
+                    // Acha o produto no banco
+                    let produto = dados.produtos.find(p => p.nome && p.nome.toLowerCase() === nomeProduto.toLowerCase());
                     
-                    const { error } = await supabaseClient
-                        .from('produtos')
-                        .update({ estoque: novoEstoque })
-                        .eq('id', produto.id);
+                    if (!produto) {
+                        produto = dados.produtos.find(p => p.nome && p.nome.toLowerCase().includes(nomeProduto.toLowerCase()));
+                    }
+                    
+                    if (produto) {
+                        const estoqueAtual = parseInt(produto.estoque) || 0;
+                        const novoEstoque = estoqueAtual + quantidadeDisponivel;
                         
-                    if (error) throw error;
-                    
-                    produto.estoque = novoEstoque;
-                    console.log(`✅ Estoque de "${produto.nome}" devolvido: ${estoqueAtual} + ${item.quantidade} = ${novoEstoque}`);
-                } else {
-                    console.log(`🏭 Item "${produto.nome}" era de produção. Estoque preservado.`);
+                        const { error } = await supabaseClient
+                            .from('produtos')
+                            .update({ estoque: novoEstoque })
+                            .eq('id', produto.id);
+                            
+                        if (error) throw error;
+                        
+                        produto.estoque = novoEstoque;
+                        console.log(`✅ DEVOLVIDO: "${nomeProduto}" + ${quantidadeDisponivel} = ${novoEstoque}`);
+                    }
                 }
-            }
+            } else if (linhaUpper.includes('PRODUÇÃO') || linhaUpper.includes('PRODUCAO')) {
+                console.log(`🏭 IGNORADO (Produção): ${linha.substring(0, 30)}...`);
             }
         }
         
+        // Atualiza o status do pedido
         const { error: erroStatus } = await supabaseClient
             .from('pedidos')
             .update({ status: 'Cancelado' })
@@ -6858,6 +6843,7 @@ function imprimirCupom(idPedido) {
     
     const totalBerçosPorGomos = {};
     
+    // 🔥 A FUNÇÃO ORIGINAL QUE CALCULA E AGRUPA OS BERÇOS
     function extrairESomarBerços(descricao, totalUnidades) {
         if (!descricao || totalUnidades <= 0) return;
         const regex = /[Bb]erços?\s*:\s*([^\n]*)/;
@@ -6897,7 +6883,7 @@ function imprimirCupom(idPedido) {
         
         let codigoProduto = '';
         
-        // 🔥 CORREÇÃO: Remove o sufixo "(Produção X dias)" do nome para achar o produto certo no banco
+        // Limpa o nome para buscar no banco
         let nomeBusca = item.nome.split(' (Produção')[0].trim();
         
         const produtoEncontrado = dados.produtos.find(p => p.nome && p.nome.toLowerCase() === nomeBusca.toLowerCase());
@@ -6905,7 +6891,7 @@ function imprimirCupom(idPedido) {
         if (produtoEncontrado) {
             codigoProduto = produtoEncontrado.codigo_produto || '';
             
-            // 🔥 CORREÇÃO: Busca berços na descrição E no nome do produto
+            // 🔥 CHAMA A FUNÇÃO ANTIGA PARA SOMAR OS BERÇOS
             if (produtoEncontrado.descricao) {
                 extrairESomarBerços(produtoEncontrado.descricao, totalUnidades);
             }
@@ -6941,6 +6927,7 @@ function imprimirCupom(idPedido) {
         `;
     });
     
+    // 🔥 AQUI DESENHA O BLOCO DE BERÇOS AGRUPADO NO FINAL (COMO ERA ANTES)
     const gomosOrdenados = Object.keys(totalBerçosPorGomos).map(Number).sort((a, b) => a - b);
     
     if (gomosOrdenados.length > 0) {
@@ -7005,11 +6992,9 @@ function imprimirCupom(idPedido) {
         }
     }
     
-    // Monta a string de observações igual ao modelo antigo, puxando as colunas do banco
     let obsLimpa = pedido.observacoes || '';
     obsLimpa = obsLimpa.replace(/Prazo:\s*undefined\s*dias/gi, '').trim();
     
-    // Se a observação não tiver o texto de Frete e Pagamento, adiciona
     if (!obsLimpa.includes('Frete:') && !obsLimpa.includes('Pagamento:')) {
         let textoObs = `Frete: ${freteNome} (R$ ${freteValor.toFixed(2)}) | Pagamento: ${pagamento}`;
         if (parseInt(pedido.desconto) > 0) textoObs += ` | Desconto PIX: R$ ${parseFloat(pedido.desconto).toFixed(2)}`;
@@ -7499,7 +7484,938 @@ console.log('💡 EXECUTE: forcarCorrecaoBusca() para corrigir automaticamente')
 // 🚀 INICIALIZAÇÃO
 // ============================================================
 carregarDados();
+// ============================================================
+// LÓGICA DO NOVO PEDIDO MANUAL - CLIENTES (ETAPA 1)
+// ============================================================
+let pmClienteSelecionado = null;
 
+function abrirPedidoManual() {
+    // Limpa a tela ao abrir
+    document.getElementById('pmBuscaCliente').value = '';
+    document.getElementById('pmClienteSelecionado').style.display = 'none';
+    document.getElementById('pmResultadoClientes').style.display = 'none';
+    pmClienteSelecionado = null;
+    
+    // Abre o modal
+    document.getElementById('modalPedidoManual').classList.add('open');
+}
+
+function pmBuscarCliente() {
+    const termo = document.getElementById('pmBuscaCliente').value.toLowerCase().trim();
+    const container = document.getElementById('pmResultadoClientes');
+    
+    if (termo.length < 2) {
+        container.style.display = 'none';
+        return;
+    }
+
+    // MÁGICA DO BALCÃO: Se digitar "balcão" ou "balcao", cria um cliente fake
+    if ('balcao'.includes(termo) || 'balcão'.includes(termo)) {
+        container.innerHTML = `
+            <div onclick="pmSelecionarClienteBalcao()" style="padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; background: #fff3cd;">
+                <strong style="color: #856404;"><i class="fas fa-store"></i> VENDA NO BALCÃO (Sem cadastro)</strong>
+                <div style="font-size: 11px; color: #888;">Clique para usar como cliente</div>
+            </div>
+        `;
+        container.style.display = 'block';
+        return; // Para por aqui e não buscar no banco
+    }
+
+    // Busca no banco de dados (clientes já carregados na memória)
+    const resultados = dados.clientes.filter(c => {
+        const nome = String(c.nome || '').toLowerCase();
+        const email = String(c.email || '').toLowerCase();
+        const doc = String(c.cpf || c.documento || '').replace(/\D/g, '');
+        const tel = String(c.telefone || '').replace(/\D/g, '');
+        
+        return nome.includes(termo) || email.includes(termo) || doc.includes(termo) || tel.includes(termo);
+    }).slice(0, 10); // Mostra no máximo 10
+
+    if (resultados.length === 0) {
+        container.innerHTML = `<div style="padding: 10px; text-align: center; color: #999; font-size: 12px;">Nenhum cliente encontrado. Cadastre um novo.</div>`;
+    } else {
+        container.innerHTML = resultados.map(c => {
+            const docFormatado = formatarDocumento(c.cpf || c.documento);
+            return `
+                <div onclick="pmSelecionarCliente(${c.id_cliente})" style="padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#f0f4f8'" onmouseout="this.style.background='white'">
+                    <div style="font-weight: 600; color: var(--primary-dark);">${c.nome}</div>
+                    <div style="font-size: 11px; color: #666;">${c.email || 'Sem email'} | ${c.telefone || 'Sem tel'}</div>
+                    ${docFormatado !== '---' ? `<div style="font-size: 10px; color: #999;">Doc: ${docFormatado}</div>` : ''}
+                </div>
+            `;
+        }).join('');
+    }
+    container.style.display = 'block';
+}
+
+function pmSelecionarCliente(id) {
+    pmClienteSelecionado = dados.clientes.find(c => parseInt(c.id_cliente) === parseInt(id));
+    if (!pmClienteSelecionado) return;
+    
+    document.getElementById('pmBuscaCliente').value = pmClienteSelecionado.nome;
+    document.getElementById('pmResultadoClientes').style.display = 'none';
+    
+    document.getElementById('pmNomeClienteSel').textContent = pmClienteSelecionado.nome;
+    document.getElementById('pmDocClienteSel').textContent = formatarDocumento(pmClienteSelecionado.cpf || pmClienteSelecionado.documento);
+    document.getElementById('pmClienteSelecionado').style.display = 'block';
+
+    // 👇 AQUI ESTÁ A NOVA LÓGICA DO CEP AUTOMÁTICO 👇
+    const cepCliente = pmClienteSelecionado.cep || '';
+    document.getElementById('pmCep').value = cepCliente;
+
+    // Se o cliente tiver um CEP válido, calcula o frete automaticamente após 500ms
+    if (cepCliente && cepCliente.replace(/\D/g, '').length === 8) {
+        setTimeout(() => {
+            pmCalcularFrete();
+        }, 500);
+    }
+
+    // Salva o rascunho com os dados do cliente e o CEP
+    pmSalvarRascunho();
+}
+
+function pmSelecionarClienteBalcao() {
+    pmClienteSelecionado = {
+        id_cliente: -1, // ID fake para saber que é balcão
+        nome: 'Cliente Balcão',
+        cpf: '',
+        documento: '',
+        email: '',
+        telefone: '',
+        endereco: 'Retirada no Balcão'
+    };
+    
+    document.getElementById('pmBuscaCliente').value = 'BALCÃO';
+    document.getElementById('pmResultadoClientes').style.display = 'none';
+    
+    document.getElementById('pmNomeClienteSel').textContent = 'VENDA NO BALCÃO';
+    document.getElementById('pmDocClienteSel').textContent = 'Sem cadastro';
+    document.getElementById('pmClienteSelecionado').style.display = 'block';
+    
+    // Foca no campo de busca de produto para agilizar a venda
+    document.getElementById('pmBuscaProduto').focus();
+}
+
+function pmLimparCliente() {
+    pmClienteSelecionado = null;
+    document.getElementById('pmBuscaCliente').value = '';
+    document.getElementById('pmClienteSelecionado').style.display = 'none';
+}
+
+// Fecha a lista suspensa de clientes se clicar fora
+document.addEventListener('click', function(e) {
+    const container = document.getElementById('pmResultadoClientes');
+    const input = document.getElementById('pmBuscaCliente');
+    if (container && input && !container.contains(e.target) && e.target !== input) {
+        container.style.display = 'none';
+    }
+});
+
+// ============================================================
+// LÓGICA DO NOVO PEDIDO MANUAL - PRODUTOS E CARRINHO (ETAPA 2)
+// ============================================================
+let pmCarrinho = [];
+
+function pmFiltrarProdutos() {
+    const termo = document.getElementById('pmBuscaProduto').value.toLowerCase().trim();
+    const container = document.getElementById('pmListaProdutos');
+    
+    if (!dados.produtos || dados.produtos.length === 0) {
+        container.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">Carregando produtos...</div>';
+        return;
+    }
+
+    // Filtra os produtos
+    let filtrados = dados.produtos.filter(p => {
+        const nome = String(p.nome || '').toLowerCase();
+        const cod = String(p.codigo_produto || '').toLowerCase();
+        return nome.includes(termo) || cod.includes(termo);
+    });
+
+    // Ordena alfabeticamente
+    filtrados.sort((a, b) => String(a.nome).localeCompare(String(b.nome)));
+
+    if (filtrados.length === 0) {
+        container.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">Nenhum produto encontrado.</div>';
+        return;
+    }
+
+    container.innerHTML = filtrados.map(p => {
+        const estoque = parseInt(p.estoque) || 0;
+        const corEstoque = estoque > 0 ? '#27ae60' : '#e74c3c';
+        
+        return `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; border-bottom: 1px solid #eee; transition: background 0.2s;" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background='transparent'">
+                <div style="flex: 1; min-width: 0; padding-right: 10px;">
+                    <div style="font-weight: 600; font-size: 13px; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${p.nome}">${p.nome}</div>
+                    <div style="font-size: 11px; color: #888;">Cód: ${p.codigo_produto || '---'} | Estoque: <span style="color: ${corEstoque}; font-weight: bold;">${estoque}</span></div>
+                </div>
+                <button onclick="pmAdicionarAoCarrinho(${p.id})" class="btn-sm btn-success" style="padding: 6px 10px; white-space: nowrap;">
+                    <i class="fas fa-cart-plus"></i> Add
+                </button>
+            </div>
+        `;
+    }).join('');
+}
+
+function pmAdicionarAoCarrinho(produtoId) {
+    const p = dados.produtos.find(x => parseInt(x.id) === parseInt(produtoId));
+    if (!p) return;
+
+    // Verifica se o produto já está no carrinho. Se sim, apenas aumenta a quantidade.
+    const itemExistente = pmCarrinho.find(i => i.produtoId === produtoId);
+    
+    if (itemExistente) {
+        itemExistente.quantidade++;
+        itemExistente.precoTotal = itemExistente.quantidade * itemExistente.precoUnitario;
+    } else {
+        // REGRA DE PREÇO UNITÁRIO BASE
+        // Pega os pacotes (10, 50, 100) e calcula o valor da unidade
+        let precoUnit10 = 0, precoUnit50 = 0, precoUnit100 = 0;
+        
+        const precosStr = p.preco_venda || '';
+        precosStr.split(';').forEach(item => {
+            const parts = item.split(':');
+            if (parts.length === 2) {
+                const qtd = parseInt(parts[0]);
+                const valorPacote = parseFloat(parts[1]);
+                if (qtd === 10) precoUnit10 = valorPacote / 10;
+                if (qtd === 50) precoUnit50 = valorPacote / 50;
+                if (qtd === 100) precoUnit100 = valorPacote / 100;
+            }
+        });
+
+        // Se o produto tiver pacote de 10, usa ele como base inicial.
+        let precoBase = precoUnit10 > 0 ? precoUnit10 : (precoUnit50 > 0 ? precoUnit50 : precoUnit100);
+
+        pmCarrinho.push({
+            produtoId: p.id,
+            nome: p.nome,
+            quantidade: 1, // Sempre começa com 1 unidade
+            estoqueTotal: parseInt(p.estoque) || 0,
+            precoUnitario: precoBase,
+            precoTotal: precoBase,
+            precoUnit10: precoUnit10,
+            precoUnit50: precoUnit50,
+            precoUnit100: precoUnit100,
+            isProducao: false,
+            queroLevar: false,
+            prazoProducao: parseInt(p.prazo_producao) || 7
+        });
+    }
+
+    pmAtualizarCarrinho();
+}
+
+function pmAtualizarCarrinho() {
+    const container = document.getElementById('pmCarrinho');
+    const totalItensEl = document.getElementById('pmTotalItens');
+    
+    if (pmCarrinho.length === 0) {
+        container.innerHTML = '<div style="text-align: center; padding: 30px; color: #999;"><i class="fas fa-box-open" style="font-size: 30px; display: block; margin-bottom: 10px; color: #ddd;"></i>Nenhum produto adicionado</div>';
+        totalItensEl.textContent = '0 itens';
+        pmCalcularTotais();
+        return;
+    }
+
+    let totalItens = 0;
+
+    container.innerHTML = pmCarrinho.map((item, index) => {
+        totalItens += item.quantidade;
+
+        // REGRA DE PREÇO DINÂMICO
+        // Atualiza o preço unitário baseado na quantidade atual
+        if (item.quantidade >= 100 && item.precoUnit100 > 0) {
+            item.precoUnitario = item.precoUnit100;
+        } else if (item.quantidade >= 50 && item.precoUnit50 > 0) {
+            item.precoUnitario = item.precoUnit50;
+        } else if (item.precoUnit10 > 0) {
+            item.precoUnitario = item.precoUnit10;
+        }
+        
+        // Se o usuário não editou manualmente (vou considerar que se ele editar, o valor muda, mas para simplificar vamos deixar a edição mandar)
+        // Neste modelo, o input de preço reflete o item.precoUnitario.
+
+        item.precoTotal = item.quantidade * item.precoUnitario;
+
+        // Lógica do "Quero Levar"
+        const podeLevar = item.quantidade <= item.estoqueTotal;
+        let avisoEstoque = '';
+        
+               if (!podeLevar) {
+            item.isProducao = true;
+            if (!item.queroLevar) {
+                avisoEstoque = `<span style="color:#e67e22; font-size:11px; font-weight:bold; display:block; margin-bottom:4px;"><i class="fas fa-clock"></i> Produção: ${item.quantidade} un (${item.prazoProducao} dias)</span>`;
+            } else {
+                const qtdProduzir = item.quantidade - item.estoqueTotal;
+                avisoEstoque = `<div style="font-size:11px; font-weight:bold; line-height:1.3;">
+                                    <span style="color:#27ae60; display:block;"><i class="fas fa-check-circle"></i> Levar: ${item.estoqueTotal} un</span>
+                                    <span style="color:#e74c3c; display:block;"><i class="fas fa-clock"></i> Produção: ${qtdProduzir} un (${item.prazoProducao} dias)</span>
+                                </div>`;
+            }
+        } else {
+            item.isProducao = false;
+            avisoEstoque = `<span style="color:#27ae60; font-size:11px; font-weight:bold;"><i class="fas fa-check-circle"></i> Disponível (${item.quantidade} un)</span>`;
+        }
+
+        return `
+            <div style="border: 1px solid #e0e0e0; border-radius: 6px; padding: 10px; margin-bottom: 10px; background: #fff;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div style="font-weight: 600; font-size: 13px; color: #333; flex: 1; padding-right: 10px;">${item.nome}</div>
+                    <button onclick="pmRemoverDoCarrinho(${index})" style="background: none; border: none; color: #e74c3c; cursor: pointer;"><i class="fas fa-trash"></i></button>
+                </div>
+                
+                <div style="display: flex; align-items: center; gap: 10px; margin-top: 8px;">
+                    <!-- Controle de Quantidade -->
+                    <div style="display: flex; align-items: center; border: 1px solid #ddd; border-radius: 4px; overflow: hidden;">
+                        <button onclick="pmAlterarQtd(${index}, -1)" style="background: #f0f0f0; border: none; padding: 4px 8px; cursor: pointer;">-</button>
+                        <input type="number" value="${item.quantidade}" min="1" max="9999" onchange="pmMudarQtdManual(${index}, this.value)" style="width: 55px; text-align: center; border: none; padding: 4px; font-weight: bold; font-size: 14px;">
+                        <button onclick="pmAlterarQtd(${index}, 1)" style="background: #f0f0f0; border: none; padding: 4px 8px; cursor: pointer;">+</button>
+                    </div>
+
+                    <!-- Preço Unitário -->
+                    <div style="display: flex; align-items: center; gap: 4px;">
+                        <span style="font-size: 11px; color: #666;">R$</span>
+                        <input type="number" step="0.01" value="${item.precoUnitario.toFixed(2)}" onchange="pmMudarPrecoManual(${index}, this.value)" style="width: 70px; border: 1px solid #ddd; border-radius: 4px; padding: 4px; text-align: right; font-size: 13px; font-weight: 600; color: var(--primary-blue);">
+                    </div>
+                    
+                    <!-- Total -->
+                    <div style="margin-left: auto; font-weight: 700; color: var(--primary-blue); font-size: 14px;">
+                        R$ ${item.precoTotal.toFixed(2)}
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; border-top: 1px dashed #eee; padding-top: 8px;">
+                    <div>${avisoEstoque}</div>
+                    
+                    <!-- Checkbox Quero Levar (só aparece se faltar estoque) -->
+                    ${item.isProducao ? `
+                                                <label style="font-size: 12px; font-weight: 600; color: #e67e22; cursor: pointer; display: flex; align-items: center; gap: 6px; background: #fff3cd; padding: 4px 8px; border-radius: 4px; border: 1px solid #ffeeba;">
+                            <input type="checkbox" ${item.queroLevar ? 'checked' : ''} onchange="pmToggleQueroLevar(${index})" style="width: 16px; height: 16px;">
+                            Quero levar o que tem no estoque
+                        </label>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }).join('');
+
+       totalItensEl.textContent = `${totalItens} itens`;
+    pmCalcularTotais();
+    
+    // 👇 A MÁGICA ACONTECE AQUI: Salva o rascunho toda vez que o carrinho for desenhado
+    pmSalvarRascunho(); 
+}
+
+function pmAlterarQtd(index, delta) {
+    const item = pmCarrinho[index];
+    if (item.quantidade + delta < 1) return;
+    item.quantidade += delta;
+    item.precoTotal = item.quantidade * item.precoUnitario;
+    pmAtualizarCarrinho();
+}
+
+function pmMudarQtdManual(index, valor) {
+    const qtd = parseInt(valor);
+    if (isNaN(qtd) || qtd < 1) return;
+    pmCarrinho[index].quantidade = qtd;
+    pmAtualizarCarrinho();
+}
+
+function pmMudarPrecoManual(index, valor) {
+    const preco = parseFloat(valor);
+    if (isNaN(preco) || preco < 0) return;
+    pmCarrinho[index].precoUnitario = preco;
+    pmAtualizarCarrinho();
+}
+
+function pmToggleQueroLevar(index) {
+    pmCarrinho[index].queroLevar = !pmCarrinho[index].queroLevar;
+    pmAtualizarCarrinho();
+}
+
+function pmRemoverDoCarrinho(index) {
+    pmCarrinho.splice(index, 1);
+    pmAtualizarCarrinho();
+}
+
+function pmCalcularTotais() {
+    let subtotal = 0;
+    pmCarrinho.forEach(item => subtotal += item.precoTotal);
+    
+    document.getElementById('pmSubtotal').textContent = `R$ ${subtotal.toFixed(2)}`;
+    
+    // O desconto e o frete vão ser calculados na próxima etapa,
+    // mas já preparamos os campos para não dar erro.
+    document.getElementById('pmTotalGeral').textContent = `R$ ${subtotal.toFixed(2)}`;
+    document.getElementById('pmTotalItens').textContent = `${pmCarrinho.reduce((acc, i) => acc + i.quantidade, 0)} itens`;
+}
+
+
+// ============================================================
+// LÓGICA DO NOVO PEDIDO MANUAL - FRETE E AUTO-SAVE (ETAPA 4 ATUALIZADA)
+// ============================================================
+
+// Função blindada contra erros de produto sem peso/dimensão
+function pmCalcularPesoDimensoes() {
+    let pesoTotal = 0;
+    let volumes = []; 
+    
+    pmCarrinho.forEach(item => {
+        const p = dados.produtos.find(x => parseInt(x.id) === parseInt(item.produtoId));
+        if (!p) return;
+
+        // Quantidade que realmente vai ser enviada (se "quero levar" está ativo, enviamos só o estoque)
+        let qtdEnviar = item.quantidade;
+        if (item.queroLevar && item.quantidade > item.estoqueTotal) {
+            qtdEnviar = item.estoqueTotal; // Só envia o que tem
+        }
+        if (qtdEnviar <= 0) return; // Se não vai enviar nada, pula
+
+        const pesoStr = String(p.pesos_medidas || '');
+        let peso10 = 0, peso50 = 0, peso100 = 0;
+        let dim10 = {a:16,l:16,c:16}, dim50 = {a:16,l:16,c:16}, dim100 = {a:16,l:16,c:16};
+
+        // Extrai os dados do banco de dados
+        if (pesoStr) {
+            pesoStr.split(';').forEach(regra => {
+                const parts = regra.split(':');
+                if (parts.length === 2) {
+                    const qtd = parseInt(parts[0]);
+                    const dados = parts[1].split('-');
+                    const peso = parseFloat(String(dados[0]).replace(/[^0-9.]/g, '')) || 0;
+                    const dims = dados[1] ? dados[1].split('x') : ['16','16','16']; // Padrão se não tiver dimensão
+
+                    const a = parseInt(dims[0]) || 16;
+                    const l = parseInt(dims[1]) || 16;
+                    const c = parseInt(dims[2]) || 16;
+
+                    if (qtd === 10) { peso10 = peso; dim10 = {a: a, l: l, c: c}; }
+                    if (qtd === 50) { peso50 = peso; dim50 = {a: a, l: l, c: c}; }
+                    if (qtd === 100) { peso100 = peso; dim100 = {a: a, l: l, c: c}; }
+                }
+            });
+        }
+
+        let restante = qtdEnviar;
+        
+        // REGRA 1: Pega os pacotes de 100 inteiros
+        if (peso100 > 0) {
+            const qtd100 = Math.floor(restante / 100);
+            if (qtd100 > 0) {
+                pesoTotal += (qtd100 * peso100);
+                volumes.push({ qtd: qtd100, dim: dim100 });
+                restante -= (qtd100 * 100);
+            }
+        }
+        
+        // REGRA 2: Pega os pacotes de 50 inteiros
+        if (restante >= 50 && peso50 > 0) {
+            const qtd50 = Math.floor(restante / 50);
+            if (qtd50 > 0) {
+                pesoTotal += (qtd50 * peso50);
+                volumes.push({ qtd: qtd50, dim: dim50 });
+                restante -= (qtd50 * 50);
+            }
+        }
+
+        // REGRA 3: O que sobrar (1 a 49, ou 51 a 99) usa o pacote de 10 arredondado pra cima
+        if (restante > 0) {
+            const qtd10 = Math.ceil(restante / 10); 
+            
+            // Pega o peso do pacote de 10. Se não tiver, tenta o de 50 ou 100.
+            const pesoBase = peso10 > 0 ? peso10 : (peso50 > 0 ? peso50 : (peso100 > 0 ? peso100 : 0.5));
+            const dimBase = peso10 > 0 ? dim10 : (peso50 > 0 ? dim50 : (peso100 > 0 ? dim100 : {a:16,l:16,c:16}));
+            
+            pesoTotal += (qtd10 * pesoBase);
+            volumes.push({ qtd: qtd10, dim: dimBase });
+        }
+    });
+
+    // Monta o volume final (soma alturas, pega a maior base)
+    let alturaFinal = 0, larguraFinal = 16, comprimentoFinal = 16;
+    volumes.forEach(vol => {
+        if (vol.dim.a > 0) {
+            alturaFinal += (vol.qtd * vol.dim.a);
+            if (vol.dim.l > larguraFinal) larguraFinal = vol.dim.l;
+            if (vol.dim.c > comprimentoFinal) comprimentoFinal = vol.dim.c;
+        }
+    });
+
+    // TRAVA DE SEGURANÇA PARA OS CORREIOS (Mínimo aceitável)
+    if (alturaFinal < 2) alturaFinal = 2;
+    if (larguraFinal < 11) larguraFinal = 11;
+    if (comprimentoFinal < 16) comprimentoFinal = 16;
+    if (pesoTotal < 0.3) pesoTotal = 0.3; // Peso mínimo de 300g
+
+    console.log("Cálculo do Frete:", { peso: pesoTotal, altura: alturaFinal, largura: larguraFinal, comprimento: comprimentoFinal });
+
+    return { peso: pesoTotal, altura: alturaFinal, largura: larguraFinal, comprimento: comprimentoFinal };
+}
+// Funções auxiliares para calcular Entrega Própria no Gestor
+function obterCidadePorCep(cep) {
+    if (!cep) return null;
+    const c = String(cep).replace(/\D/g, '');
+    const mapa = {
+        '30': 'Belo Horizonte', '31': 'Belo Horizonte', '32': 'Belo Horizonte',
+        '326': 'Betim', '325': 'Contagem', '345': 'Sabará', '348': 'Nova Lima',
+        '324': 'Ibirité', '333': 'Ribeirão das Neves', '332': 'Santa Luzia', '347': 'Lagoa Santa'
+    };
+    const prefixos = Object.keys(mapa).sort((a, b) => b.length - a.length);
+    for (const p of prefixos) {
+        if (c.indexOf(p) === 0) return mapa[p];
+    }
+    return null;
+}
+
+function calcularEntregaPropria(cidade, total) {
+    if (!cidade) return { encontrado: false };
+    const tabela = {
+        'Belo Horizonte': [{ min: 0.01, max: 50.00, cost: 16.90 }, { min: 50.01, max: 299.99, cost: 7.90 }, { min: 300.00, max: 999999, cost: -12.00 }],
+        'Betim': [{ min: 50.00, max: 120.00, cost: 44.90 }, { min: 120.01, max: 299.99, cost: 35.90 }, { min: 300.00, max: 999999, cost: 25.90 }],
+        'Contagem': [{ min: 50.00, max: 120.00, cost: 26.90 }, { min: 120.01, max: 299.99, cost: 17.90 }, { min: 300.00, max: 999999, cost: 7.90 }],
+        'Sabará': [{ min: 50.00, max: 120.00, cost: 26.90 }, { min: 120.01, max: 299.99, cost: 17.90 }, { min: 300.00, max: 999999, cost: 12.90 }],
+        'Ibirité': [{ min: 50.00, max: 120.00, cost: 44.90 }, { min: 120.01, max: 299.99, cost: 35.90 }, { min: 300.00, max: 999999, cost: 25.90 }],
+        'Ribeirão das Neves': [{ min: 50.00, max: 120.00, cost: 44.90 }, { min: 120.01, max: 299.99, cost: 35.90 }, { min: 300.00, max: 999999, cost: 25.90 }],
+        'Santa Luzia': [{ min: 50.00, max: 120.00, cost: 37.90 }, { min: 120.01, max: 299.99, cost: 27.90 }, { min: 300.00, max: 999999, cost: 17.90 }],
+        'Vespasiano': [{ min: 50.00, max: 120.00, cost: 44.90 }, { min: 120.01, max: 299.99, cost: 35.90 }, { min: 300.00, max: 999999, cost: 25.90 }],
+        'Lagoa Santa': [{ min: 50.00, max: 120.00, cost: 44.90 }, { min: 120.01, max: 299.99, cost: 35.90 }, { min: 300.00, max: 999999, cost: 25.90 }],
+        'Nova Lima': [{ min: 50.00, max: 120.00, cost: 44.90 }, { min: 120.01, max: 299.99, cost: 35.90 }, { min: 300.00, max: 999999, cost: 25.90 }]
+    };
+    
+    const norm = cidade.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    for (const key in tabela) {
+        const kn = key.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        if (kn === norm) {
+            for (const f of tabela[key]) {
+                if (total >= f.min && total <= f.max) {
+                    return { encontrado: true, cost: f.cost, cidade: key };
+                }
+            }
+        }
+    }
+    return { encontrado: false };
+}
+async function pmCalcularFrete() {
+    const cep = document.getElementById('pmCep').value.replace(/\D/g, '');
+    const container = document.getElementById('pmResultadoFrete');
+    
+    if (cep.length !== 8) return container.innerHTML = '<span style="color: #e74c3c;">CEP inválido.</span>';
+    if (pmCarrinho.length === 0) return container.innerHTML = '<span style="color: #e74c3c;">Adicione produtos primeiro.</span>';
+
+    container.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Calculando...';
+    const dims = pmCalcularPesoDimensoes();
+    const totalProdutos = pmCarrinho.reduce((acc, i) => acc + i.precoTotal, 0);
+
+    try {
+        const { data, error } = await supabaseClient.functions.invoke('calcular-frete', {
+            body: { cepDestino: cep, peso: dims.peso, altura: dims.altura, largura: dims.largura, comprimento: dims.comprimento }
+        });
+        
+        if (error) throw error;
+        
+        let opcoes = [];
+        if (data && data.opcoes) {
+            data.opcoes.forEach(op => opcoes.push({ id: op.codigo || 'F', nome: op.nome || 'Frete', valor: parseFloat(String(op.preco).replace(',', '.')) || 0, prazo: parseInt(op.prazo) || 0 }));
+        }
+
+        const cidade = obterCidadePorCep(cep);
+        if (cidade) {
+            const ep = calcularEntregaPropria(cidade, totalProdutos);
+            if (ep.encontrado) opcoes.push({ id: 'ENTREGA_PROPRIA', nome: ep.cost === 0 ? 'Entrega Própria (Grátis)' : 'Entrega Própria', valor: ep.cost, prazo: 1 });
+        }
+        opcoes.push({ id: 'RETIRADA', nome: 'Retirada na Loja', valor: 0, prazo: 1 });
+
+        if (opcoes.length === 0) return container.innerHTML = '<span style="color: #e74c3c;">Nenhuma opção disponível.</span>';
+
+        container.innerHTML = opcoes.map(op => `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px; border-bottom: 1px solid #eee; background: white; margin-bottom: 4px; border-radius: 4px; border: 1px solid #ddd;">
+                <div style="cursor: pointer; flex: 1;" onclick="pmSelecionarFrete('${op.id}', '${op.nome}', ${op.valor}, ${op.prazo}, this)">
+                    <strong style="font-size: 12px; color: var(--primary-dark);">${op.nome}</strong>
+                    <div style="font-size: 10px; color: #888;">Prazo: ${op.prazo} dias</div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 4px;">
+                    <span style="font-size: 11px; color: #666;">R$</span>
+                    <input type="number" step="0.01" value="${op.valor.toFixed(2)}" id="pmFreteInput_${op.id}" 
+                           style="width: 65px; text-align: right; border: 1px solid #ccc; border-radius: 4px; padding: 4px; font-size: 12px; font-weight: bold; color: #27ae60;">
+                    <button onclick="pmSelecionarFrete('${op.id}', '${op.nome}', parseFloat(document.getElementById('pmFreteInput_${op.id}').value), ${op.prazo}, this)" class="btn-sm btn-success" style="padding: 4px 8px;">
+                        <i class="fas fa-check"></i>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+
+    } catch (error) {
+        console.error('Erro no frete:', error);
+        container.innerHTML = '<span style="color: #e74c3c;">Erro ao calcular. Verifique o peso dos produtos.</span>';
+    }
+}
+
+let pmFreteSelecionado = null;
+
+function pmSelecionarFrete(id, nome, valor, prazo, btnElement) {
+    pmFreteSelecionado = { id, nome, valor: parseFloat(valor), prazo };
+    
+    // Limpa a borda de todos e marca o selecionado
+    document.querySelectorAll('#pmResultadoFrete > div').forEach(el => el.style.border = '1px solid #ddd');
+    if (btnElement) {
+        const parent = btnElement.closest('div[style*="display: flex"]');
+        if (parent) parent.style.border = '2px solid #27ae60';
+    }
+
+    document.getElementById('pmFreteValor').textContent = `R$ ${pmFreteSelecionado.valor.toFixed(2)}`;
+    pmCalcularTotaisFinais();
+    pmSalvarRascunho();
+}
+
+function pmCalcularTotaisFinais() {
+    let subtotal = pmCarrinho.reduce((acc, item) => acc + item.precoTotal, 0);
+    const percDesc = parseFloat(document.getElementById('pmDescontoPerc').value) || 0;
+    const valorDesconto = subtotal * (percDesc / 100);
+    const subtotalComDesc = subtotal - valorDesconto;
+    const frete = pmFreteSelecionado ? pmFreteSelecionado.valor : 0;
+    
+    document.getElementById('pmSubtotal').textContent = `R$ ${subtotal.toFixed(2)}`;
+    document.getElementById('pmDescontoValor').textContent = `- R$ ${valorDesconto.toFixed(2)}`;
+    document.getElementById('pmFreteValor').textContent = `R$ ${frete.toFixed(2)}`;
+    
+    const totalGeral = subtotalComDesc + frete;
+    document.getElementById('pmTotalGeral').textContent = `R$ ${totalGeral.toFixed(2)}`;
+}
+
+document.addEventListener('input', function(e) {
+    if (e.target && e.target.id === 'pmDescontoPerc') {
+        pmCalcularTotaisFinais();
+        pmSalvarRascunho();
+    }
+});
+
+// ============================================================
+// AUTO-SAVE E CARREGAMENTO DO RASCUNHO
+// ============================================================
+function pmSalvarRascunho() {
+    try {
+        const rascunho = {
+            cliente: pmClienteSelecionado,
+            carrinho: pmCarrinho,
+            frete: pmFreteSelecionado,
+            cep: document.getElementById('pmCep').value,
+            formaPagamento: document.getElementById('pmFormaPagamento').value,
+            descontoPerc: document.getElementById('pmDescontoPerc').value
+        };
+        localStorage.setItem('pm_rascunho', JSON.stringify(rascunho));
+    } catch (e) {}
+}
+
+function pmCarregarRascunho() {
+    try {
+        const data = localStorage.getItem('pm_rascunho');
+        if (!data) return false;
+        const r = JSON.parse(data);
+        
+        if (!r.carrinho || r.carrinho.length === 0) return false;
+
+        // Restaura os dados
+        pmClienteSelecionado = r.cliente;
+        pmCarrinho = r.carrinho;
+        pmFreteSelecionado = r.frete;
+        
+        if (pmClienteSelecionado) {
+            document.getElementById('pmBuscaCliente').value = pmClienteSelecionado.nome;
+            document.getElementById('pmNomeClienteSel').textContent = pmClienteSelecionado.nome;
+            document.getElementById('pmClienteSelecionado').style.display = 'block';
+            document.getElementById('pmCep').value = r.cep || '';
+        }
+        
+        document.getElementById('pmFormaPagamento').value = r.formaPagamento || 'PIX';
+        document.getElementById('pmDescontoPerc').value = r.descontoPerc || '';
+        
+        pmAtualizarCarrinho();
+        pmCalcularTotaisFinais();
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+
+function pmLimparTudo() {
+    // Removemos o confirm para limpar direto quando o pedido é salvo
+    // ...resto do código
+    
+    localStorage.removeItem('pm_rascunho');
+    pmClienteSelecionado = null;
+    pmCarrinho = [];
+    pmFreteSelecionado = null;
+    
+    document.getElementById('pmBuscaCliente').value = '';
+    document.getElementById('pmClienteSelecionado').style.display = 'none';
+    document.getElementById('pmCep').value = '';
+    document.getElementById('pmResultadoFrete').innerHTML = '';
+    document.getElementById('pmFormaPagamento').value = 'PIX';
+    document.getElementById('pmDescontoPerc').value = '';
+    
+    pmAtualizarCarrinho();
+    pmCalcularTotaisFinais();
+}
+
+// ============================================================
+// ATUALIZAÇÃO DA FUNÇÃO DE ABRIR O MODAL
+// ============================================================
+function abrirPedidoManual() {
+    // Tenta carregar o rascunho. Se não tiver, limpa tudo.
+    if (!pmCarregarRascunho()) {
+        pmLimparTudo();
+    } else {
+        // Se tem rascunho, atualiza os estoques dos produtos por segurança
+        pmCarrinho.forEach(item => {
+            const p = dados.produtos.find(x => parseInt(x.id) === parseInt(item.produtoId));
+            if (p) {
+                item.estoqueTotal = parseInt(p.estoque) || 0;
+                // Se o estoque diminuiu e o item era disponível, recalcula a produção
+                if (item.quantidade > item.estoqueTotal) {
+                    item.isProducao = true;
+                }
+            }
+        });
+        pmAtualizarCarrinho();
+    }
+    
+    // Abre o modal
+    document.getElementById('modalPedidoManual').classList.add('open');
+    pmFiltrarProdutos(); // Carrega a lista de produtos à esquerda
+}
+
+// ============================================================
+// LÓGICA DO NOVO PEDIDO MANUAL - FINALIZAR E ESTOQUE (ETAPA 6)
+// ============================================================
+
+async function pmFinalizarPedido() {
+    // 1. Validações Obrigatórias
+    if (!pmClienteSelecionado) {
+        alert('⚠️ Selecione um cliente (ou a opção Balcão) antes de finalizar.');
+        return;
+    }
+    if (pmCarrinho.length === 0) {
+        alert('⚠️ Adicione pelo menos um produto ao carrinho.');
+        return;
+    }
+    if (!pmFreteSelecionado) {
+        alert('⚠️ Calcule e selecione uma opção de frete antes de finalizar.');
+        return;
+    }
+    const formaPagamento = document.getElementById('pmFormaPagamento').value;
+    if (!formaPagamento) {
+        alert('⚠️ Selecione uma forma de pagamento.');
+        return;
+    }
+
+    const percDesconto = parseFloat(document.getElementById('pmDescontoPerc').value) || 0;
+    
+    // 2. Cálculos Finais
+    let subtotal = pmCarrinho.reduce((acc, item) => acc + item.precoTotal, 0);
+    const valorDesconto = subtotal * (percDesconto / 100);
+    const subtotalComDesc = subtotal - valorDesconto;
+    const frete = pmFreteSelecionado ? pmFreteSelecionado.valor : 0;
+    const totalGeral = subtotalComDesc + frete;
+    
+    // Prazo total (Maior prazo de produção + Prazo do frete)
+    let maiorPrazoProducao = 0;
+    pmCarrinho.forEach(item => {
+        if (item.isProducao && item.prazoProducao > maiorPrazoProducao) {
+            maiorPrazoProducao = item.prazoProducao;
+        }
+    });
+    const prazoFrete = pmFreteSelecionado ? pmFreteSelecionado.prazo : 0;
+    const prazoTotal = maiorPrazoProducao + prazoFrete;
+
+    // 3. Monta o texto dos itens para salvar no banco
+    let textoItens = [];
+    
+    pmCarrinho.forEach(item => {
+        // Busca o produto no banco de dados
+        const produtoNoBanco = dados.produtos.find(p => parseInt(p.id) === parseInt(item.produtoId));
+        const nomeProduto = produtoNoBanco ? (produtoNoBanco.nome || '') : item.nome;
+        const descricaoProduto = produtoNoBanco ? (produtoNoBanco.descricao || '') : '';
+        
+        // 🔥 A MÁGICA: Procura a quantidade de berços e gomos EXATAMENTE na descrição
+        let qtdBercoPorCaixa = 0;
+        let gomosBerco = 0;
+        
+        // Regex para achar "2 berços 2 gomos", "1 berço 4 gomos", etc.
+        const matchBerco = descricaoProduto.match(/(\d*)\s*berços?\s*(?:de\s*)?(\d+)\s*gomos/i);
+        
+        if (matchBerco) {
+            qtdBercoPorCaixa = matchBerco[1] ? parseInt(matchBerco[1]) : 1;
+            gomosBerco = parseInt(matchBerco[2]);
+        }
+
+        if (item.isProducao) {
+            if (item.queroLevar && item.estoqueTotal > 0) {
+                const qtdProduzir = item.quantidade - item.estoqueTotal;
+                
+                textoItens.push(`${nomeProduto} (Disponível) (${item.estoqueTotal}x 1 un) - R$ ${(item.estoqueTotal * item.precoUnitario).toFixed(2)}`);
+                textoItens.push(`${nomeProduto} (Produção ${item.prazoProducao} dias) (${qtdProduzir}x 1 un) - R$ ${(qtdProduzir * item.precoUnitario).toFixed(2)}`);
+
+                if (qtdBercoPorCaixa > 0 && gomosBerco > 0) {
+                    const bercosDisp = item.estoqueTotal * qtdBercoPorCaixa;
+                    const bercosProd = qtdProduzir * qtdBercoPorCaixa;
+                    textoItens.push(`BERÇO ${gomosBerco} GOMOS (Disponível) (${bercosDisp} un)`);
+                    textoItens.push(`BERÇO ${gomosBerco} GOMOS (Produção ${item.prazoProducao} dias) (${bercosProd} un)`);
+                }
+            } else {
+                textoItens.push(`${nomeProduto} (Produção ${item.prazoProducao} dias) (${item.quantidade}x 1 un) - R$ ${item.precoTotal.toFixed(2)}`);
+
+                if (qtdBercoPorCaixa > 0 && gomosBerco > 0) {
+                    const bercosProd = item.quantidade * qtdBercoPorCaixa;
+                    textoItens.push(`BERÇO ${gomosBerco} GOMOS (Produção ${item.prazoProducao} dias) (${bercosProd} un)`);
+                }
+            }
+        } else {
+            textoItens.push(`${nomeProduto} (Disponível) (${item.quantidade}x 1 un) - R$ ${item.precoTotal.toFixed(2)}`);
+
+            if (qtdBercoPorCaixa > 0 && gomosBerco > 0) {
+                const bercosDisp = item.quantidade * qtdBercoPorCaixa;
+                textoItens.push(`BERÇO ${gomosBerco} GOMOS (Disponível) (${bercosDisp} un)`);
+            }
+        }
+    });
+    
+    const stringItens = textoItens.join(' | ');
+
+    // 4. Monta as observações
+    let obs = `Frete: ${pmFreteSelecionado.nome} (R$ ${frete.toFixed(2)}) | Pagamento: ${formaPagamento}`;
+    if (valorDesconto > 0) obs += ` | Desconto: ${percDesconto}% (R$ ${valorDesconto.toFixed(2)})`;
+    obs += ` | Pedido Manual / Balcão | Prazo Total: ${prazoTotal} dias`;
+
+    // 5. Prepara os dados do pedido
+    const agora = new Date();
+    const dataPedido = agora.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+    
+    const pedidoData = {
+        cliente_nome: pmClienteSelecionado.nome,
+        cliente_email: pmClienteSelecionado.email || 'balcao@embalagens.com',
+        cliente_telefone: pmClienteSelecionado.telefone || '',
+        cliente_documento: pmClienteSelecionado.cpf || pmClienteSelecionado.documento || '',
+        itens: stringItens,
+        total: String(totalGeral.toFixed(2)),
+        total_produtos: String(subtotal.toFixed(2)),
+        desconto: String(valorDesconto.toFixed(2)),
+        endereco_entrega: pmClienteSelecionado.endereco || 'Retirada no Balcão',
+        frete: pmFreteSelecionado.nome,
+        frete_valor: String(frete.toFixed(2)),
+        observacoes: obs,
+        prazo_entrega: prazoTotal,
+        producao_dias: maiorPrazoProducao,
+        pagamento: formaPagamento,
+        status: 'Pendente',
+        data_pedido: dataPedido
+    };
+
+    // Desabilita o botão para não clicar duas vezes
+    const btnSalvar = document.querySelector('button[onclick="pmFinalizarPedido()"]');
+    const textoOriginal = btnSalvar.innerHTML;
+    btnSalvar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+    btnSalvar.disabled = true;
+
+    try {
+        // 6. Salva o pedido no Supabase
+        const { data: pedidoSalvo, error } = await supabaseClient
+            .from('pedidos')
+            .insert([pedidoData])
+            .select()
+            .single();
+
+        if (error) throw error;
+
+        // 7. BAIXA DE ESTOQUE (A Regra de Ouro)
+        for (const item of pmCarrinho) {
+            const produtoNoBanco = dados.produtos.find(p => parseInt(p.id) === parseInt(item.produtoId));
+            if (!produtoNoBanco) continue;
+
+            const estoqueAtual = parseInt(produtoNoBanco.estoque) || 0;
+            let novoEstoque = estoqueAtual;
+
+            if (!item.isProducao) {
+                novoEstoque = estoqueAtual - item.quantidade;
+            } else if (item.queroLevar) {
+                novoEstoque = 0;
+            } else {
+                novoEstoque = estoqueAtual;
+            }
+
+            if (novoEstoque !== estoqueAtual) {
+                await supabaseClient
+                    .from('produtos')
+                    .update({ estoque: novoEstoque })
+                    .eq('id', produtoNoBanco.id);
+            }
+        }
+
+        // 8. Limpa tudo e fecha automaticamente
+        alert(`✅ Pedido #${pedidoSalvo.id_pedido} salvo com sucesso!\n\nO estoque foi atualizado e o carrinho será limpo.`);
+        
+        pmLimparTudo(); 
+        fecharModal('modalPedidoManual');
+        carregarDadosParcial();
+
+    } catch (error) {
+        console.error('Erro ao salvar pedido:', error);
+        alert('❌ Erro ao salvar o pedido: ' + (error.message || 'Tente novamente.'));
+    } finally {
+        btnSalvar.innerHTML = textoOriginal;
+        btnSalvar.disabled = false;
+    }
+}
+
+  // ============================================================
+// APROVAÇÃO MANUAL DE PAGAMENTO
+// ============================================================
+async function aprovarPagamentoManual(idPedido) {
+    // Pede o nome de quem autorizou
+    const autorizador = prompt(`💰 Aprovar pagamento do Pedido #${idPedido}\n\nDigite o nome de quem conferiu e autorizou o pagamento:`);
+    
+    if (autorizador === null) return; // Se clicar em cancelar, para tudo
+    if (autorizador.trim() === '') {
+        alert('⚠️ Você precisa digitar o nome de quem autorizou o pagamento.');
+        return;
+    }
+
+    mostrarSpinner('Aprovando pagamento...');
+
+    try {
+        const pedido = dados.pedidos.find(p => parseInt(p.id_pedido) === parseInt(idPedido));
+        if (!pedido) throw new Error('Pedido não encontrado');
+
+        // Pega as observações atuais e adiciona a nota de aprovação
+        let obsAtual = pedido.observacoes || '';
+        const dataAprovacao = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+        
+        obsAtual += ` | ✅ PAGAMENTO APROVADO MANUALMENTE por ${autorizador.trim()} em ${dataAprovacao}`;
+
+        // Atualiza o pedido no Supabase
+        const { error } = await supabaseClient
+            .from('pedidos')
+            .update({ 
+                status: 'Pago',
+                observacoes: obsAtual
+            })
+            .eq('id_pedido', idPedido);
+
+        if (error) throw error;
+
+        esconderSpinner();
+        mostrarNotificacao(`✅ Pagamento do Pedido #${idPedido} aprovado por ${autorizador.trim()}!`, 'success');
+        
+        // Recarrega os dados para atualizar a tela
+        await carregarDadosParcial();
+
+    } catch (error) {
+        console.error('Erro ao aprovar pagamento:', error);
+        esconderSpinner();
+        alert('⚠️ Erro ao aprovar pagamento: ' + error.message);
+    }
+}
+    
 </script>
 
 </body>
