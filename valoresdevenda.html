@@ -53,9 +53,7 @@
   }
   .conteudo { padding: 25px; display: none; }
   .conteudo.ativo { display: block; }
-  .campo {
-    margin-bottom: 20px;
-  }
+  .campo { margin-bottom: 20px; }
   .campo label {
     display: block;
     font-weight: 600;
@@ -199,7 +197,7 @@
       <h3>📋 Regras – Fitas de Cetim</h3>
       <ul>
         <li>Acréscimo: <code>+10%</code> sobre o preço base</li>
-        <li><b>10 metros:</b> (valor c/ 10%) ÷ <code>0,35</code> ÷ 5</li>
+        <li><b>10 metros:</b> (valor c/ 10%) ÷ <code>0,45</code> ÷ 5</li>
         <li><b>50 metros:</b> (valor c/ 10%) ÷ <code>0,48</code> ÷ 1</li>
       </ul>
     </div>
@@ -217,9 +215,9 @@
       <h3>📋 Regras – Palha</h3>
       <ul>
         <li>Acréscimo: <code>+10%</code> sobre o preço base</li>
-        <li><b>1 un.:</b> (valor c/ 10%) ÷ <code>0,25</code> ÷ 400</li>
-        <li><b>10 un.:</b> (valor c/ 10%) ÷ <code>0,35</code> ÷ 40</li>
-        <li><b>20 un.:</b> (valor c/ 10%) ÷ <code>0,45</code> ÷ 20</li>
+        <li><b>1 un.:</b> (valor c/ 10%) ÷ <code>0,15</code> ÷ 400</li>
+        <li><b>10 un.:</b> (valor c/ 10%) ÷ <code>0,20</code> ÷ 40</li>
+        <li><b>20 un.:</b> (valor c/ 10%) ÷ <code>0,25</code> ÷ 20</li>
       </ul>
     </div>
     <div class="resultado-base" id="base-palha">Valor com 10%: <span>R$ 0,00</span></div>
@@ -297,7 +295,7 @@ function calcFitas(v) {
   const base = p * 1.10;
   document.querySelector('#base-fitas span').textContent = fmt(base);
   renderCards('res-fitas', [
-    { qtd: '10 metros', valor: (base / 0.35) / 5, detalhe: '÷ 0,35 ÷ 5' },
+    { qtd: '10 metros', valor: (base / 0.45) / 5, detalhe: '÷ 0,45 ÷ 5' },
     { qtd: '50 metros', valor: (base / 0.48) / 1, detalhe: '÷ 0,48 ÷ 1' }
   ]);
 }
@@ -308,9 +306,9 @@ function calcPalha(v) {
   const base = p * 1.10;
   document.querySelector('#base-palha span').textContent = fmt(base);
   renderCards('res-palha', [
-    { qtd: '1 unidade',   valor: (base / 0.25) / 400, detalhe: '÷ 0,25 ÷ 400' },
-    { qtd: '10 unidades', valor: (base / 0.35) / 40,  detalhe: '÷ 0,35 ÷ 40' },
-    { qtd: '20 unidades', valor: (base / 0.45) / 20,  detalhe: '÷ 0,45 ÷ 20' }
+    { qtd: '1 unidade',   valor: (base / 0.15) / 400, detalhe: '÷ 0,15 ÷ 400' },
+    { qtd: '10 unidades', valor: (base / 0.20) / 40,  detalhe: '÷ 0,20 ÷ 40' },
+    { qtd: '20 unidades', valor: (base / 0.25) / 20,  detalhe: '÷ 0,25 ÷ 20' }
   ]);
 }
 
