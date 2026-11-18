@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora de Preços</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #f4f6f8;
+    padding: 20px;
+    color: #333;
+  }
+  .container {
+    max-width: 850px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    overflow: hidden;
+  }
+  header {
+    background: #2c3e50;
+    color: #fff;
+    padding: 20px;
+    text-align: center;
+  }
+  header h1 { font-size: 1.4em; }
+  .abas {
+    display: flex;
+    flex-wrap: wrap;
+    background: #34495e;
+  }
+  .aba-btn {
+    flex: 1;
+    min-width: 120px;
+    padding: 14px 10px;
+    background: transparent;
+    border: none;
+    color: #bdc3c7;
+    cursor: pointer;
+    font-size: 0.95em;
+    font-weight: 600;
+    transition: 0.2s;
+    border-bottom: 3px solid transparent;
+  }
+  .aba-btn:hover { background: #3d566e; color: #fff; }
+  .aba-btn.ativa {
+    background: #fff;
+    color: #2c3e50;
+    border-bottom: 3px solid #e67e22;
+  }
+  .conteudo { padding: 25px; display: none; }
+  .conteudo.ativo { display: block; }
+  .campo {
+    margin-bottom: 20px;
+  }
+  .campo label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #555;
+  }
+  .campo input {
+    width: 100%;
+    padding: 12px 15px;
+    font-size: 1.1em;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    outline: none;
+    transition: 0.2s;
+  }
+  .campo input:focus { border-color: #e67e22; }
+  .regras {
+    background: #fdf6ec;
+    border-left: 4px solid #e67e22;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-size: 0.9em;
+  }
+  .regras h3 {
+    color: #e67e22;
+    margin-bottom: 10px;
+    font-size: 1em;
+  }
+  .regras ul { list-style: none; }
+  .regras li { padding: 4px 0; color: #555; }
+  .regras code {
+    background: #fff;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    color: #c0392b;
+  }
+  .resultado-base {
+    background: #e8f5e9;
+    border-left: 4px solid #27ae60;
+    padding: 12px 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-weight: 600;
+    color: #1b5e20;
+  }
+  .resultado-base span { color: #27ae60; font-size: 1.2em; }
+  .grid-resultados {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+  }
+  .card {
+    background: #fff;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 18px;
+    text-align: center;
+    transition: 0.2s;
+  }
+  .card:hover { border-color: #e67e22; box-shadow: 0 4px 12px rgba(230,126,34,0.15); }
+  .card .qtd {
+    font-size: 0.85em;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  .card .valor {
+    font-size: 1.5em;
+    font-weight: 700;
+    color: #2c3e50;
+  }
+  .card .detalhe {
+    font-size: 0.75em;
+    color: #999;
+    margin-top: 6px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>🧮 Calculadora de Preços</h1>
+  </header>
+
+  <div class="abas">
+    <button class="aba-btn ativa" onclick="abrirAba(event, 'caixas')">Caixas Kraft</button>
+    <button class="aba-btn" onclick="abrirAba(event, 'sacolas')">Sacolas Kraft</button>
+    <button class="aba-btn" onclick="abrirAba(event, 'fitas')">Fitas Cetim</button>
+    <button class="aba-btn" onclick="abrirAba(event, 'palha')">Palha</button>
+    <button class="aba-btn" onclick="abrirAba(event, 'outros')">Outros</button>
+  </div>
+
+  <!-- CAIXAS KRAFT -->
+  <div id="caixas" class="conteudo ativo">
+    <div class="campo">
+      <label>Preço base (R$)</label>
+      <input type="number" step="0.01" min="0" placeholder="Ex: 100,00" oninput="calcCaixas(this.value)">
+    </div>
+    <div class="regras">
+      <h3>📋 Regras – Caixas Kraft</h3>
+      <ul>
+        <li>Acréscimo: <code>+12%</code> sobre o preço base</li>
+        <li><b>10 un.:</b> (valor c/ 12%) ÷ <code>0,55</code> × 10</li>
+        <li><b>50 un.:</b> (valor c/ 12%) ÷ <code>0,58</code> × 50</li>
+        <li><b>100 un.:</b> (valor c/ 12%) ÷ <code>0,61</code> × 100</li>
+      </ul>
+    </div>
+    <div class="resultado-base" id="base-caixas">Valor com 12%: <span>R$ 0,00</span></div>
+    <div class="grid-resultados" id="res-caixas"></div>
+  </div>
+
+  <!-- SACOLAS KRAFT -->
+  <div id="sacolas" class="conteudo">
+    <div class="campo">
+      <label>Preço base (R$)</label>
+      <input type="number" step="0.01" min="0" placeholder="Ex: 100,00" oninput="calcSacolas(this.value)">
+    </div>
+    <div class="regras">
+      <h3>📋 Regras – Sacolas Kraft</h3>
+      <ul>
+        <li>Acréscimo: <code>+8%</code> sobre o preço base</li>
+        <li><b>25 un.:</b> (valor c/ 8%) ÷ <code>0,55</code> × 1</li>
+        <li><b>50 un.:</b> (valor c/ 8%) ÷ <code>0,58</code> × 2</li>
+        <li><b>100 un.:</b> (valor c/ 8%) ÷ <code>0,61</code> × 4</li>
+      </ul>
+    </div>
+    <div class="resultado-base" id="base-sacolas">Valor com 8%: <span>R$ 0,00</span></div>
+    <div class="grid-resultados" id="res-sacolas"></div>
+  </div>
+
+  <!-- FITAS CETIM -->
+  <div id="fitas" class="conteudo">
+    <div class="campo">
+      <label>Preço base (R$)</label>
+      <input type="number" step="0.01" min="0" placeholder="Ex: 100,00" oninput="calcFitas(this.value)">
+    </div>
+    <div class="regras">
+      <h3>📋 Regras – Fitas de Cetim</h3>
+      <ul>
+        <li>Acréscimo: <code>+10%</code> sobre o preço base</li>
+        <li><b>10 metros:</b> (valor c/ 10%) ÷ <code>0,35</code> ÷ 5</li>
+        <li><b>50 metros:</b> (valor c/ 10%) ÷ <code>0,48</code> ÷ 1</li>
+      </ul>
+    </div>
+    <div class="resultado-base" id="base-fitas">Valor com 10%: <span>R$ 0,00</span></div>
+    <div class="grid-resultados" id="res-fitas"></div>
+  </div>
+
+  <!-- PALHA -->
+  <div id="palha" class="conteudo">
+    <div class="campo">
+      <label>Preço base (R$)</label>
+      <input type="number" step="0.01" min="0" placeholder="Ex: 100,00" oninput="calcPalha(this.value)">
+    </div>
+    <div class="regras">
+      <h3>📋 Regras – Palha</h3>
+      <ul>
+        <li>Acréscimo: <code>+10%</code> sobre o preço base</li>
+        <li><b>1 un.:</b> (valor c/ 10%) ÷ <code>0,25</code> ÷ 400</li>
+        <li><b>10 un.:</b> (valor c/ 10%) ÷ <code>0,35</code> ÷ 40</li>
+        <li><b>20 un.:</b> (valor c/ 10%) ÷ <code>0,45</code> ÷ 20</li>
+      </ul>
+    </div>
+    <div class="resultado-base" id="base-palha">Valor com 10%: <span>R$ 0,00</span></div>
+    <div class="grid-resultados" id="res-palha"></div>
+  </div>
+
+  <!-- OUTROS -->
+  <div id="outros" class="conteudo">
+    <div class="campo">
+      <label>Preço base (R$)</label>
+      <input type="number" step="0.01" min="0" placeholder="Ex: 100,00" oninput="calcOutros(this.value)">
+    </div>
+    <div class="regras">
+      <h3>📋 Regras – Outros</h3>
+      <ul>
+        <li>Acréscimo: <code>+10%</code> sobre o preço base</li>
+        <li><b>1 un.:</b> (valor c/ 10%) ÷ <code>0,45</code> × 1</li>
+        <li><b>10 un.:</b> (valor c/ 10%) ÷ <code>0,48</code> × 10</li>
+        <li><b>50 un.:</b> (valor c/ 10%) ÷ <code>0,50</code> × 50</li>
+        <li><b>100 un.:</b> (valor c/ 10%) ÷ <code>0,54</code> × 100</li>
+      </ul>
+    </div>
+    <div class="resultado-base" id="base-outros">Valor com 10%: <span>R$ 0,00</span></div>
+    <div class="grid-resultados" id="res-outros"></div>
+  </div>
+</div>
+
+<script>
+const fmt = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+function abrirAba(evt, id) {
+  document.querySelectorAll('.conteudo').forEach(c => c.classList.remove('ativo'));
+  document.querySelectorAll('.aba-btn').forEach(b => b.classList.remove('ativa'));
+  document.getElementById(id).classList.add('ativo');
+  evt.currentTarget.classList.add('ativa');
+}
+
+function renderCards(containerId, items) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = items.map(it => `
+    <div class="card">
+      <div class="qtd">${it.qtd}</div>
+      <div class="valor">${fmt(it.valor)}</div>
+      <div class="detalhe">${it.detalhe}</div>
+    </div>`).join('');
+}
+
+// ---------- CAIXAS KRAFT (+12%) ----------
+function calcCaixas(v) {
+  const p = parseFloat(v) || 0;
+  const base = p * 1.12;
+  document.querySelector('#base-caixas span').textContent = fmt(base);
+  renderCards('res-caixas', [
+    { qtd: '10 unidades',  valor: (base / 0.55) * 10,  detalhe: '÷ 0,55 × 10' },
+    { qtd: '50 unidades',  valor: (base / 0.58) * 50,  detalhe: '÷ 0,58 × 50' },
+    { qtd: '100 unidades', valor: (base / 0.61) * 100, detalhe: '÷ 0,61 × 100' }
+  ]);
+}
+
+// ---------- SACOLAS KRAFT (+8%) ----------
+function calcSacolas(v) {
+  const p = parseFloat(v) || 0;
+  const base = p * 1.08;
+  document.querySelector('#base-sacolas span').textContent = fmt(base);
+  renderCards('res-sacolas', [
+    { qtd: '25 unidades',  valor: (base / 0.55) * 1, detalhe: '÷ 0,55 × 1' },
+    { qtd: '50 unidades',  valor: (base / 0.58) * 2, detalhe: '÷ 0,58 × 2' },
+    { qtd: '100 unidades', valor: (base / 0.61) * 4, detalhe: '÷ 0,61 × 4' }
+  ]);
+}
+
+// ---------- FITAS CETIM (+10%) ----------
+function calcFitas(v) {
+  const p = parseFloat(v) || 0;
+  const base = p * 1.10;
+  document.querySelector('#base-fitas span').textContent = fmt(base);
+  renderCards('res-fitas', [
+    { qtd: '10 metros', valor: (base / 0.35) / 5, detalhe: '÷ 0,35 ÷ 5' },
+    { qtd: '50 metros', valor: (base / 0.48) / 1, detalhe: '÷ 0,48 ÷ 1' }
+  ]);
+}
+
+// ---------- PALHA (+10%) ----------
+function calcPalha(v) {
+  const p = parseFloat(v) || 0;
+  const base = p * 1.10;
+  document.querySelector('#base-palha span').textContent = fmt(base);
+  renderCards('res-palha', [
+    { qtd: '1 unidade',   valor: (base / 0.25) / 400, detalhe: '÷ 0,25 ÷ 400' },
+    { qtd: '10 unidades', valor: (base / 0.35) / 40,  detalhe: '÷ 0,35 ÷ 40' },
+    { qtd: '20 unidades', valor: (base / 0.45) / 20,  detalhe: '÷ 0,45 ÷ 20' }
+  ]);
+}
+
+// ---------- OUTROS (+10%) ----------
+function calcOutros(v) {
+  const p = parseFloat(v) || 0;
+  const base = p * 1.10;
+  document.querySelector('#base-outros span').textContent = fmt(base);
+  renderCards('res-outros', [
+    { qtd: '1 unidade',   valor: (base / 0.45) * 1,   detalhe: '÷ 0,45 × 1' },
+    { qtd: '10 unidades', valor: (base / 0.48) * 10,  detalhe: '÷ 0,48 × 10' },
+    { qtd: '50 unidades', valor: (base / 0.50) * 50,  detalhe: '÷ 0,50 × 50' },
+    { qtd: '100 unidades',valor: (base / 0.54) * 100, detalhe: '÷ 0,54 × 100' }
+  ]);
+}
+</script>
+</body>
+</html>
