@@ -197,8 +197,8 @@
       <h3>📋 Regras – Fitas de Cetim</h3>
       <ul>
         <li>Acréscimo: <code>+10%</code> sobre o preço base</li>
-        <li><b>10 metros:</b> (valor c/ 10%) ÷ <code>0,20</code> ÷ 5</li>
-        <li><b>50 metros:</b> (valor c/ 10%) ÷ <code>0,25</code> ÷ 1</li>
+        <li><b>10 metros:</b> (valor c/ 10%) ÷ <code>0,25</code> ÷ 5</li>
+        <li><b>50 metros:</b> (valor c/ 10%) ÷ <code>0,30</code> ÷ 1</li>
       </ul>
     </div>
     <div class="resultado-base" id="base-fitas">Valor com 10%: <span>R$ 0,00</span></div>
@@ -295,8 +295,8 @@ function calcFitas(v) {
   const base = p * 1.10;
   document.querySelector('#base-fitas span').textContent = fmt(base);
   renderCards('res-fitas', [
-    { qtd: '10 metros', valor: (base / 0.45) / 5, detalhe: '÷ 0,30 ÷ 5' },
-    { qtd: '50 metros', valor: (base / 0.48) / 1, detalhe: '÷ 0,35 ÷ 1' }
+    { qtd: '10 metros', valor: (base / 0.25) / 5, detalhe: '÷ 0,25 ÷ 5' },
+    { qtd: '50 metros', valor: (base / 0.30) / 1, detalhe: '÷ 0,30 ÷ 1' }
   ]);
 }
 
